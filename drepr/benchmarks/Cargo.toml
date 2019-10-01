@@ -1,0 +1,15 @@
+[package]
+name = "benchmarks"
+version = "0.2.0"
+authors = ["Binh Vu <binh@toan2.com>"]
+edition = "2018"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[dependencies]
+readers = { path = "../readers" }
+
+[[bench]]
+name = "roll_vs_unroll_loop"
+harness = false

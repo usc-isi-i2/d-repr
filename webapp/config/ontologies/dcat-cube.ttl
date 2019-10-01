@@ -1,0 +1,38 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfa: <http://www.w3.org/ns/rdfa#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcat-cube: <http://isi.edu/ontologies/dcat-cube#> .
+@prefix qb: <http://purl.org/linked-data/cube#> .
+
+<http://isi.edu/ontologies/dcat-cube>
+    a owl:Ontology;
+    owl:versionInfo "0.1";
+    rdfs:label "The extension of data cube vocabulary" .
+
+# MEASUREs
+
+dcat-cube:measure_1_value a qb:MeasureProperty, rdf:Property ;
+    rdfs:range rdfs:Resource;
+    rdfs:label "Value of the first measure"@en .
+
+dcat-cube:measure_2_value a qb:MeasureProperty, rdf:Property ;
+    rdfs:range rdfs:Resource;
+    rdfs:label "Value of the second measure"@en .
+
+# ATTRIBUTEs
+
+dcat-cube:attribute_1_unitMeasure a qb:AttributeProperty, rdf:Property ;
+    rdfs:range rdfs:Resource;
+    rdfs:label "Unit measure of the first measure"@en .
+
+dcat-cube:attribute_2_unitMeasure a qb:AttributeProperty, rdf:Property ;
+    rdfs:range rdfs:Resource;
+    rdfs:label "Unit measure of the second measure"@en .
+
+# DIMENSIONs
+
+dcat-cube:dimension_thing a qb:DimensionProperty, rdf:Property ;
+    rdfs:range rdfs:Resource;
+    rdfs:label "A thing"@en .

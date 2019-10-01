@@ -19,6 +19,9 @@
 
 ## Features
 
+- Supporting reading datasets in heterogeneous formats (JSON, CSV, Spreadsheets, etc) and layouts (relational tables, matrix tables, etc) to the RDF format
+- Extremely fast
+
 ## Example
 
 ## Installation

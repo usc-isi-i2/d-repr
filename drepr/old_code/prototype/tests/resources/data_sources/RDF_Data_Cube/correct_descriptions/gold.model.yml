@@ -1,0 +1,38 @@
+version: '1'
+resources: csv
+preprocessing:
+  - type: map
+    location: 0:1..
+    function: >
+      if value == "":
+        return get_previous_value()
+      return "http://reference.data.gov.uk/id/gregorian-interval/" + value.split("-")[0] + "-01-01T00:00:00/P3Y"
+layout:
+  area:
+    location: 2..:0
+  gender:
+    location: 1:1..
+  period:
+    location: 0:1..
+  obs:
+    location: 2..:1..
+  obs_slice_by_region:
+    location: 2..
+semantic_model:
+  semantic_types:
+    area: qb:Observation:1--eg:refArea
+    gender: qb:Observation:1--eg:gender
+    period: qb:Observation:1--eg:refPeriod^^xsd:anyURI
+    obs: qb:Observation:1--smdx-measure:obsValue^^xsd:decimal
+  semantic_relations: []
+  ontology_prefixes:
+    qb: http://purl.org/linked-data/cube#
+    smdx-measure: http://purl.org/linked-data/sdmx/2009/measure#
+    eg: http://example.org/
+mappings:
+  - type: dimension_mapping
+    value: obs:0 <-> area:0
+  - type: dimension_mapping
+    value: obs:1 <-> gender:1
+  - type: dimension_mapping
+    value: obs:1 <-> period:1

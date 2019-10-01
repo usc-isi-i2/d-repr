@@ -1,0 +1,31 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+pip = "==18.0"
+pytest-dotenv = "*"
+yapf = "*"
+
+[packages]
+ujson = "*"
+peewee = "*"
+psycopg2-binary = "*"
+werkzeug = "*"
+flask = "*"
+networkx = "*"
+netcdf4 = "*"
+pyready = "*"
+python-dotenv = {version = "*",extras = ["cli"]}
+rdflib = "*"
+whoosh = "*"
+pyyaml = "*"
+# uwsgi = "*" # error when install because using different gcc
+pika = "*"
+requests = "*"
+xmltodict = "*"
+
+[requires]
+python_version = "3.7"

@@ -1,0 +1,157 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix qb: <http://purl.org/linked-data/cube#> .
+@prefix smdx-measure: <http://purl.org/linked-data/sdmx/2009/measure#> .
+@prefix eg: <http://example.org/> .
+@prefix drepr: <https://purl.org/drepr/1.0/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+
+Observation0_2_1 a qb:Observation;
+	eg:refArea "Newport";
+	eg:gender "Male";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2004-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 76.7;
+	.
+Observation0_2_2 a qb:Observation;
+	eg:refArea "Newport";
+	eg:gender "Female";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2004-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 80.7;
+	.
+Observation0_2_3 a qb:Observation;
+	eg:refArea "Newport";
+	eg:gender "Male";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2005-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 77.1;
+	.
+Observation0_2_4 a qb:Observation;
+	eg:refArea "Newport";
+	eg:gender "Female";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2005-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 80.9;
+	.
+Observation0_2_5 a qb:Observation;
+	eg:refArea "Newport";
+	eg:gender "Male";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2006-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 77;
+	.
+Observation0_2_6 a qb:Observation;
+	eg:refArea "Newport";
+	eg:gender "Female";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2006-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 81.5;
+	.
+Observation0_3_1 a qb:Observation;
+	eg:refArea "Cardiff";
+	eg:gender "Male";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2004-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 78.7;
+	.
+Observation0_3_2 a qb:Observation;
+	eg:refArea "Cardiff";
+	eg:gender "Female";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2004-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 83.3;
+	.
+Observation0_3_3 a qb:Observation;
+	eg:refArea "Cardiff";
+	eg:gender "Male";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2005-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 78.6;
+	.
+Observation0_3_4 a qb:Observation;
+	eg:refArea "Cardiff";
+	eg:gender "Female";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2005-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 83.7;
+	.
+Observation0_3_5 a qb:Observation;
+	eg:refArea "Cardiff";
+	eg:gender "Male";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2006-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 78.7;
+	.
+Observation0_3_6 a qb:Observation;
+	eg:refArea "Cardiff";
+	eg:gender "Female";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2006-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 83.4;
+	.
+Observation0_4_1 a qb:Observation;
+	eg:refArea "Monmouthshire";
+	eg:gender "Male";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2004-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 76.6;
+	.
+Observation0_4_2 a qb:Observation;
+	eg:refArea "Monmouthshire";
+	eg:gender "Female";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2004-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 81.3;
+	.
+Observation0_4_3 a qb:Observation;
+	eg:refArea "Monmouthshire";
+	eg:gender "Male";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2005-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 76.5;
+	.
+Observation0_4_4 a qb:Observation;
+	eg:refArea "Monmouthshire";
+	eg:gender "Female";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2005-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 81.5;
+	.
+Observation0_4_5 a qb:Observation;
+	eg:refArea "Monmouthshire";
+	eg:gender "Male";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2006-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 76.6;
+	.
+Observation0_4_6 a qb:Observation;
+	eg:refArea "Monmouthshire";
+	eg:gender "Female";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2006-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 81.7;
+	.
+Observation0_5_1 a qb:Observation;
+	eg:refArea "Merthyr Tydfil";
+	eg:gender "Male";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2004-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 75.5;
+	.
+Observation0_5_2 a qb:Observation;
+	eg:refArea "Merthyr Tydfil";
+	eg:gender "Female";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2004-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 79.1;
+	.
+Observation0_5_3 a qb:Observation;
+	eg:refArea "Merthyr Tydfil";
+	eg:gender "Male";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2005-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 75.5;
+	.
+Observation0_5_4 a qb:Observation;
+	eg:refArea "Merthyr Tydfil";
+	eg:gender "Female";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2005-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 79.4;
+	.
+Observation0_5_5 a qb:Observation;
+	eg:refArea "Merthyr Tydfil";
+	eg:gender "Male";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2006-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 74.9;
+	.
+Observation0_5_6 a qb:Observation;
+	eg:refArea "Merthyr Tydfil";
+	eg:gender "Female";
+	eg:refPeriod <http://reference.data.gov.uk/id/gregorian-interval/2006-01-01T00:00:00/P3Y>;
+	smdx-measure:obsValue 79.6;
+	.

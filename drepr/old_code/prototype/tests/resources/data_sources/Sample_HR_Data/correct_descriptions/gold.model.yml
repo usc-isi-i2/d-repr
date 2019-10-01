@@ -1,0 +1,44 @@
+version: "1"
+resources: json
+preprocessing: []
+layout:
+  person_name:
+    location: ..:records:..:name
+  person_phone:
+    location: ..:records:..:phone
+  company_name:
+    location: ..:company
+  department_name:
+    location: ..:records:..:department:name
+  department_code:
+    location: ..:records:..:department:code
+mappings:
+  - type: dimension_mapping
+    source_var: person_name
+    target_var: person_phone
+    source_dims: [0, 2]
+    target_dims: [0, 2]
+  - type: dimension_mapping
+    value: person_name:0 <-> company_name:0
+  - type: dimension_mapping
+    source_var: person_name
+    target_var: department_name
+    source_dims: [0, 2]
+    target_dims: [0, 2]
+  - type: dimension_mapping
+    source_var: person_name
+    target_var: department_code
+    source_dims: [0, 2]
+    target_dims: [0, 2]
+semantic_model:
+  semantic_types:
+    person_name: schema:Employee:1--rdfs:label
+    person_phone: schema:Employee:1--schema:phone
+    company_name: schema:Company:1--rdfs:label
+    department_name: schema:Department:1--rdfs:label
+    department_code: schema:Department:1--schema:code
+  semantic_relations:
+    - schema:Employee:1--schema:workFor--schema:Company:1
+    - schema:Employee:1--schema:belongsTo--schema:Department:1
+  ontology_prefixes:
+    schema: http://schema.org/

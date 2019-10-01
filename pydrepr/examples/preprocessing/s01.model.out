@@ -1,0 +1,22 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix drepr: <https://purl.org/drepr/1.0/> .
+
+
+_:Resource0_0_0 a rdf:Resource;
+	rdfs:label "phone";
+	.
+_:Resource0_0_1 a rdf:Resource;
+	rdfs:label "name";
+	.
+_:Resource0_1_0 a rdf:Resource;
+	rdfs:label "phone";
+	.
+_:Resource0_1_1 a rdf:Resource;
+	rdfs:label "name";
+	.

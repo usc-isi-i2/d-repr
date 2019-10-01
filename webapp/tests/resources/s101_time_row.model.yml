@@ -1,0 +1,13 @@
+version: "1"
+resources:
+  time_row: csv
+preprocessing: []
+attributes:
+  year: [1.., 0]
+  energy: [1.., 1]
+  agriculture: [1.., 3]
+alignments: []
+semantic_model:
+  data_nodes: {}
+  relations: []
+  prefixes: {}

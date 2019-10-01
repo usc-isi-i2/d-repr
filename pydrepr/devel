@@ -1,0 +1,98 @@
+#!/usr/bin/python
+"""
+Execute command
+"""
+
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+def exc(py_wdir: str, ru_wdir: str, args: argparse.Namespace):
+    py_wdir = os.path.abspath(py_wdir)
+    ru_wdir = os.path.abspath(ru_wdir)
+
+    lib_name = {
+        "x86_64-unknown-linux-gnu": "libengine.so",
+        "x86_64-apple-darwin": "libengine.dylib",
+        "x86_64-pc-windows-msvc": "engine.dll"
+    }[args.target]
+    pylib_ext = {
+        "x86_64-unknown-linux-gnu": "so",
+        "x86_64-apple-darwin": "so",
+        "x86_64-pc-windows-msvc": "pyd"
+    }[args.target]
+
+    cargo_build_mode = ""
+    if args.build_mode != "debug":
+        cargo_build_mode = f"--{args.build_mode}"
+
+    if args.cmd == "pylib-build":
+        if sys.platform == "darwin" and args.target.find("linux") != -1:
+            # building linux release in macos, so we have to build it through docker
+            return subprocess.check_call(f"docker run --rm -v {ru_wdir}:/drepr isi/drepr:devel "
+                                         f"cd /drepr/engine && cargo build {cargo_build_mode} --lib "
+                                         f"--target={args.target} --features cpython/extension-module",
+                                         cwd=ru_wdir,
+                                         shell=True)
+
+        subprocess.check_call(
+            f"cargo build {cargo_build_mode} --lib --target={args.target} --features cpython/extension-module",
+            cwd=os.path.join(ru_wdir, "engine"),
+            shell=True)
+
+        # copy for development
+        shutil.copyfile(
+            Path(ru_wdir) / f"target/{args.target}/{args.build_mode}/{lib_name}",
+            Path(py_wdir) / f"drepr/drepr_engine.{pylib_ext}")
+        return
+
+    if args.cmd == "pylib-release":
+        shutil.copyfile(
+            Path(ru_wdir) / f"target/{args.target}/{args.build_mode}/{lib_name}",
+            Path(py_wdir) / f"drepr/drepr_engine.{args.target}.{pylib_ext}")
+        return
+
+    raise Exception("Invalid cmd")
+
+
+if __name__ == "__main__":
+    py_wdir = os.path.dirname(os.path.abspath(__file__))
+    ru_wdir = os.path.join(py_wdir, "..", "drepr")
+    targets = {
+        "linux": "x86_64-unknown-linux-gnu",
+        "darwin": "x86_64-apple-darwin",
+        "win32": "x86_64-pc-windows-msvc"
+    }
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("cmd",
+                        choices=["pylib-build", "pylib-release"],
+                        help="command to run")
+    parser.add_argument("--target",
+                        "-t",
+                        choices=list(targets.values()) + ["all"],
+                        default=targets[sys.platform],
+                        help="target platform to run the code")
+    parser.add_argument("--build_mode",
+                        "-m",
+                        choices=["debug", "release"],
+                        default="debug",
+                        help="build mode")
+
+    args = parser.parse_args()
+    if args.target == "all":
+        if sys.platform == "win32" or sys.platform == "linux":
+            all_targets = [targets[sys.platform]]
+        else:
+            all_targets = [targets[t] for t in {"linux", "darwin"}]
+
+        # run for all targets
+        for target in all_targets:
+            args.target = target
+            exc(py_wdir, ru_wdir, args)
+    else:
+        exc(py_wdir, ru_wdir, args)

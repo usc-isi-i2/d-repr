@@ -1,0 +1,6 @@
+*.pyc
+drepr/drepr_engine.so
+drepr/drepr_engine.pyd
+__pycache__
+.*
+!.gitignore

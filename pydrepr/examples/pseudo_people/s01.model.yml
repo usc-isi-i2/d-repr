@@ -1,0 +1,36 @@
+version: '1'
+resources: csv
+attributes:
+  id: $[1:][0]
+  name: $[1:][1]
+  phone: $[1:][2]
+  street: $[1:][3]
+  city: $[1:][4]
+  state: $[1:][5]
+  zipcode: $[1:][6]
+alignments:
+  - type: dimension
+    value: id:0 <-> name:0
+  - type: dimension
+    value: id:0 <-> phone:0
+  - type: dimension
+    value: id:0 <-> street:0
+  - type: dimension
+    value: id:0 <-> city:0
+  - type: dimension
+    value: id:0 <-> state:0
+  - type: dimension
+    value: id:0 <-> zipcode:0
+semantic_model:
+  data_nodes:
+    id: schema:Person:1--drepr:uri
+    name: schema:Person:1--schema:name
+    phone: schema:Person:1--schema:telephone
+    street: schema:PostalAddress:1--schema:streetAddress
+    city: schema:PostalAddress:1--schema:addressLocality
+    state: schema:PostalAddress:1--schema:addressRegion
+    zipcode: schema:PostalAddress:1--schema:postalCode
+  relations:
+    - schema:Person:1--schema:address--schema:PostalAddress:1
+  prefixes:
+    schema: http://schema.org/

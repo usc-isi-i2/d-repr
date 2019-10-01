@@ -1,0 +1,8 @@
+export const ONTOLOGY_LIST = "ONTOLOGY_LIST";
+export type ONTOLOGY_LIST = typeof ONTOLOGY_LIST;
+
+export const ONTOLOGY_REMOVE = "ONTOLOGY_REMOVE";
+export type ONTOLOGY_REMOVE = typeof ONTOLOGY_REMOVE;
+
+export const ONTOLOGY_CREATE = "ONTOLOGY_CREATE";
+export type ONTOLOGY_CREATE = typeof ONTOLOGY_CREATE;

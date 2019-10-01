@@ -1,0 +1,7 @@
+target
+.ipynb_checkpoints
+*.pyc
+cobertura.*
+drepr.so
+drepr.pyd
+pydrepr/drepr.so

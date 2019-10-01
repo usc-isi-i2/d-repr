@@ -1,0 +1,62 @@
+version: "1"
+resources: csv
+preprocessing:
+  - type: pslit
+    inputs: [..]
+    output: tbl
+    code: |
+      # split on empty rpw
+      return all(x == "" for x in value)
+  - type: pmap
+    inputs:
+      resource_id: tbl
+      slices: [1..-1, 0]
+    code: |
+      # invoke wikifier
+      return item(value)
+  - type: pmap
+    inputs:
+      resource_id: tbl
+      slices: [1..-1, 2]
+    code: |
+      # invoke wikifier
+      return item(value)
+attributes:
+  year:
+    location:
+      resource_id: tbl
+      slices: [1, 0, 3..]
+  data:
+    location:
+      resource_id: tbl
+      slices: [1, 1..-1, 3..]
+  unodc_name:
+    location:
+      resource_id: tbl
+      slices: [1, 1..-1, 0]
+  gender:
+    location:
+      resource_id: tbl
+      slices: [1, 1..-1, 2]
+alignments:
+  - type: dimension
+    value: year:2 <-> data:2
+  - type: dimension
+    value: data:1 <-> unodc_name:1
+  - type: dimension
+    value: data:1 <-> gender:1
+semantic_model:
+  data_nodes:
+    gender: wd:Statement:1--pq:P6001
+    data: wd:Statement:1--ps:C3002
+    year: wk:Statement:1--pq:P85
+    unit: wd:Statement:1--eg:D1002  # don't know how to store unit in statement (cannot find D1002 in wikidata)
+    unodc_name: wd:Q35120:1--drepr:uri  # uri of an entity
+  relations:
+    - wd:Q32120:1--p:C3002--wd:Statement:1
+  prefixes:
+    eg: http://example.org
+    p: http://www.wikidata.org/prop/
+    wd: http://www.wikidata.org/entity/
+    ps: http://www.wikidata.org/prop/statement/
+    pq: http://www.wikidata.org/prop/qualifier/
