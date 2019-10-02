@@ -1,4 +1,10 @@
-language: ruby
-rvm:
- - 2.2
- - jruby
+language: rust
+rust:
+  - stable
+script:
+  - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/Miniconda3-latest-Linux-x86_64.sh
+  - mkdir ${TRAVIS_HOME}/.conda && sh /tmp/Miniconda3-latest-Linux-x86_64.sh -b -p
+  - export PATH=${TRAVIS_HOME}/miniconda3/bin:$PATH
+  - conda install -y gxx_linux-64
+  - cd pydrepr
+  - python devel pylib-build
