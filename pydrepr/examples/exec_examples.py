@@ -6,7 +6,7 @@ from drepr import execute, DRepr, FileOutput, OutputFormat, Graph
 if __name__ == '__main__':
     wdir = Path(os.path.abspath(__file__)).parent
     for dataset_dir in sorted(wdir.iterdir()):
-        if not dataset_dir.name.startswith("life"):
+        if not dataset_dir.name.startswith("commodity_price"):
             continue
 
         if not dataset_dir.is_dir() or (dataset_dir / ".ignore").exists():

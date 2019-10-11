@@ -9,7 +9,7 @@ from drepr import drepr_engine
 from drepr.models import DRepr, DEFAULT_RESOURCE_ID
 from drepr.patches import xml_patch, jp_propname_patch
 
-engine_latest_version = "1.0.3"
+engine_latest_version = "1.0.4"
 assert drepr_engine.__version__ == engine_latest_version, f"You are using an old version of D-REPR" \
                                                           f": {drepr_engine.__version__}. The latest is" \
                                                           f": {engine_latest_version}"
