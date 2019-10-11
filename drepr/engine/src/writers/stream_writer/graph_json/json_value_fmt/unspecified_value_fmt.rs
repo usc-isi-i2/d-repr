@@ -13,7 +13,7 @@ impl<W: Write> JSONValueFmt<W> for UnspecifiedValueFmt {
       Value::Null => "null".to_string(),
       Value::Bool(v) => v.to_string(),
       Value::F64(v) => v.to_string(),
-      Value::Str(v) => v.clone(),
+      Value::Str(v) => format!("\"{}\"", v),
       Value::Array(v) => serde_json::to_string(&serde_json::Value::Array(
         v.iter().map(|vv| vv.to_serde_json()).collect()
       )).unwrap(),
@@ -34,7 +34,11 @@ impl<W: Write> JSONValueFmt<W> for UnspecifiedValueFmt {
       Value::Null => writer.write("null".as_bytes()),
       Value::Bool(v) => writer.write(v.to_string().as_bytes()),
       Value::F64(v) => writer.write(v.to_string().as_bytes()),
-      Value::Str(v) => writer.write(v.as_bytes()),
+      Value::Str(v) => {
+        writer.write(&[b'"']).unwrap();
+        writer.write(v.as_bytes()).unwrap();
+        writer.write(&[b'"'])
+      },
       Value::Array(v) => {
         writer.write(&serde_json::to_vec(&serde_json::Value::Array(
           v.iter().map(|vv| vv.to_serde_json()).collect()

@@ -1,7 +1,7 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
 name = "engine"
-version = "1.0.3"
+version = "1.0.4"
 authors = ["Binh Vu <binh@toan2.com>"]
 edition = "2018"
 
