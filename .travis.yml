@@ -13,6 +13,7 @@ cache:
   directories:
   - "${TRAVIS_HOME}/miniconda3-${MINICONDA_VERSION}"
   - "/c/tools/miniconda3"
+  - "${TRAVIS_BUILD_DIR}/drepr/target"
 install:
 - source .travis/install-dependencies-x86_64.sh
 script:
@@ -21,7 +22,7 @@ script:
 deploy:
   provider: releases
   api_key:
-    secure: e/BESdiNgknJ0tRATMLubQlrwY0JRiY7jL57tdno8UR+gQ15mutv9bYoaSksei79GNHTs/mNIBV2jkF2zGXaIg77fPSKGe+7E0PiZzUbqdGGj6MPziNdPGtODx87tIWvdPxHEIcUTYzVZ/lsXDI6DOCHx8KdRCQQFLeh3zcwmEcLJtOqW9iUR8TRsTlbDlMJ9nUuRwoLvxIxL/IEt905SCH8GUhpsa+aa1Aj6IT1XaxFdCZjD/HAwX/qCqc+UjRPhXlgFLCGSEfZH+iK+Ky/kVwaC0VPhLuquMWUNLyrwueVOV7BEfGpaIMkbMp+A3S6ToY9ypHLANdbqfJKurfJ/ikjU8RVR4Xz644FNxf1YcZXLfqU8Qdtd0T/F45/7pu2ajApdB4PfOjJfmCLfzruKkyrnbROumS34iXyWGlNLl2gb0zLiJAmzGj0J6j+w3wltK2xTErderfmggeEGvD7qf65EdtLFa0VbM2mmrf3OyP0uiF1tKmwu22ydvAxogcFfdP9GdtUolv4Om4wM2R/9dWQEQzNU7XdcX6z7IW/nMFIGeHK7+wz5qHN+3hT+pU1Z7zPpysswdWi7gyiR/gfDU8KltrF+WoIw0pqCa1vEXbyHo7B0r5XawNmqp7i2OiivA/hqBgJzTlE9vCaFJwJO+KjtXBeIcV4EBa3RwjLzUg=
+    secure: xMz1+70FrJSeHNfQaxSSYBz/IS2Eiw327jNLZvy6SbjsJo7HKR0bWJTIRBpvUZKxSMqExgQcZCWBJpCerNxMGpBIzCP5t0G3A/KEa13Z5jPdlOO3yQRp/23iaB5wyauw783AYYXPZLcG4WDSLgyTcF2KlNwj1tqdBxIZCCx0hEtre6ucks1WToGGD5HiFxBFNnsiidlKNvdomRUNiUPZ3AkuZ2SSvXbBkDo0Jt/er7DpvJ4XPocD+HospYmGwfzxypkGuAe3H2Z3dmaRVZdYnxL0tV7pAFxLuffDsa6pEYNAi+IOFeJXLsqcefPL5On/qkdXHBUwrJgIW/uNZVknbfISL9p48s6k8EKZlwCNTDUGP5MK6gpvYkw5qo01JtMg+fpJvOA7TPTEtSpe62QQfxSZbWtTTXgeAgpXqT501QtaM449/4z9PtrkLgkGhvz6fecxbbE+pMQ6wAfoWAlimKtelhUpGDwrfCA9IWbUd0WbILkdG9PzjrZCRHoaXAZ6kcVqrAfzALpGpYtUzIYqnk7wcbBeZOV8gQUKVx7v2y8zosIW4I7S8owCrQRU1bQQrkRDTsNalqqegX8ZyoGFTe769miH4oSbWRBizIeqQ5JCPA7dResrmDpUuvO2cNLS6RbfRgFlsNuk4VuK2rIfGVpeHM5XDXkkMgKjEM1CYk0=
   skip_cleanup: true
   file_glob: true
   file:

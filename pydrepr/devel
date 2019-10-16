@@ -74,7 +74,7 @@ if __name__ == "__main__":
                         help="command to run")
     parser.add_argument("--target",
                         "-t",
-                        choices=list(targets.values()) + ["all"],
+                        choices=list(targets.values()),
                         default=targets[sys.platform],
                         help="target platform to run the code")
     parser.add_argument("--build_mode",
@@ -84,15 +84,4 @@ if __name__ == "__main__":
                         help="build mode")
 
     args = parser.parse_args()
-    if args.target == "all":
-        if sys.platform == "win32" or sys.platform == "linux":
-            all_targets = [targets[sys.platform]]
-        else:
-            all_targets = [targets[t] for t in {"linux", "darwin"}]
-
-        # run for all targets
-        for target in all_targets:
-            args.target = target
-            exc(py_wdir, ru_wdir, args)
-    else:
-        exc(py_wdir, ru_wdir, args)
+    exc(py_wdir, ru_wdir, args)
