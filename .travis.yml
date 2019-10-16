@@ -5,49 +5,34 @@ env:
   global:
   - RUST_VERSION=stable
   - MINICONDA_VERSION=4.7.10
-  - CACHE_MINICONDA_DIR=$([ $TRAVIS_OS_NAME = 'windows' ] && echo "/c/tools/miniconda3" || echo "${TRAVIS_HOME}/miniconda3-${MINICONDA_VERSION}")
+  - CACHE_MINICONDA_DIR=$([ $TRAVIS_OS_NAME = 'windows' ] && echo "/c/tools/miniconda3"
+    || echo "${TRAVIS_HOME}/miniconda3-${MINICONDA_VERSION}")
+  - PYPI_TOKEN=pypi-AgEIcHlwaS5vcmcCJDBmODNmZDg0LTQzYWYtNDEzMi04ZTZjLTliMWU3NWNmYmFiZAACNnsicGVybWlzc2lvbnMiOiB7InByb2plY3RzIjogWyJkcmVwciJdfSwgInZlcnNpb24iOiAxfQAABiBO8tmF-o4K2Tfl1i1emuotDPf_DqMubX5MhMiVk1TYqw
+  - secure: SqUeB7yb0RGdGW3ItemNQFR+iEgNjn7ZGDHFH88JY+EnteBZ5N7tOkTsuaibAQ2E49crV5MmWBM0Qfh1nDtlYfPDHwOKTM23NYGEpAnWJVgTTzBazJNu38/ahGtCdxR1GwMNrloEoPlIM2a+lpJcR+8aAcUeZaoacgr/AezA629M6Wj+6RdFf/vPE+HlB/pejnO0wexRlinU3kVkNOTA4lX8W32BwkWCl8Wqo/cZfVsDAHQAZ5oLZqFAlPJUNpeMYbhhC0KBqqIHgxZmM1leGpXXF0BdVQLlBEqgwSpGYnjmWNiOx77FLY7oaKX1VZQsNIluh49jbxZtDehM/Kr7zpmvU35q1LXW6Y5vWLrOfaN7I5cqiYamwK1MxIUIt6i9jlyS0RYJ9481C8tiQL937qB0U40ie2qqsCPs9c7S9y1cY/Pub85NJBsJd7RVR8Gfwd+Ij8/KuBpTao5SApvNrqNdc6w3BcRm07o1rMUWjhi82Eq/E5v4vyQxmp22xoQHD03ElGx3q8mPrkLHhfkbZpLzmnggd/98XdiBQrgZWsXOR8P8dN2fDhvRR/tOcRHNFT0POWRB3V98sZRljRSxeMQinKC9i8146n+1xeiX9NgGwp7k663DwGI4sXFlB0ztPrKnXWzRbLiHTvimmRHtwF4e0iReZlQPZ5Dl5BCyM5c=
+os:
+- linux
+- osx
+- windows
 cache:
   cargo: true
   pip: true
   directories:
   - "$CACHE_MINICONDA_DIR"
   - "${TRAVIS_BUILD_DIR}/drepr/target"
-jobs:
-  include:
-    - stage: build
-      os:
-        - linux
-        - osx
-        - windows
-      install:
-        - source .travis/install-dependencies-x86_64.sh
-      script:
-        - source .travis/build-engine.sh
-        - export ENGINE_RELEASE_TAG=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --engine_release_tag)
-        - export ENGINE_FILE_GLOB=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --pre_built_engine_rel_glob)
-    - stage: deploy
-      deploy:
-        provider: releases
-        api_key:
-          secure: s/KLgjtdf4rcb2yrxxBBSInebP79gn6FtjsZ7K646VlZ2uJfyBWAlkPsWFuTe+zu/fUY1DIpPnLAFf3t/USxkEVRHgroXSFm+NydxsVKnZxhVqbaEU1gnZErACvluXjojJ9d2JAerzyxtz6f/j4zSpLoEuf9YTeLsfCtj3T6Zyur7zCBcyLU98SbT1y5zFXCa0PkTbJT7sagX1mgvuY83bqWzvJIFQXohOx771qDGe30qJ/OVaVuaBhd4WbFPvsHg+59+voOIV7w/p/+GHUqU2X3CGRSjnMW+xgTwvmrDJM3aynRWlIVXS6GWgpdfiB4rWUJBvDp44FuaAIT/Sl77MrSekRCeK3CCk8xJzLYF77JVCPdTHrLD667Dso2XDoL2EH9PGbZ1dkf9WuGA8XnIa07DsfZ8W74Frnx4T9FZISPcDpo/W/31PEnqFns8HC8GywyX9+MK5ru482kf9o3NzCJNgibSIJEoYpaU4C5d7cUZy887B2pX8wx9T2LZzkFwoSehNte+7m/V7GrsdyhE0mh4tKkuQX7tjsvWcOkqk6PDkvZ5GkKHK/vJ/B1V0sPRu+u/5K64KLF9z2U3y46maEDeJXc4TgWPDwN0ONlOq8zcu4HoANP/ajgEm680u7SVIQgi4W6o9nZ0fOeqecO+Dqo6YZ9bLF6Gv+9/7Y7gbQ=
-        skip_cleanup: true
-        file_glob: true
-        file:
-        - "${ENGINE_FILE_GLOB}"
-        on:
-          # condition: $ENGINE_RELEASE_TAG = "$TRAVIS_TAG"
-          tags: true
-    - stage: deploy
-      os:
-        - linux
-      before_deploy: cd pydrepr
-      deploy:
-        provider: pypi
-        user: pypi-AgEIcHlwaS5vcmcCJGJkZDFlM2M2LWVjNDItNDg5Ny1iMzRiLWQwZjU4NjQ1OWNhNAACNnsicGVybWlzc2lvbnMiOiB7InByb2plY3RzIjogWyJkcmVwciJdfSwgInZlcnNpb24iOiAxfQAABiAdGPW9tquH6kepgSFCoOJZ2OJKIHrVpNj3oRW8WRwtcg
-        password:
-          secure: EeBa0TJtpdojhjFMx2vRaxhGUGmWZitHgm1jp3KwHxUO7wbb+Rd+ZZZckVBeONG191GD3XuvTL1P7TDUL3OH8ihL9OtxbH9v00Z+qd1IyjdizP6tqYUM1VtKMFbzJILDsNAdSDJ1PLipFyjHdUT6ZCHYpDWeMqMGV0TfggUoHsTvmO3yOIeS5b45aMuUB8maL7WIViYsyEkwZy1uaCSbWVy2NZh/IMvlkqI6keTfCwJm98AspWUlAUxVfm+31p7Wk9tYszYuw8Il2flm+KNAnk+UHSR4kKX4fEgVtftHQQXKTprxnIgOZTB3izvCE5BKV3V8Nh5HFb2hmDeR6o2OPsBInaTfII9SetRFbhSE9THwslo0CovIKPufbny9z1qD3PTk14Po/v1UNt5fNPNtgkdnOzzBAsZvFkH75ZKJm4DLO/910fVpSk2WsYlK5qZHin/1ScFcNwgcP8bo+5HCYY4pv5j6jhkhuB4IsBQm//Ip4h2HkfI7suKq10hkAWQoRinydbm9Lq+Bcixpzps6KPoYbcfClLqakKYxli/9Hs3GD8orijMtc8t9mGNvODVV5bP27B5hlgdJc0AllkysMaGMMVDa/biJ4BKQPd4RbDp+pLmES/A79zPHlU+w+H4nDqCpgfQ/LdYDKPNuAJYBIlyZJnZN/3q/LREyk0McID0=
-        distributions: "sdist"
-        on:
-          # condition: $ENGINE_RELEASE_TAG = "$TRAVIS_TAG"
-          tags: true
-      after_deploy: cd ..
+install:
+- source .travis/install-dependencies-x86_64.sh
+script:
+- source .travis/build-engine.sh
+- export ENGINE_RELEASE_TAG=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --engine_release_tag)
+- export ENGINE_FILE_GLOB=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --pre_built_engine_rel_glob)
+- ".travis/publish-pypi.sh"
+deploy:
+  provider: releases
+  api_key:
+    secure: s/KLgjtdf4rcb2yrxxBBSInebP79gn6FtjsZ7K646VlZ2uJfyBWAlkPsWFuTe+zu/fUY1DIpPnLAFf3t/USxkEVRHgroXSFm+NydxsVKnZxhVqbaEU1gnZErACvluXjojJ9d2JAerzyxtz6f/j4zSpLoEuf9YTeLsfCtj3T6Zyur7zCBcyLU98SbT1y5zFXCa0PkTbJT7sagX1mgvuY83bqWzvJIFQXohOx771qDGe30qJ/OVaVuaBhd4WbFPvsHg+59+voOIV7w/p/+GHUqU2X3CGRSjnMW+xgTwvmrDJM3aynRWlIVXS6GWgpdfiB4rWUJBvDp44FuaAIT/Sl77MrSekRCeK3CCk8xJzLYF77JVCPdTHrLD667Dso2XDoL2EH9PGbZ1dkf9WuGA8XnIa07DsfZ8W74Frnx4T9FZISPcDpo/W/31PEnqFns8HC8GywyX9+MK5ru482kf9o3NzCJNgibSIJEoYpaU4C5d7cUZy887B2pX8wx9T2LZzkFwoSehNte+7m/V7GrsdyhE0mh4tKkuQX7tjsvWcOkqk6PDkvZ5GkKHK/vJ/B1V0sPRu+u/5K64KLF9z2U3y46maEDeJXc4TgWPDwN0ONlOq8zcu4HoANP/ajgEm680u7SVIQgi4W6o9nZ0fOeqecO+Dqo6YZ9bLF6Gv+9/7Y7gbQ=
+  skip_cleanup: true
+  file_glob: true
+  file:
+  - "${ENGINE_FILE_GLOB}"
+  on:
+    tags: true
