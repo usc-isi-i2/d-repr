@@ -14,7 +14,7 @@ else
     rm $(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --pre_built_engine_glob) || echo ""
     echo ">>> Testing..."
     echo ">>> Building..."
-    python ${TRAVIS_BUILD_DIR}/pydrepr devel pylib-build -m release
-    python ${TRAVIS_BUILD_DIR}/pydrepr devel pylib-release -m release
+    python ${TRAVIS_BUILD_DIR}/pydrepr/devel pylib-build -m release
+    python ${TRAVIS_BUILD_DIR}/pydrepr/devel pylib-release -m release
     export HAS_NEW_ENGINE="true"
 fi
