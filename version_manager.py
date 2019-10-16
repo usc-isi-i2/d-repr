@@ -4,9 +4,10 @@ from pathlib import Path
 
 # ================================================================================
 # Note: update the version by changing variables before the `=...=` line
-DREPR_PYLIB_VESRION = "2.1.0"
+DREPR_PYLIB_VESRION = "2.1.0.post8"
 DREPR_ENGINE_VERSION = "1.0.4"
-DREPR_PYLIB_MIN_VERSION_COMPATIBLE_WITH_ENGINE = "2.1.0"
+# this tag marks the release which contains the pre-built engine in it.
+DREPR_ENGINE_RELEASE_TAG = "2.1.0"
 
 
 # ================================================================================
@@ -56,5 +57,5 @@ if __name__ == "__main__":
     update_version(root_dir / "drepr" / "engine" / "Cargo.toml", DREPR_ENGINE_VERSION)
     update_version(root_dir / "pydrepr" / "drepr" / "version.py", DREPR_PYLIB_VESRION, "__version__")
     update_version(root_dir / "pydrepr" / "drepr" / "version.py", DREPR_ENGINE_VERSION, "__engine_version__")
-    update_version(root_dir / "pydrepr" / "drepr" / "version.py", DREPR_PYLIB_MIN_VERSION_COMPATIBLE_WITH_ENGINE,
-                   "__min_version_compatible_with_engine__")
+    update_version(root_dir / "pydrepr" / "drepr" / "version.py", DREPR_ENGINE_RELEASE_TAG,
+                   "__engine_release_tag__")
