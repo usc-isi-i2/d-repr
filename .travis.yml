@@ -22,8 +22,7 @@ install:
 script:
 - source .travis/build-engine.sh
 - export MIN_PYLIB_VERSION=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --min_pylib_version_compatible_with_engine)
-- echo "${ENGINE_FILE}"
-- ls -lah "${ENGINE_FILE}"
+- export ENGINE_FILE_GLOB=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --pre_built_engine_rel_glob)
 deploy:
   provider: releases
   api_key:
@@ -31,7 +30,7 @@ deploy:
   skip_cleanup: true
   file_glob: true
   file:
-    - ./drepr/target/drepr_engine*
+    - ${ENGINE_FILE_GLOB}
   on:
     condition: $MIN_PYLIB_VERSION = "$TRAVIS_TAG"
     tags: true

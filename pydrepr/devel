@@ -77,6 +77,10 @@ if __name__ == "__main__":
                         action="store_true",
                         default=False,
                         help="Get a glob rule that matches all pre-built engine files (only work with `info` command)")
+    parser.add_argument("--pre_built_engine_rel_glob",
+                        action="store_true",
+                        default=False,
+                        help="Get a glob rule that matches all pre-built engine files (only work with `info` command). Relative to the root (repository) directory")
     parser.add_argument("--min_pylib_version_compatible_with_engine",
                         action="store_true",
                         default=False,
@@ -94,6 +98,8 @@ if __name__ == "__main__":
         elif args.pre_built_engine_glob:
             engine_file = os.path.join(ru_wdir, "target", f"drepr_engine.*")
             print(os.path.abspath(engine_file))
+        elif args.pre_built_engine_rel_glob:
+            print("./drepr/target/drepr_engine.*")
         elif args.min_pylib_version_compatible_with_engine:
             print(__min_version_compatible_with_engine__)
     else:
