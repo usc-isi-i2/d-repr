@@ -8,8 +8,8 @@ env:
     - MINICONDA_VERSION=4.7.10
     - CACHE_MINICONDA_DIR=$([ $TRAVIS_OS_NAME = 'windows' ] && echo "/c/tools/miniconda3" || echo "${TRAVIS_HOME}/miniconda3-${MINICONDA_VERSION}")
 os:
-# - linux
-# - osx
+- linux
+- osx
 - windows
 cache:
   cargo: true
@@ -21,7 +21,7 @@ install:
 - source .travis/install-dependencies-x86_64.sh
 script:
 - source .travis/build-engine.sh
-- export MIN_PYLIB_VERSION=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --min_pylib_version_compatible_with_engine)
+# - export MIN_PYLIB_VERSION=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --min_pylib_version_compatible_with_engine)
 - export ENGINE_FILE_GLOB=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --pre_built_engine_rel_glob)
 deploy:
   provider: releases
@@ -32,5 +32,6 @@ deploy:
   file:
     - ${ENGINE_FILE_GLOB}
   on:
-    condition: $MIN_PYLIB_VERSION = "$TRAVIS_TAG"
+    # Uncomment to publish only when the engine is updated
+    # condition: $MIN_PYLIB_VERSION = "$TRAVIS_TAG"
     tags: true
