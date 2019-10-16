@@ -23,7 +23,7 @@ script:
 - source .travis/build-engine.sh
 - export MIN_PYLIB_VERSION=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --min_pylib_version_compatible_with_engine)
 - echo "${ENGINE_FILE}"
-- ls "${ENGINE_FILE}"
+- ls -lah "${ENGINE_FILE}"
 deploy:
   provider: releases
   api_key:
@@ -31,7 +31,7 @@ deploy:
   skip_cleanup: true
   file_glob: true
   file:
-    - "${ENGINE_FILE}"
+    - C:\Users\travis\build\sizxy3462g5829bz\d-repr\drepr\target\drepr_engine.x86_64-pc-windows-msvc.1.0.4.pyd
   on:
     condition: $MIN_PYLIB_VERSION = "$TRAVIS_TAG"
     tags: true
