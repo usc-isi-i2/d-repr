@@ -1,10 +1,21 @@
 language: rust
 rust:
   - stable
+env:
+- MINICONDA_VERSION=4.7.10 RUST_VERSION=stable
+os:
+  - linux
+  - osx
+  - windows
+cache:
+  cargo: true
+  pip: true
+  directories:
+  - "${TRAVIS_HOME}/miniconda3-${MINICONDA_VERSION}"
+  - /c/tools/miniconda3
+install:
+  - source .travis/install-dependencies-x86_64.sh
 script:
-  - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/Miniconda3-latest-Linux-x86_64.sh
-  - mkdir ${TRAVIS_HOME}/.conda && sh /tmp/Miniconda3-latest-Linux-x86_64.sh -b -p
-  - export PATH=${TRAVIS_HOME}/miniconda3/bin:$PATH
-  - conda install -y gxx_linux-64
-  - cd pydrepr
-  - python devel pylib-build
+  - python --version
+  # - cd pydrepr
+  # - python devel pylib-build
