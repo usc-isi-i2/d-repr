@@ -2,7 +2,10 @@ language: rust
 rust:
 - stable
 env:
-- MINICONDA_VERSION=4.7.10 RUST_VERSION=stable
+  global:
+    - CACHE_MINICONDA_DIR=$([ $TRAVIS_OS_NAME = 'windows' ] && echo "/c/tools/miniconda3" || echo "${TRAVIS_HOME}/miniconda3-${MINICONDA_VERSION}")
+  matrix:
+    - MINICONDA_VERSION=4.7.10 RUST_VERSION=stable
 os:
 - linux
 - osx
@@ -11,8 +14,9 @@ cache:
   cargo: true
   pip: true
   directories:
-  - "${TRAVIS_HOME}/miniconda3-${MINICONDA_VERSION}"
-  - "/c/tools/miniconda3"
+  - "$CACHE_MINICONDA_DIR"
+  # - "${TRAVIS_HOME}/miniconda3-${MINICONDA_VERSION}"
+  # - "/c/tools/miniconda3"
   - "${TRAVIS_BUILD_DIR}/drepr/target"
 install:
 - source .travis/install-dependencies-x86_64.sh
