@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 def get_pylib_ext():
-    return {"linux": "so", "darwin": "so", "windows": "pyd"}[sys.platform]
+    return {"linux": "so", "darwin": "so", "win32": "pyd"}[sys.platform]
 
 
 def get_target_triple():
@@ -27,7 +27,7 @@ def exc(py_wdir: str, ru_wdir: str, engine_version: str, target_triple: str, arg
     py_wdir = os.path.abspath(py_wdir)
     ru_wdir = os.path.abspath(ru_wdir)
 
-    lib_name = {"linux": "libengine.so", "darwin": "libengine.dylib", "windows": "engine.dll"}[sys.platform]
+    lib_name = {"linux": "libengine.so", "darwin": "libengine.dylib", "win32": "engine.dll"}[sys.platform]
     pylib_ext = get_pylib_ext()
 
     cargo_build_mode = ""

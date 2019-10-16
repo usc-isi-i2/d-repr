@@ -2,6 +2,7 @@ language: rust
 rust:
 - stable
 env:
+  # there is a different between global & matrix
   global:
     - RUST_VERSION=stable
     - MINICONDA_VERSION=4.7.10
