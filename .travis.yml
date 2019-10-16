@@ -1,29 +1,27 @@
 language: rust
 rust:
-  - stable
+- stable
 env:
 - MINICONDA_VERSION=4.7.10 RUST_VERSION=stable
 os:
-  - linux
-  - osx
-  - windows
+- linux
+- osx
+- windows
 cache:
   cargo: true
   pip: true
   directories:
   - "${TRAVIS_HOME}/miniconda3-${MINICONDA_VERSION}"
-  - /c/tools/miniconda3
+  - "/c/tools/miniconda3"
 install:
-  - source .travis/install-dependencies-x86_64.sh
+- source .travis/install-dependencies-x86_64.sh
 script:
-  - python --version
-  - python -c "import sys; print(sys.platform)" > "${TRAVIS_OS_NAME}.txt"
-  # - cd pydrepr
-  # - python devel pylib-build
+- python --version
+- python -c "import sys; print(sys.platform)" > "${TRAVIS_OS_NAME}.txt"
 deploy:
   provider: releases
   api_key:
-    secure: TKFqYZx0U+b/gAJQl95j85KPfq8DfAW+kuDTeWccfF8U9afUzldvbZlrUwNX+bddhS9mRWLG2FCLTOq0Bz5/jJQuruqU6Tqdu2pMj/oHrbyBIC51XQmkkdkg/OaVgkse9xUd9CpAbjsirXQunaOQmO2+AHptxeCkXCHvXh+Y58qUoNlOhvFNV8IK197AVwjlHijKbYj0Uto5eCf8iR2ReNaWr0BzhxLjARZaFwVr+er60SoC6dOqtS7TNqIgAIKVcUKDDZ0KYIKeUsW5/QdlVxMwInLIgWbET5MFe617uFhhmQ2Z6c1dzFuh7iWynawp5O8BtHNPTel8IW7AKQZZOPqsgOebVVNCyn8w2tf+4GdyE02qmjcZOPBsanBZzAC81lVdOSrIzVh7D3T8iv9UE/MT7xrIzCxcvUwAwn/k8BTYxacflWPclqAfSCRVA3501mnsZ+8+SEoyFW6H0weN7WcMhYpmYDANW3WcAdhI3CXBgIVMc9q1nWtYKITjuoW1HpZY7zj558un/edSjvvhG76R6Efb6ypBagEhs2r2KE4JOeSeVYybDZuUUQ8naTUw74Fheeq/C338zf0KRw5A7pLFRgyGgiTUKWYbTJmhtQgWtbXsxkBlvKU8jbEe5YeyQ6D9cyVqmJx0FjBpV4lzcsKrk93HclAPh0O9jttx+Zo=
+    secure: sIjhvqTzQCk42nH81MWnVH29CTVbESwDUOKdTq9mv26Zf0MQTIGzZy0jnQPVzHt3KfLMH58xoiW0AK3SW2Atjo7UZg5iphiDt24I3wpebICYLcdMicSEGRreCAYlJLmSW0UAeNfPS7aNx1ip27OsfSK4ijJgWbS+NPRJoUsJ5222L4ww+VvfZdz4sHGRilcnIZU2u1zyUEU6wVlSeTfdWg9fvqRUI60dOnHZr/YLUWDSw8k5sGk3mPD2eGyDXOZzkXYwQMIs31ag6Me3murdaPBCxMyIietic5FMljceedDCznTQQoAIX2CKelk/IzWL/YKYMwlbDPOFvnf9qCEjaqTYvjDADnQ0jO7wwelI8l+BsvkKBFpMRRWkrvLG2mHTYOqat/mbh9d4XEDcU8CQLNCww6gSknol3IaWczeARwCsBv7JF2mMtuNDvSoXRrlprPwCJhBBsO++vJxi6NUIU9Mrr+vMQksWBRdu2Yl8WS3q0+ww+HvwZmSSH5ZWLHWgzS2srCEsHwgL1FLczXVSzVb+hWJUtzqQBWyHBQe5I0UTfQpUo8Qg+YQ5tBqMqgo4LbzDhfn8/63CtBJwB2UcU+99tLOLMPpWx/wA5nbTINAb1cAo5HM8G+QldJk3ePtwMqUO5rn1PCWby3PRsBJjfRL0IMsXuSBkImrkBdAjF3M=
   skip_cleanup: true
   file_glob: true
   file:
