@@ -3,7 +3,7 @@ set -e
 
 if [ "${TRAVIS_OS_NAME}" = "linux" ]  ; then export MINICONDA_HOME=${TRAVIS_HOME}/miniconda3-${MINICONDA_VERSION}; fi
 if [ "${TRAVIS_OS_NAME}" = "osx" ]    ; then export MINICONDA_HOME=${TRAVIS_HOME}/miniconda3-${MINICONDA_VERSION}; fi
-if [ "${TRAVIS_OS_NAME}" = "windows" ]; then export MINICONDA_HOME=/c/tools/miniconda3 fi
+if [ "${TRAVIS_OS_NAME}" = "windows" ]; then export MINICONDA_HOME=/c/tools/miniconda3                           ; fi
 
 # solution for three platforms
 # the home dir is going to be redundant for linux + osx, and the bin dir is going to be redundant for windows
@@ -37,6 +37,3 @@ else
 
     echo ${MINICONDA_VERSION} > ${MINICONDA_HOME}/travis-${MINICONDA_VERSION}-20191015.txt
 fi
-
-##########################
-#
