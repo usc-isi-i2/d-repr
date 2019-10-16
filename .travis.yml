@@ -17,5 +17,16 @@ install:
   - source .travis/install-dependencies-x86_64.sh
 script:
   - python --version
+  - python -c "import sys; print(sys.platform)" > "${TRAVIS_OS_NAME}.txt"
   # - cd pydrepr
   # - python devel pylib-build
+deploy:
+  provider: releases
+  api_key:
+    secure: TKFqYZx0U+b/gAJQl95j85KPfq8DfAW+kuDTeWccfF8U9afUzldvbZlrUwNX+bddhS9mRWLG2FCLTOq0Bz5/jJQuruqU6Tqdu2pMj/oHrbyBIC51XQmkkdkg/OaVgkse9xUd9CpAbjsirXQunaOQmO2+AHptxeCkXCHvXh+Y58qUoNlOhvFNV8IK197AVwjlHijKbYj0Uto5eCf8iR2ReNaWr0BzhxLjARZaFwVr+er60SoC6dOqtS7TNqIgAIKVcUKDDZ0KYIKeUsW5/QdlVxMwInLIgWbET5MFe617uFhhmQ2Z6c1dzFuh7iWynawp5O8BtHNPTel8IW7AKQZZOPqsgOebVVNCyn8w2tf+4GdyE02qmjcZOPBsanBZzAC81lVdOSrIzVh7D3T8iv9UE/MT7xrIzCxcvUwAwn/k8BTYxacflWPclqAfSCRVA3501mnsZ+8+SEoyFW6H0weN7WcMhYpmYDANW3WcAdhI3CXBgIVMc9q1nWtYKITjuoW1HpZY7zj558un/edSjvvhG76R6Efb6ypBagEhs2r2KE4JOeSeVYybDZuUUQ8naTUw74Fheeq/C338zf0KRw5A7pLFRgyGgiTUKWYbTJmhtQgWtbXsxkBlvKU8jbEe5YeyQ6D9cyVqmJx0FjBpV4lzcsKrk93HclAPh0O9jttx+Zo=
+  skip_cleanup: true
+  file_glob: true
+  file:
+    - "${TRAVIS_OS_NAME}.txt"
+  on:
+    tags: true
