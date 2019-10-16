@@ -23,7 +23,7 @@ install:
 - source .travis/install-dependencies-x86_64.sh
 script:
 - source .travis/build-engine.sh
-- export MIN_PYLIB_VERSION=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info min_pylib_version_compatible_with_engine)
+- export MIN_PYLIB_VERSION=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --min_pylib_version_compatible_with_engine)
 deploy:
   provider: releases
   api_key:
