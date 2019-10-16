@@ -4,3 +4,5 @@ drepr/drepr_engine.pyd
 __pycache__
 .*
 !.gitignore
+drepr.egg-info
+dist
