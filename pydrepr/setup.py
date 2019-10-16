@@ -19,7 +19,7 @@ else:
         f"{wdir}/drepr/drepr_engine.{targets[sys.platform]}.so", f"{wdir}/drepr/drepr_engine.so")
 
 setup(name="drepr",
-      version="2.0a11",
+      version="2.0a11", # ___PKG_VERSION___
       packages=find_packages(),
       author="Binh Vu",
       author_email="binhlvu@usc.edu",

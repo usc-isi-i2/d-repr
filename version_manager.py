@@ -1,0 +1,4 @@
+import sys
+
+DREPR_ENGINE_VERSION = "1.0.4"
+DREPR_PYLIB_VERSION  = 
