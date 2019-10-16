@@ -31,7 +31,7 @@ deploy:
   skip_cleanup: true
   file_glob: true
   file:
-    - C:\Users\travis\build\sizxy3462g5829bz\d-repr\drepr\target\drepr_engine.x86_64-pc-windows-msvc.1.0.4.pyd
+    - ./drepr/target/drepr_engine*
   on:
     condition: $MIN_PYLIB_VERSION = "$TRAVIS_TAG"
     tags: true
