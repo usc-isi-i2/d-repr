@@ -97,7 +97,7 @@ if __name__ == "__main__":
         elif args.pre_built_engine_rel_glob:
             print("./drepr/target/drepr_engine.*")
         elif args.engine_release_tag:
-            print(__min_version_compatible_with_engine__)
+            print(__engine_release_tag__)
     elif args.cmd == "pypi-release":
         shutil.rmtree(os.path.join(py_wdir, "dist"))
         subprocess.check_call(
