@@ -22,8 +22,8 @@ cache:
 install:
 - source .travis/install-dependencies-x86_64.sh
 script:
-- python --version
 - source .travis/build-engine.sh
+- export MIN_PYLIB_VERSION=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info min_pylib_version_compatible_with_engine)
 deploy:
   provider: releases
   api_key:
@@ -33,5 +33,5 @@ deploy:
   file:
     - "${ENGINE_FILE}"
   on:
-    condition: $HAS_NEW_ENGINE = "true"
+    condition: $MIN_PYLIB_VERSION = "$TRAVIS_TAG"
     tags: true

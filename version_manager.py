@@ -4,7 +4,7 @@ from pathlib import Path
 
 # ================================================================================
 # Note: update the version by changing variables before the `=...=` line
-DREPR_PYLIB_VESRION = "2.1.1"
+DREPR_PYLIB_VESRION = "2.1.0"
 DREPR_ENGINE_VERSION = "1.0.4"
 DREPR_PYLIB_MIN_VERSION_COMPATIBLE_WITH_ENGINE = "2.1.0"
 

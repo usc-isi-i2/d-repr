@@ -72,11 +72,15 @@ if __name__ == "__main__":
     parser.add_argument("--pre_built_engine_location",
                         action="store_true",
                         default=False,
-                        help="Get location of the pre-built engine file (only work for `info` command)")
+                        help="Get location of the pre-built engine file (only work with `info` command)")
     parser.add_argument("--pre_built_engine_glob",
                         action="store_true",
                         default=False,
-                        help="Get a glob rule that matches all pre-built engine files (only work for `info` command)")
+                        help="Get a glob rule that matches all pre-built engine files (only work with `info` command)")
+    parser.add_argument("--min_pylib_version_compatible_with_engine",
+                        action="store_true",
+                        default=False,
+                        help="get the minimum version of python library that is compatible with the engine, i.e., the version of the python library at the time when the engine is updated (only work with `info` command)")
 
     args = parser.parse_args()
 
@@ -90,5 +94,7 @@ if __name__ == "__main__":
         elif args.pre_built_engine_glob:
             engine_file = os.path.join(ru_wdir, "target", f"drepr_engine.*")
             print(os.path.abspath(engine_file))
+        elif args.min_pylib_version_compatible_with_engine:
+            print(__min_version_compatible_with_engine__)
     else:
         exc(py_wdir, ru_wdir, __engine_version__, target_triple, args)
