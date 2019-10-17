@@ -6,13 +6,13 @@ import ujson, traceback
 
 # noinspection PyUnresolvedReferences
 from drepr import drepr_engine
-from drepr.version import __engine_version__
 from drepr.models import DRepr, DEFAULT_RESOURCE_ID
 from drepr.patches import xml_patch, jp_propname_patch
 
-assert drepr_engine.__version__ == __engine_version__, f"You are using a different version of D-REPR" \
-                                                          f": {drepr_engine.__version__}. The correct one is" \
-                                                          f": {__engine_version__}"
+engine_latest_version = "1.0.4"
+assert drepr_engine.__version__ == engine_latest_version, f"You are using an old version of D-REPR" \
+                                                          f": {drepr_engine.__version__}. The latest is" \
+                                                          f": {engine_latest_version}"
 
 
 def execute(ds_model: DRepr,
