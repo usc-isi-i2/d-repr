@@ -10,24 +10,26 @@ wdir = os.path.dirname(os.path.abspath(__file__))
 # load versions
 exec(open("drepr/version.py").read())
 
-class custom_install(install):
-    def run(self):
-        # download correct engine version
-        target_triple = {
-            "linux": "x86_64-unknown-linux-gnu",
-            "darwin": "x86_64-apple-darwin",
-            "win32": "x86_64-pc-windows-msvc"
-        }[sys.platform]
-        pylib_ext = {"linux": "so", "darwin": "so", "win32": "pyd"}[sys.platform]
-        engine_file = f"https://github.com/usc-isi-i2/d-repr/releases/download/{__engine_release_tag__}/drepr_engine.{target_triple}.{__engine_version__}.{pylib_ext}"
+if sys.argv[1] != "sdist":
+    # download correct engine version, only run if this is not the command that build the dist
+    target_triple = {
+        "linux": "x86_64-unknown-linux-gnu",
+        "darwin": "x86_64-apple-darwin",
+        "win32": "x86_64-pc-windows-msvc"
+    }[sys.platform]
+    pylib_ext = {"linux": "so", "darwin": "so", "win32": "pyd"}[sys.platform]
+    engine_url = f"https://github.com/usc-isi-i2/d-repr/releases/download/{__engine_release_tag__}/drepr_engine.{target_triple}.{__engine_version__}.{pylib_ext}"
+    is_downloaded_test_file = f"{wdir}/download-executed-gn13v9a5.txt"
 
-        print(">>> download pre-built engine at", engine_file)
-        urllib.request.urlretrieve(engine_file, f"{wdir}/drepr/drepr_engine.{pylib_ext}")
+    if os.path.exists(is_downloaded_test_file):
+        print(">>> pre-built engine is already exist! Skip it")
+    else:
+        print(">>> download pre-built engine at", engine_url)
+        urllib.request.urlretrieve(engine_url, f"{wdir}/drepr/drepr_engine.{pylib_ext}")
+        with open(is_downloaded_test_file, "w") as f:
+            f.write("downloaded")
 
-        # then run the normal installation process
-        install.run(self)
-
-with open(os.path.join(wdir, "README.md"), "r", encoding="utf-8") as f:
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "README.md"), "r", encoding="utf-8") as f:
     long_description = f.read()
 
 setup(name="drepr",
@@ -41,9 +43,6 @@ setup(name="drepr",
       url="https://github.com/usc-isi-i2/d-repr",
       python_requires='>3.6',
       license="MIT",
-      cmdclass={
-          "install": custom_install
-      },
       install_requires=['ujson', 'ruamel.yaml>=0.15.0',
                         'dataclasses;python_version<"3.7"', 'xmltodict'],
       package_data={'': ['*.so', '*.pyd']})
