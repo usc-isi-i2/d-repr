@@ -99,9 +99,10 @@ if __name__ == "__main__":
         elif args.engine_release_tag:
             print(__engine_release_tag__)
     elif args.cmd == "pypi-release":
-        shutil.rmtree(os.path.join(py_wdir, "dist"))
+        if os.path.exists(os.path.join(py_wdir, "dist")):
+            shutil.rmtree(os.path.join(py_wdir, "dist"))
         subprocess.check_call(
-            f"python setup.py sdist && twine upload dist/*",
+            f"python setup.py sdist && twine upload --skip-existing dist/*",
             cwd=py_wdir,
             shell=True)
     else:
