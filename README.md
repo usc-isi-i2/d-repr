@@ -13,18 +13,15 @@
 
 ## Table of Contents
 - [Features](#features)
-- [Example](#example)
 - [Installation](#installation)
-- [FAQ](#faq)
+- [Example](#example)
 - [Contributing](#contributing)
-- [Support](#support)
+<!-- - [Support](#support) -->
 
 ## Features
 
 - Supporting reading datasets in heterogeneous formats (JSON, CSV, Spreadsheets, etc) and layouts (relational tables, matrix tables, etc) to the RDF format
 - Extremely fast
-
-## Example
 
 ## Installation
 
@@ -32,10 +29,11 @@ From PyPi: `pip install drepr`
 
 If you want to install from source or have trouble during installation, please look in the Wiki [Installation](https://github.com/usc-isi-i2/d-repr/wiki/Installation)
 
-## FAQ
+## Example
+
+Coming soon
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://github.com/usc-isi-i2/d-repr/blob/master/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+Please read the Wiki [Contributing](https://github.com/usc-isi-i2/d-repr/wiki/Contributing) for details on our code of conduct, how to setup the development environment and the process for submitting pull requests to us.
 
-## Support
