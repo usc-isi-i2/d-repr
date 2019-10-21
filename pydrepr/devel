@@ -8,6 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
+from urllib.request import urlretrieve
 from pathlib import Path
 
 
@@ -58,7 +59,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("cmd",
-                        choices=["pylib-build", "pylib-release", "info", "pypi-release"],
+                        choices=["pylib-build", "pylib-release", "pylib-download", "info", "pypi-release"],
                         help="command to run")
     parser.add_argument("--build_mode",
                         "-m",
@@ -105,5 +106,10 @@ if __name__ == "__main__":
             f"python setup.py sdist && twine upload --skip-existing dist/*",
             cwd=py_wdir,
             shell=True)
+    elif args.cmd == "pylib-download":
+        urlretrieve(
+            f"https://github.com/usc-isi-i2/d-repr/releases/download/{__engine_release_tag__}/drepr_engine.{target_triple}.{__engine_version__}.{get_pylib_ext()}",
+            os.path.join(py_wdir, "drepr", f"drepr_engine.{get_pylib_ext()}")
+        )
     else:
         exc(py_wdir, ru_wdir, __engine_version__, target_triple, args)

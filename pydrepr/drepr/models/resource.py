@@ -8,7 +8,8 @@ class ResourceType(Enum):
     JSON = "json"
     XML = "xml"
     Spreadsheet = "spreadsheet"
-    NetCDF = "netcdf4"
+    NetCDF4 = "netcdf4"
+    GeoTIFF = "geotiff"
 
 
 @dataclass

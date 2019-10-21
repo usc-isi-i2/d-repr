@@ -39,7 +39,7 @@ class NDArray:
     @staticmethod
     def is_cf_convention(ds_model: DRepr) -> bool:
         # have only one resource, which is netcdf
-        if len(ds_model.resources) > 1 and ds_model.resources[0].type != ResourceType.NetCDF:
+        if len(ds_model.resources) > 1 and ds_model.resources[0].type != ResourceType.NetCDF4:
             return False
 
         # only have map preprocessing, which mutate the current data
