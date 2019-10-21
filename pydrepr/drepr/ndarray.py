@@ -1,55 +1,44 @@
-from typing import Dict, Union, Iterable
+from typing import Dict, Union, Iterable, Any
 
 from drepr import DRepr
 from drepr.graph import Node, Edge
 from drepr.models.align import RangeAlignment
 from drepr.models.preprocessing import PreprocessingType, PMap
 from drepr.models.resource import ResourceType
+from drepr.executors.cf_convention_map.cf_convention_map import CFConventionNDArrayMap
 
 
 class NDArray:
 
-    def __init__(self, ds_model: DRepr, resource: str):
-        self.ds_model = ds_model
-        self.resource = resource
-
-    def iter_nodes(self) -> Iterable[Node]:
-        pass
-
-    def iter_nodes_by_class(self, cls: str) -> Iterable[Node]:
-        pass
-
-    def iter_edges(self) -> Iterable[Edge]:
-        pass
+    def __init__(self, tables: Dict[str, Dict[str, Any]], table_relations: Dict[str, Dict[str, Any]]):
+        self.tables = tables
+        self.table_relations = table_relations
 
     @staticmethod
     def from_drepr(ds_model: DRepr, resources: Union[str, Dict[str, str]]):
         # check if we can create a NDArray representation of the dataset
         # the convention that we support is CF convention
-        if not NDArray.is_cf_convention(ds_model):
-            return False
+        if not CFConventionNDArrayMap.analyze(ds_model):
+            raise NotImplementedError()
 
         if isinstance(resources, dict):
             resource = next(iter(resources.values()))
         else:
             resource = resources
 
-        return NDArray(ds_model, resource)
+        return CFConventionNDArrayMap.execute(ds_model, resource)
 
-    @staticmethod
-    def is_cf_convention(ds_model: DRepr) -> bool:
-        # have only one resource, which is netcdf
-        if len(ds_model.resources) > 1 and ds_model.resources[0].type != ResourceType.NetCDF4:
-            return False
+    def get_column_as_array(self, table_id: str, column_id: str):
+        """
+        Get column data as array, if there is multiple columns of same id, the returned array
+        is a 2D array
+        :return:
+        """
+        return self.tables[table_id][column_id]
 
-        # only have map preprocessing, which mutate the current data
-        for prepro in ds_model.preprocessing:
-            if not isinstance(prepro.value, PMap) \
-                    or prepro.value.output is not None \
-                    or prepro.value.change_structure:
-                return False
+    def get_column_unique_values(self, table_id: str, column_id: str):
+        """
+        :return:
+        """
+        return self.tables[table_id][column_id]
 
-        # all alignments are dimension alignments
-        for align in ds_model.aligns:
-            if not isinstance(align, RangeAlignment):
-                return False

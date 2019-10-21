@@ -9,6 +9,7 @@ class ResourceType(Enum):
     XML = "xml"
     Spreadsheet = "spreadsheet"
     NetCDF4 = "netcdf4"
+    NetCDF3 = "netcdf3"
     GeoTIFF = "geotiff"
 
 

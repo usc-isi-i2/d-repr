@@ -75,6 +75,7 @@ def execute(ds_model: DRepr,
 class OutputFormat(Enum):
     TTL = "ttl"
     GraphJSON = "graph_json"
+    NDArray = "ndarray"
 
 
 @dataclass
