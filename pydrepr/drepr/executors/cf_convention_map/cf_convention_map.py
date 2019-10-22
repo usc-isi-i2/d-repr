@@ -41,4 +41,3 @@ class CFConventionNDArrayMap:
             return map_netcdf(ds_model, resource_file, "3")
         else:
             raise ValueError("Invalid resource type %s" % ds_model.resources[0].type)
-
