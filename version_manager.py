@@ -9,7 +9,6 @@ DREPR_ENGINE_VERSION = "1.0.5"
 # this tag marks the release which contains the pre-built engine in it.
 DREPR_ENGINE_RELEASE_TAG = "2.1.0"
 
-
 # ================================================================================
 
 
@@ -55,7 +54,9 @@ def update_version(fpath, version, version_tag="version", verbose=True):
 if __name__ == "__main__":
     root_dir = Path(os.path.abspath(__file__)).parent
     update_version(root_dir / "drepr" / "engine" / "Cargo.toml", DREPR_ENGINE_VERSION)
-    update_version(root_dir / "pydrepr" / "drepr" / "version.py", DREPR_PYLIB_VESRION, "__version__")
-    update_version(root_dir / "pydrepr" / "drepr" / "version.py", DREPR_ENGINE_VERSION, "__engine_version__")
+    update_version(root_dir / "pydrepr" / "drepr" / "version.py", DREPR_PYLIB_VESRION,
+                   "__version__")
+    update_version(root_dir / "pydrepr" / "drepr" / "version.py", DREPR_ENGINE_VERSION,
+                   "__engine_version__")
     update_version(root_dir / "pydrepr" / "drepr" / "version.py", DREPR_ENGINE_RELEASE_TAG,
                    "__engine_release_tag__")

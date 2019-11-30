@@ -21,7 +21,8 @@ class PathParserV2(PathParser):
         r"^(?:(\d+)|(?:\$\{([^}]+)}))?\.\.(?:(-\d+)|(?:\$\{([^}]+)}))?(?::(\d+)|(?:\$\{([^}]+)}))?$"
     )
 
-    REG_JPATH_BRACKET = re.compile(r"(?:\[(-?\d+)?\:(-?\d+)?(?:\:(-?\d+))?\])|(?:\[(-?\d+)\])|(?:\['([^']+)'\])")
+    REG_JPATH_BRACKET = re.compile(
+        r"(?:\[(-?\d+)?\:(-?\d+)?(?:\:(-?\d+))?\])|(?:\[(-?\d+)\])|(?:\['([^']+)'\])")
     REG_JPATH_DOT = re.compile(r"\.((?:(?!\.|\[).)+)")
 
     def parse(self, resource: Resource, path: Union[str, list], parse_trace: str) -> Path:
@@ -41,7 +42,7 @@ class PathParserV2(PathParser):
         index = 0
         for i, c in enumerate(reversed(letter)):
             assert ord('a') <= ord(c) <= ord('z'), f'{c} is not a valid column in spreadsheet'
-            index += (ord(c) - ord('a') + 1) * (n_chars ** i)
+            index += (ord(c) - ord('a') + 1) * (n_chars**i)
         return index - 1
 
     def isdigit(self, s: str) -> bool:
@@ -51,8 +52,9 @@ class PathParserV2(PathParser):
 
     def parse_jsonpath(self, resource: Resource, jpath: str, parse_trace: str) -> Path:
         if not jpath.startswith("$"):
-            raise InputError(f"{parse_trace}\nERROR: invalid json path. The path must start with `$`. "
-                             f"Get: {jpath}")
+            raise InputError(
+                f"{parse_trace}\nERROR: invalid json path. The path must start with `$`. "
+                f"Get: {jpath}")
 
         jpath = jpath[1:]
         steps = []
@@ -62,7 +64,7 @@ class PathParserV2(PathParser):
         if resource.type == ResourceType.Spreadsheet:
             last_step_index = max(jpath.rfind("["), jpath.rfind("."))
             if jpath[last_step_index] == "[":
-                last_step = jpath[last_step_index+1:-1]
+                last_step = jpath[last_step_index + 1:-1]
                 result = last_step.split(":")
                 if len(result) == 1:
                     index = result[0]
@@ -79,10 +81,14 @@ class PathParserV2(PathParser):
                     else:
                         raise InputError(f"{parse_trace}\nERROR: invalid path")
 
-                    if (len(start) > 0 and not self.isdigit(start)) or (len(end) > 0 and not self.isdigit(end)):
+                    if (len(start) > 0 and not self.isdigit(start)) or (len(end) > 0
+                                                                        and not self.isdigit(end)):
                         # they use letter system, otherwise, do nothing
-                        if (len(start) > 0 and self.isdigit(start)) or (len(end) > 0 and self.isdigit(end)):
-                            raise InputError(f"{parse_trace}\nERROR: Cannot mixed between number and letter index")
+                        if (len(start) > 0 and self.isdigit(start)) or (len(end) > 0
+                                                                        and self.isdigit(end)):
+                            raise InputError(
+                                f"{parse_trace}\nERROR: Cannot mixed between number and letter index"
+                            )
                         start = self.letter2index(start)
                         if len(end) > 0:
                             end = self.letter2index(end)
@@ -104,7 +110,8 @@ class PathParserV2(PathParser):
                 m = self.REG_JPATH_BRACKET.match(jpath)
                 if m is None:
                     raise InputError(
-                        f"{parse_trace}\nERROR: invalid json path, error while parsing bracket at position {parsing_pos}")
+                        f"{parse_trace}\nERROR: invalid json path, error while parsing bracket at position {parsing_pos}"
+                    )
 
                 jpath = jpath[m.span()[-1]:]
                 parsing_pos += m.span()[-1]  # m.span()[0] is always 0
@@ -116,10 +123,10 @@ class PathParserV2(PathParser):
                     # match with a single number
                     steps.append(IndexExpr(int(m.group(4))))
                 else:
-                    steps.append(RangeExpr(
-                        int(m.group(1) or "0"),
-                        int(m.group(2)) if m.group(2) is not None else None,
-                        int(m.group(3) or "1")))
+                    steps.append(
+                        RangeExpr(int(m.group(1) or "0"),
+                                  int(m.group(2)) if m.group(2) is not None else None,
+                                  int(m.group(3) or "1")))
             elif jpath.startswith(".*~"):
                 # *~ select property names
                 steps.append(WildcardExpr.Names)
@@ -133,7 +140,8 @@ class PathParserV2(PathParser):
                 m = self.REG_JPATH_DOT.match(jpath)
                 if m is None:
                     raise InputError(
-                        f"{parse_trace}\nERROR: invalid json path, error while parsing step at position {parsing_pos}")
+                        f"{parse_trace}\nERROR: invalid json path, error while parsing step at position {parsing_pos}"
+                    )
 
                 jpath = jpath[m.span()[-1]:]
                 parsing_pos += m.span()[-1]  # m.span()[0] is always 0
@@ -159,10 +167,14 @@ class PathParserV2(PathParser):
                     else:
                         step = ""
 
-                    if (len(start) > 0 and not self.isdigit(start)) or (len(end) > 0 and not self.isdigit(end)):
+                    if (len(start) > 0 and not self.isdigit(start)) or (len(end) > 0
+                                                                        and not self.isdigit(end)):
                         # they use letter system, otherwise, do nothing
-                        if (len(start) > 0 and self.isdigit(start)) or (len(end) > 0 and self.isdigit(end)):
-                            raise InputError(f"{parse_trace}\nERROR: Cannot mixed between number and letter index")
+                        if (len(start) > 0 and self.isdigit(start)) or (len(end) > 0
+                                                                        and self.isdigit(end)):
+                            raise InputError(
+                                f"{parse_trace}\nERROR: Cannot mixed between number and letter index"
+                            )
                         start = self.letter2index(start)
                         if len(end) > 0:
                             end = self.letter2index(end)
@@ -179,21 +191,21 @@ class PathParserV2(PathParser):
             if isinstance(step, str):
                 m = self.REG_SRANGE.match(step)
                 if m is not None:
-                    steps.append(RangeExpr(
-                        int(m.group(1) or '0'),
-                        int(m.group(2)) if m.group(2) is not None else None,
-                        int(m.group(3) or '1')))
+                    steps.append(
+                        RangeExpr(int(m.group(1) or '0'),
+                                  int(m.group(2)) if m.group(2) is not None else None,
+                                  int(m.group(3) or '1')))
                     continue
 
                 m = self.REG_SRANGE_EXPR.match(step)
                 if m is not None:
-                    steps.append(RangeExpr(
-                        (Expr(m.group(1)[2:-1]) if m.group(1).startswith("${") else int(m.group(1)))
-                        if m.group(1) is not None else 0,
-                        (Expr(m.group(2)[2:-1]) if m.group(2).startswith("${") else int(m.group(2)))
-                        if m.group(2) is not None else None,
-                        (Expr(m.group(2)[2:-1]) if m.group(2).startswith("${") else int(m.group(2)))
-                        if m.group(2) is not None else 1))
+                    steps.append(
+                        RangeExpr((Expr(m.group(1)[2:-1]) if m.group(1).startswith("${") else int(
+                            m.group(1))) if m.group(1) is not None else 0,
+                                  (Expr(m.group(2)[2:-1]) if m.group(2).startswith("${") else int(
+                                      m.group(2))) if m.group(2) is not None else None,
+                                  (Expr(m.group(2)[2:-1]) if m.group(2).startswith("${") else int(
+                                      m.group(2))) if m.group(2) is not None else 1))
                     continue
 
                 if step.startswith("${"):
@@ -204,6 +216,7 @@ class PathParserV2(PathParser):
                 steps.append(IndexExpr(step))
             else:
                 raise InputError(
-                    f"{parse_trace}\n{trace}\nERROR: step must either be string or number. Get {type(step)} instead")
+                    f"{parse_trace}\n{trace}\nERROR: step must either be string or number. Get {type(step)} instead"
+                )
 
         return Path(steps)

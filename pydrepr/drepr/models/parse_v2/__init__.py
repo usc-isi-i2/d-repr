@@ -19,14 +19,17 @@ class ReprV2Parser:
     2. Semantic model configuration is changed to focus on classes
     """
 
-    TOP_KEYWORDS = {"version", "resources", "preprocessing", "attributes", "alignments", "semantic_model"}
+    TOP_KEYWORDS = {
+        "version", "resources", "preprocessing", "attributes", "alignments", "semantic_model"
+    }
     DEFAULT_RESOURCE_ID = "default"
 
     @classmethod
     def parse(cls, raw: dict):
         from ..drepr import DRepr
 
-        Validator.must_be_subset(cls.TOP_KEYWORDS, raw.keys(),
+        Validator.must_be_subset(cls.TOP_KEYWORDS,
+                                 raw.keys(),
                                  setname="Keys of D-REPR configuration",
                                  error_msg="Parsing D-REPR configuration")
 
@@ -42,7 +45,8 @@ class ReprV2Parser:
             default_resource_id = ResourceParser.DEFAULT_RESOURCE_ID
 
         path_parser = PathParserV2()
-        preprocessing = PreprocessingParser(path_parser).parse(default_resource_id, resources, raw.get('preprocessing', []))
+        preprocessing = PreprocessingParser(path_parser).parse(default_resource_id, resources,
+                                                               raw.get('preprocessing', []))
         attrs = AttrParser(path_parser).parse(default_resource_id, resources, raw['attributes'])
         aligns = AlignParser.parse(raw.get('alignments', []))
 

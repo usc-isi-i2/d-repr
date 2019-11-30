@@ -24,8 +24,12 @@ def patch(repr: DRepr, resources: Dict[str, ResourceData]) -> DRepr:
             if resource.type in netcdf_types:
                 resource.type = ResourceType.JSON
 
-                assert isinstance(resources[resource.id], ResourceDataFile), "Doesn't support loading netcdf from raw bytes yet"
-                nc_data = Dataset(resources[resource.id].file_path, "r+", format=ResourceType.NetCDF4.value.upper())
+                assert isinstance(
+                    resources[resource.id],
+                    ResourceDataFile), "Doesn't support loading netcdf from raw bytes yet"
+                nc_data = Dataset(resources[resource.id].file_path,
+                                  "r+",
+                                  format=ResourceType.NetCDF4.value.upper())
 
                 doc = {}
                 for vname in nc_data.variables.keys():
