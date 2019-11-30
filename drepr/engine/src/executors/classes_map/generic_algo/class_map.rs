@@ -147,6 +147,7 @@ pub fn generic_class_map(readers: &[Box<dyn RAReader>], cls_writer: &mut dyn Str
         for lplan in class_plan.literal_props.iter() {
           cls_writer.write_data_property(&subj_id, lplan.predicate_id, &lplan.value);
         }
+        cls_writer.end_record();
       }
 
       if !subj_iter.advance() {

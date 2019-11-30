@@ -1,11 +1,26 @@
 import re
+from abc import ABC, abstractmethod
 from typing import List, Union
 
 from drepr.utils.validator import InputError
 from ..path import Path, IndexExpr, RangeExpr, WildcardExpr, Expr
+from ..resource import Resource
 
 
-class PathParser:
+class PathParser(ABC):
+    @abstractmethod
+    def parse(self, resource: Resource, path: Union[str, list], parse_trace: str) -> Path:
+        pass
+
+    # noinspection PyMethodMayBeStatic
+    def get_resource(self, resources: List[Resource], resource_id: str, trace: str) -> Resource:
+        for res in resources:
+            if res.id == resource_id:
+                return res
+        raise InputError(f"{trace}\nERROR: Refer to path of an nonexistent resource: {resource_id}")
+
+
+class PathParserV1(PathParser):
     """
     A path can either be a JSONPath or our list path
 
@@ -23,19 +38,17 @@ class PathParser:
     REG_JPATH_BRACKET = re.compile(r"(?:\[(-?\d+)?\:(?:(-?\d+)(?:\:(-?\d+))?)?\])|(?:\[(-?\d+)\])|(?:\['([^']+)'\])")
     REG_JPATH_DOT = re.compile(r"\.((?:(?!\.|\[).)+)")
 
-    @classmethod
-    def parse(cls, path: Union[str, list], parse_trace: str) -> Path:
+    def parse(self, _resource: Resource, path: Union[str, list], parse_trace: str) -> Path:
         if isinstance(path, str):
-            return cls.parse_jsonpath(path, parse_trace)
+            return self.parse_jsonpath(path, parse_trace)
 
         if isinstance(path, list):
-            return cls.parse_custom_path(path, parse_trace)
+            return self.parse_custom_path(path, parse_trace)
 
         raise InputError(f"{parse_trace}\nERROR: the path must either be a "
                          f"string (JSONPath) or a list of steps. Get {type(path)} instead")
 
-    @classmethod
-    def parse_jsonpath(cls, jpath: str, parse_trace: str) -> Path:
+    def parse_jsonpath(self, jpath: str, parse_trace: str) -> Path:
         if not jpath.startswith("$"):
             raise InputError(f"{parse_trace}\nERROR: invalid json path. The path must start with `$`. "
                              f"Get: {jpath}")
@@ -46,7 +59,7 @@ class PathParser:
 
         while len(jpath) > 0:
             if jpath.startswith("["):
-                m = cls.REG_JPATH_BRACKET.match(jpath)
+                m = self.REG_JPATH_BRACKET.match(jpath)
                 if m is None:
                     raise InputError(
                         f"{parse_trace}\nERROR: invalid json path, error while parsing bracket at position {parsing_pos}")
@@ -67,15 +80,15 @@ class PathParser:
                         int(m.group(3) or "1")))
             elif jpath.startswith(".*~"):
                 # *~ select property names
-                steps.append(WildcardExpr.Values)
+                steps.append(WildcardExpr.Names)
                 jpath = jpath[3:]
                 parsing_pos += 3
             elif jpath.startswith(".*"):
-                steps.append(WildcardExpr.Names)
+                steps.append(WildcardExpr.Values)
                 jpath = jpath[2:]
                 parsing_pos += 2
             else:
-                m = cls.REG_JPATH_DOT.match(jpath)
+                m = self.REG_JPATH_DOT.match(jpath)
                 if m is None:
                     raise InputError(
                         f"{parse_trace}\nERROR: invalid json path, error while parsing step at position {parsing_pos}")
@@ -91,13 +104,12 @@ class PathParser:
 
         return Path(steps)
 
-    @classmethod
-    def parse_custom_path(cls, path: List[str], parse_trace: str) -> Path:
+    def parse_custom_path(self, path: List[str], parse_trace: str) -> Path:
         steps = []
         for i, step in enumerate(path):
             trace = f"Parsing step {i} ({step})"
             if isinstance(step, str):
-                m = cls.REG_SRANGE.match(step)
+                m = self.REG_SRANGE.match(step)
                 if m is not None:
                     steps.append(RangeExpr(
                         int(m.group(1) or '0'),
@@ -105,7 +117,7 @@ class PathParser:
                         int(m.group(3) or '1')))
                     continue
 
-                m = cls.REG_SRANGE_EXPR.match(step)
+                m = self.REG_SRANGE_EXPR.match(step)
                 if m is not None:
                     steps.append(RangeExpr(
                         (Expr(m.group(1)[2:-1]) if m.group(1).startswith("${") else int(m.group(1)))

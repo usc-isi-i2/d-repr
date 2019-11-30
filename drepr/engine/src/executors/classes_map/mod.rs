@@ -1,5 +1,4 @@
-use readers::csv::csv_ra_reader::CSVRAReader;
-use readers::ra_reader::RAReader;
+use readers::prelude::{CSVRAReader, RAReader, JSONRAReader, SpreadsheetRAReader};
 
 use crate::execution_plans::classes_map_plan::write_plan::WritePlan;
 use crate::execution_plans::ClassesMapExecutionPlan;
@@ -31,6 +30,28 @@ pub fn classes_map(resource_files: &[PhysicalResource], desc: &Description, plan
           }
           PhysicalResource::String(content) => {
             Box::new(CSVRAReader::from_str(content, r.get_delimiter()))
+          }
+        };
+        readers.push(reader);
+      },
+      Resource::Spreadsheet(_) => {
+        let reader = match &resource_files[i] {
+          PhysicalResource::File(fpath) => {
+            Box::new(SpreadsheetRAReader::from_file(fpath))
+          },
+          _ => {
+            unimplemented!("Haven't implemented reading spreadsheet from string yet")
+          }
+        };
+        readers.push(reader);
+      },
+      Resource::JSON(_) => {
+        let reader = match &resource_files[i] {
+          PhysicalResource::File(fpath) => {
+            Box::new(JSONRAReader::from_file(fpath))
+          }
+          PhysicalResource::String(content) => {
+            Box::new(JSONRAReader::from_str(content))
           }
         };
         readers.push(reader);

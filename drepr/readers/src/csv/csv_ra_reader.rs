@@ -85,7 +85,7 @@ impl CSVRAReader {
 impl RAReader for CSVRAReader {
   fn set_value(&mut self, index: &[Index], start_idx: usize, val: Value) {
     if index.len() - 1 > start_idx {
-      self.data[index[start_idx].as_idx()].as_mut_array()[index[start_idx + 1].as_idx()] = val;
+      self.data[index[start_idx].as_idx()].set_value(index, start_idx + 1, val);
     } else {
       self.data[index[start_idx].as_idx()] = val;
     }
@@ -93,7 +93,7 @@ impl RAReader for CSVRAReader {
   
   fn get_value(&self, index: &[Index], start_idx: usize) -> &Value {
     if index.len() - 1 > start_idx {
-      &self.data[index[start_idx].as_idx()].as_array()[index[start_idx + 1].as_idx()]
+      self.data[index[start_idx].as_idx()].get_value(index, start_idx + 1)
     } else {
       &self.data[index[start_idx].as_idx()]
     }
@@ -101,7 +101,7 @@ impl RAReader for CSVRAReader {
   
   fn get_mut_value(&mut self, index: &[Index], start_idx: usize) -> &mut Value {
     if index.len() - 1 > start_idx {
-      &mut self.data[index[start_idx].as_idx()].as_mut_array()[index[start_idx + 1].as_idx()]
+      self.data[index[start_idx].as_idx()].get_mut_value(index, start_idx + 1)
     } else {
       &mut self.data[index[start_idx].as_idx()]
     }

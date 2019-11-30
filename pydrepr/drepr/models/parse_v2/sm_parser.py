@@ -10,21 +10,18 @@ class SMParser:
 
     ```
     semantic_model:
-      data_nodes:
-        <attr_id>: <class_id>--<predicate>[^^<semantic type>]
-        # other attributes
-      relations:
-        - <source_class_id>--<predicate>--<target_class_id>
-        # other relations
-      literal_nodes:
-        - <source_class_id>--<predicate>--<value>
-      subjects:
-        <class_id>: <attr_id>
+      <class_id>:
+        props:
+            - [<predicate>, <attr_id>, <sem_type>]
+        links:
+            - [<predicate>, <value>, <sem_type>]
+        static:
+            -
       prefixes:
         <prefix>: <uri>
     ```
     """
-    SM_KEYS = {"data_nodes", "subjects", "literal_nodes", "prefixes", "relations"}
+    CLS_KEYS = {"properties", "subject", "links", "static_properties"}
     DATA_TYPE_VALUES = {x.value for x in DataType}
 
     REG_SM_CLASS = re.compile(r"^((.+):\d+)$")
@@ -35,100 +32,96 @@ class SMParser:
 
     @classmethod
     def parse(cls, sm: dict) -> SemanticModel:
-        Validator.must_be_subset(cls.SM_KEYS, sm.keys(), "properties of semantic model", "Parsing the semantic model")
-
-        Validator.must_have(sm, "data_nodes", "Parsing the semantic model")
-        trace0 = "Parsing `data_nodes` of the semantic model"
-        Validator.must_be_dict(sm['data_nodes'], trace0)
-
         nodes = {}
         edges = []
 
-        for attr_id, stype in sm['data_nodes'].items():
-            trace1 = f"{trace0}\nParsing data node `{attr_id}`"
-            m = cls.REG_SM_DNODE.match(stype)
-            if m is None:
-                raise InputError(f"{trace1}\nERROR: the value of data node does not match with the format")
+        prefixes = sm.pop('prefixes', {})
+        trace0 = f"Parsing `prefixes` of the semantic model"
+        Validator.must_be_dict(prefixes, trace0)
+        for prefix, uri in prefixes.items():
+            Validator.must_be_str(uri, f"{trace0}\nParse prefix {prefix}")
 
-            # do something with the data node
-            class_id = m.group(1)
-            class_name = cls.REG_SM_CLASS.match(m.group(1)).group(2)
-            predicate = m.group(2)
-            data_type = m.group(3)
+        for class_id, class_conf in sm.items():
+            trace0 = f"Parsing class `{class_id}` of the semantic model"
+            Validator.must_be_dict(class_conf, trace0)
+            Validator.must_be_subset(cls.CLS_KEYS, class_conf.keys(), "keys of ontology class", trace0)
 
-            if data_type is not None:
-                Validator.must_in(data_type, cls.DATA_TYPE_VALUES, f"{trace1}\nParsing data type")
-                data_type = DataType(data_type)
-            else:
-                data_type = None
+            try:
+                class_name = cls.REG_SM_CLASS.match(class_id).group(2)
+            except Exception as e:
+                raise InputError(f"{trace0}\nERROR: invalid class_id `{class_id}`. Expect to be <string>:<number>")
 
-            if class_id not in nodes:
-                nodes[class_id] = ClassNode(node_id=class_id, label=class_name)
+            nodes[class_id] = ClassNode(class_id, class_name)
 
-            data_node = DataNode(node_id=f"dnode:{attr_id}", attr_id=attr_id, data_type=data_type)
-            nodes[data_node.node_id] = data_node
-            edges.append(Edge(class_id, data_node.node_id, predicate))
+        for class_id, class_conf in sm.items():
+            trace0 = f"Parsing class `{class_id}` of the semantic model"
 
-        if 'relations' in sm:
-            trace0 = f"Parsing `relations` of the semantic model"
-            Validator.must_be_list(sm['relations'], trace0)
-            for i, node in enumerate(sm['relations']):
-                trace1 = f"{trace0}\nParsing relation at position {i}: {node}"
-                Validator.must_be_str(node, trace1)
-                m = cls.REG_SM_REL.match(node)
-                if m is None:
-                    raise InputError(f"{trace1}\nERROR: value of the relation does not match with the format")
+            for i, prop in enumerate(class_conf.get('properties', [])):
+                trace1 = f"{trace0}\nParsing property {i}: {prop}"
+                if len(prop) == 2:
+                    predicate, attr_id = prop
+                    data_type = None
+                    is_required = False
+                elif len(prop) == 3:
+                    predicate, attr_id, data_type = prop
+                    if isinstance(data_type, bool) or data_type.lower() in {"true", "false"}:
+                        is_required = data_type if isinstance(data_type, bool) else data_type == "true"
+                        data_type = None
+                    else:
+                        is_required = False
+                elif len(prop) == 4:
+                    predicate, attr_id, data_type, is_required = prop
+                else:
+                    raise InputError(f"{trace1}\nERROR: Expect value of the property to be an array of two "
+                                     f"three or four items (<predicate>, <attribute_id>[, semantic_type='auto'][, is_required=false])")
 
-                edges.append(Edge(source_id=m.group(1), target_id=m.group(3), label=m.group(2)))
-
-        if 'literal_nodes' in sm:
-            trace0 = f"Parsing `literal_nodes` of the semantic model"
-            Validator.must_be_list(sm['literal_nodes'], trace0)
-            for i, node in enumerate(sm['literal_nodes']):
-                trace1 = f"{trace0}\nParsing literal node at position {i}: {node}"
-                Validator.must_be_str(node, trace1)
-                m = cls.REG_SM_LNODE.match(node)
-                if m is None:
-                    raise InputError(f"{trace1}\nERROR: value of the literal node does not match with the format")
-
-                class_id = m.group(1)
-                class_name = cls.REG_SM_CLASS.match(m.group(1)).group(2)
-                predicate = m.group(2)
-
-                data_type = m.group(4)
                 if data_type is not None:
                     Validator.must_in(data_type, cls.DATA_TYPE_VALUES, f"{trace1}\nParsing data type")
-                data_type = DataType(data_type)
+                    data_type = DataType(data_type)
 
-                if class_id not in nodes:
-                    nodes[class_id] = ClassNode(node_id=class_id, label=class_name)
+                node = DataNode(node_id=f"dnode:{attr_id}", attr_id=attr_id, data_type=data_type)
+                nodes[node.node_id] = node
+                edges.append(Edge(class_id, node.node_id, predicate, is_required=is_required))
 
-                literal_node = LiteralNode(
-                    node_id=f"lnode:{i}",
-                    value=m.group(3),
-                    data_type=data_type)
-                nodes[literal_node.node_id] = literal_node
-                edges.append(Edge(source_id=class_id, target_id=literal_node.node_id, label=predicate))
+            for i, link_conf in enumerate(class_conf.get('links', [])):
+                trace1 = f"{trace0}\nParsing link {i}: {link_conf}"
+                if len(link_conf) != 2:
+                    raise InputError(f"{trace1}\nERROR: Expect value of the link to be an array of two "
+                                     f"items (<predicate>, <class_id>)")
+                predicate, object_class_id = link_conf
+                edges.append(Edge(class_id, object_class_id, predicate))
 
-        if 'prefixes' in sm:
-            trace0 = f"Parsing `prefixes` of the semantic model"
-            Validator.must_be_dict(sm['prefixes'], trace0)
-            for prefix, uri in sm['prefixes'].items():
-                Validator.must_be_str(uri, f"{trace0}\nParse prefix {prefix}")
+            for i, prop in enumerate(class_conf.get('static_properties', [])):
+                trace1 = f"{trace0}\nParsing static properties {i}: {prop}"
+                if len(prop) == 2:
+                    predicate, value = prop
+                    data_type = None
+                elif len(prop) == 3:
+                    predicate, value, data_type = prop
+                else:
+                    raise InputError(f"{trace1}\nERROR: Expect value of the property to be an array of two "
+                                     f"or three items (<predicate>, <attribute_id>, [semantic_type])")
 
-            prefixes = dict(sm['prefixes'])
-        else:
-            prefixes = {}
+                if data_type is not None:
+                    Validator.must_in(data_type, cls.DATA_TYPE_VALUES, f"{trace1}\nParsing data type")
+                    data_type = DataType(data_type)
 
-        if 'subjects' in sm:
-            trace0 = f"Parsing `subjects` of the semantic model"
-            Validator.must_be_dict(sm['subjects'], trace0)
-            for class_id, attr_id in sm['subjects'].items():
-                Validator.must_be_str(attr_id, f"{trace0}\nParsing subject of class {class_id}")
+                node = LiteralNode(node_id=f"lnode:{len(nodes)}", value=value, data_type=data_type)
+                nodes[node.node_id] = node
+                edges.append(Edge(class_id, node.node_id, predicate))
+
+        for class_id, class_conf in sm.items():
+            trace0 = f"Parsing class `{class_id}` of the semantic model"
+            if 'subject' in class_conf:
+                trace1 = f"{trace0}\nParsing subject"
+                attr_id = class_conf['subject']
                 target_id = f"dnode:{attr_id}"
                 for edge in edges:
                     if edge.source_id == class_id and edge.target_id == target_id:
                         edge.is_subject = True
                         break
+                else:
+                    raise InputError(f"{trace1}\nERROR: Subject of the class node must be one "
+                                     f"of the attributes used in the semantic model")
 
         return SemanticModel(nodes, edges, prefixes)

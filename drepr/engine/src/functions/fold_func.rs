@@ -1,6 +1,8 @@
 use crate::models::Location;
 use crate::readers::{RAReader, Value, Index};
 
+/// This function is applied on
+///
 pub struct FoldFunc<F>
 where
   F: Fn(&Value, &Value, &[Index]) -> Value

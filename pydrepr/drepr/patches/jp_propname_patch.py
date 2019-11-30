@@ -1,10 +1,13 @@
+import copy
 from collections import defaultdict
 from typing import List, Dict, Tuple, Callable, Any, Optional
 
-from drepr.models import DRepr
+from drepr.models import DRepr, WildcardExpr, StepExpr, RangeExpr, Expr, IndexExpr, Preprocessing, PreprocessingType, \
+    RMap, RMapFunc, Path, RangeAlignment
+from drepr.patches import ResourceData
 
 
-def patch(repr: DRepr, resources: Dict[str, str]) -> DRepr:
+def patch(repr: DRepr, resources: Dict[str, ResourceData]) -> DRepr:
     """
     This patch will fix json path that select property names, before we officially support
     selecting property names
@@ -12,31 +15,31 @@ def patch(repr: DRepr, resources: Dict[str, str]) -> DRepr:
     How does it work: it creates a preprocessing function that convert an object to list of key-value pairs
     """
     need_patch = False
-    for pfunc in repr.get_preprocess():
-        for slice in pfunc['input']['slices']:
-            if slice == '*~':
+    for pfunc in repr.preprocessing:
+        for step in pfunc.value.path.steps:
+            if step == WildcardExpr.Names:
                 raise Exception(
                     "Does not support preprocessing that is applied on properties of an object yet!"
                 )
 
-    for attr_name, attr in repr.get_attributes().items():
-        if sum(int(slice == '*~') for slice in attr['location']['slices']) > 1:
-            raise Exception(f"Invalid path for attribute {attr_name}")
+    for attr in repr.attrs:
+        n_wildcard_names = sum(int(step == WildcardExpr.Names) for step in attr.path.steps)
+        if n_wildcard_names > 1:
+            # cannot select names inside names
+            raise Exception(f"Invalid path for attribute {attr.id}")
 
-        for slice in attr['location']['slices']:
-            if slice == '*~':
-                need_patch = True
-                break
+        if n_wildcard_names > 0:
+            need_patch = True
 
     if need_patch:
-        repr = repr.clone()
+        repr = copy.deepcopy(repr)
 
+        # first, find paths that containing the WildcardExpr.Names (*~)
         property_paths = []
-        for attr_name, attr in repr.get_attributes().items():
-            slices = attr['location']['slices']
-            for i, slice in enumerate(slices):
-                if slice == '*~':
-                    property_paths.append((attr_name, i, slices[:i]))
+        for attr in repr.attrs:
+            for i, step in enumerate(attr.path.steps):
+                if step == WildcardExpr.Names:
+                    property_paths.append((attr.id, i, attr.path.steps[:i]))
                     break
 
         # now we need to make sure for every property paths, all paths that is overlap to the property paths,
@@ -45,29 +48,24 @@ def patch(repr: DRepr, resources: Dict[str, str]) -> DRepr:
             for j in range(i + 1, len(property_paths)):
                 if is_path_overlap(property_paths[i][-1], property_paths[j][-1]):
                     raise Exception(
-                        f"Does not handle nested selecting property names yet. Found in either {property_paths[i][0]} or {property_paths[i][1]}"
+                        f"Does not handle nested selecting property names yet. Found in either {property_paths[i][0]} or {property_paths[j][0]}"
                     )
 
         overlapped_paths = defaultdict(lambda: [])
-        for aid, attr in repr.get_attributes().items():
-            slices = attr['location']['slices']
+        for attr in repr.attrs:
+            steps = attr.path.steps
             for i, (paid, _, path) in enumerate(property_paths):
-                if len(slices) > len(path) and is_path_overlap(path, slices):
-                    assert slices[:len(path
-                                       )] == path, f"Slices {slices} does not fully contain {path}"
-                    overlapped_paths[i].append(aid)
-
+                if len(steps) > len(path) and is_path_overlap(path, steps):
+                    assert steps[:len(path)] == path, f"Slices {steps} does not fully contain {path}"
+                    overlapped_paths[i].append(attr.id)
         # add preprocessing functions
-        attrs = repr.get_attributes()
+        id2attr = {attr.id: attr for attr in repr.attrs}
         for paid, _, path in property_paths:
             # need to convert dict to key-value pairs
-            repr.get_preprocess().append({
-                'type': 'rmap-dict2items',
-                'input': {
-                    "resource_id": attrs[paid]['location']['resource_id'],
-                    "slices": path,
-                }
-            })
+            repr.preprocessing.append(Preprocessing(
+                PreprocessingType.rmap,
+                RMap(id2attr[paid].resource_id, Path(path), RMapFunc.Dict2Items)
+            ))
 
         # now every property path is distinct, and we have a map of property path => attributes
         # that require to re-map their positions
@@ -75,76 +73,73 @@ def patch(repr: DRepr, resources: Dict[str, str]) -> DRepr:
             _, _, path = property_paths[pi]
             for aid in aids:
                 # remap attribute slices
-                attr = attrs[aid]
-                slices = attr['location']['slices']
+                attr = id2attr[aid]
+                steps = attr.path.steps
 
-                if slices[len(path)] == '*~':
+                if steps[len(path)] == WildcardExpr.Names:
                     # this select property names
-                    slices = slices[:len(path)] + ['..', 0] + slices[len(path) + 1:]
+                    steps = steps[:len(path)] + [RangeExpr(0, None, 1), IndexExpr(0)] + steps[len(path) + 1:]
                 else:
-                    assert slices[len(
+                    assert steps[len(
                         path
-                    )] == '..', 'Does not support select both all property names and just a subset of its values'
-                    slices = slices[:len(path)] + ['..', 1] + slices[len(path) + 1:]
-                attr['location']['slices'] = slices
+                    )] == WildcardExpr.Values, 'Does not support select both all property names and just a subset of its values'
+                    steps = steps[:len(path)] + [RangeExpr(0, None, 1), IndexExpr(1)] + steps[len(path) + 1:]
+                attr.path.steps = steps
 
                 # remap alignments
-                for alignment in repr.get_alignments():
-                    if alignment['type'] == 'dimension':
-                        if alignment['source'] == aid:
-                            for adim in alignment['aligned_dims']:
-                                if adim['source'] > len(path):
-                                    adim['source'] += 1
-                        elif alignment['target'] == aid:
-                            for adim in alignment['aligned_dims']:
-                                if adim['target'] > len(path):
-                                    adim['target'] += 1
+                for alignment in repr.aligns:
+                    if isinstance(alignment, RangeAlignment):
+                        if alignment.source == aid:
+                            for adim in alignment.aligned_steps:
+                                if adim.source_idx > len(path):
+                                    adim.source_idx += 1
+                        elif alignment.target == aid:
+                            for adim in alignment.aligned_steps:
+                                if adim.target_idx > len(path):
+                                    adim.target_idx += 1
 
     return repr
 
 
-def is_path_overlap(path_0: List[str], path_1: List[str]):
+def is_path_overlap(path_0: List[StepExpr], path_1: List[StepExpr]):
     def is_slice_overlap(s0, s1):
-        if s0['type'] == 'range':
-            if any(str(s0[key]).startswith("${") for key in ('start', 'end', 'step')):
+        if isinstance(s0, RangeExpr):
+            if any(isinstance(v, Expr) for v in [s0.start, s0.end, s0.step]):
                 raise Exception("Haven't support compare expr overlapped yet")
 
-            if s1['type'] == 'range':
-                if any(str(s1[key]).startswith("${") for key in ('start', 'end', 'step')):
+            if isinstance(s1, RangeExpr):
+                if any(isinstance(v, Expr) for v in [s1.start, s1.end, s1.step]):
                     raise Exception("Haven't support compare expr overlapped yet")
 
-                if s1['start'] < (s0['end'] or float('inf')) and (s1['end']
-                                                                  or float('inf')) > s0['start']:
-                    return True
-                return False
-            else:
-                if isinstance(s1['idx'], str):
+                return s1.start < (s0.end or float('inf')) and (s1.end or float('inf')) > s0.start
+            elif isinstance(s1, IndexExpr):
+                if isinstance(s1.val, str) or isinstance(s1.val, Expr):
                     return False
-                elif s0['start'] <= s1['idx'] < (s0['end'] or float('inf')):
+                elif s0.start <= s1.val < (s0.end or float('inf')):
                     return True
                 return False
+        elif isinstance(s0, IndexExpr):
+            if isinstance(s1, RangeExpr):
+                if any(isinstance(v, Expr) for v in [s1.start, s1.end, s1.step]):
+                    raise Exception("Haven't support compare expr overlapped yet")
+
+                if isinstance(s0.val, (str, Expr)):
+                    return False
+                elif s1.start <= s0.val < (s1.end or float('inf')):
+                    return True
+                return False
+            elif isinstance(s1, IndexExpr):
+                return s1.val == s1.val
         else:
-            if s1['type'] == 'range':
-                if any(str(s1[key]).startswith("${") for key in ('start', 'end', 'step')):
-                    raise Exception("Haven't support compare expr overlapped yet")
+            # not index & range does not have overlapping?
+            return s0 == s1
 
-                if isinstance(s0['idx'], str):
-                    return False
-                elif s1['start'] <= s0['idx'] < (s1['end'] or float('inf')):
-                    return True
-                return False
-            else:
-                return s1['idx'] == s0['idx']
+    if len(path_0) > len(path_1):
+        path_0, path_1 = path_1, path_0
 
-    slices_0 = [Repr.parse_slice(slice) for slice in path_0]
-    slices_1 = [Repr.parse_slice(slice) for slice in path_1]
-
-    if len(slices_0) > len(slices_1):
-        slices_0, slices_1 = slices_1, slices_0
-
-    for i in range(len(slices_0)):
-        s0 = slices_0[i]
-        s1 = slices_1[i]
+    for i in range(len(path_0)):
+        s0 = path_0[i]
+        s1 = path_1[i]
 
         if not is_slice_overlap(s0, s1):
             return False
