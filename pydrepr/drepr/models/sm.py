@@ -104,6 +104,26 @@ class SemanticModel:
             if self.edges[i].source_id == node_id or self.edges[i].target_id == node_id:
                 self.edges.pop(i)
 
+    def iter_outgoing_edges(self, node_id: str):
+        for e in self.edges:
+            if e.source_id == node_id:
+                yield e
+
+    def iter_incoming_edges(self, node_id: str):
+        for e in self.edges:
+            if e.target_id == node_id:
+                yield e
+
+    def iter_child_nodes(self, node_id: str):
+        for e in self.edges:
+            if e.source_id == node_id:
+                yield self.nodes[e.source_id]
+
+    def iter_parent_nodes(self, node_id: str):
+        for e in self.edges:
+            if e.target_id == node_id:
+                yield self.nodes[e.target_id]
+
     def get_rel_iri(self, abs_iri: str) -> str:
         for prefix, uri in self.prefixes.items():
             if abs_iri.startswith(uri):
