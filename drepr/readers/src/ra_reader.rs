@@ -11,7 +11,6 @@ pub trait RAReader: Debug {
   fn get_mut_value(&mut self, index: &[Index], start_idx: usize) -> &mut Value;
   fn len(&self) -> usize;
   fn remove(&mut self, index: &Index);
-  
   fn ground_path(&self, path: &mut PathExpr, start_idx: usize);
   
   #[inline]

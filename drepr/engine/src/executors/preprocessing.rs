@@ -1,6 +1,6 @@
 use readers::prelude::{RAReader, Value, Index};
 use crate::lang::preprocessing::{PreprocessingFunc, BuiltinRustMapFunc};
-use crate::functions::{MapFunc, FilterFunc, dict2items};
+use crate::functions::{MapFunc, FilterFunc, dict2items, SplitFunc};
 use std::ptr::NonNull;
 use crate::python::{PyExecutor, ReaderPtr};
 
@@ -26,6 +26,14 @@ pub fn exec_preprocessing(readers: &mut [Box<dyn RAReader>], preprocessing_funcs
           func: |val: &Value, idx: &[Index]| py_executor.exec(&pyfunc, val, idx).unwrap(),
         };
         func.exec(readers[pf.resource_id].as_mut());
+      }
+      PreprocessingFunc::PySplit(ps) => {
+        let pyfunc = py_executor.compile(ps.resource_id, &ps.code).unwrap();
+        let mut func = SplitFunc {
+          path: &ps.path,
+          func: |val: &Value, idx: &[Index]| py_executor.exec(&pyfunc, val, idx).unwrap(),
+        };
+        func.exec(readers[ps.resource_id].as_mut());
       }
       PreprocessingFunc::RuMap(rm) => {
         let mut func = MapFunc {

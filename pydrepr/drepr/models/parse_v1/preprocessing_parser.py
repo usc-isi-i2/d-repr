@@ -1,8 +1,10 @@
-from typing import List
+from typing import List, Type, Union
 
 from drepr.utils.validator import Validator
 from .path_parser import PathParser
-from ..preprocessing import Preprocessing, PreprocessingType, PMap, PFilter, RMap
+from ..preprocessing import Preprocessing, PreprocessingType, PMap, PFilter, RMap, PSplit
+from ..resource import Resource
+from ..path import Path
 
 
 class PreprocessingParser:
@@ -47,8 +49,10 @@ class PreprocessingParser:
     """
     PREPRO_TYPES = {x.value for x in PreprocessingType}
 
-    @classmethod
-    def parse(cls, default_resource_id: str, conf: list) -> List[Preprocessing]:
+    def __init__(self, path_parser: PathParser):
+        self.path_parser = path_parser
+
+    def parse(self, default_resource_id: str, resources: List[Resource], conf: list) -> List[Preprocessing]:
         Validator.must_be_list(conf, "Parsing preprocessing")
         result = []
 
@@ -56,33 +60,36 @@ class PreprocessingParser:
             trace0 = f"Parsing preprocessing at position {i}"
             Validator.must_be_dict(prepro, trace0)
             Validator.must_have(prepro, "type", trace0)
-            Validator.must_in(prepro['type'], cls.PREPRO_TYPES, f"{trace0}\nParsing property `type`")
-
+            Validator.must_in(prepro['type'], self.PREPRO_TYPES, f"{trace0}\nParsing property `type`")
             prepro_type = PreprocessingType(prepro['type'])
+
+            if "resource_id" in prepro:
+                Validator.must_be_str(prepro["resource_id"], f"{trace0}\nParsing property `resource_id`")
+                resource_id = prepro['resource_id']
+            else:
+                resource_id = default_resource_id
+
+            trace1 = f"{trace0}\nParsing property `path`"
+            Validator.must_have(prepro, "path", trace1)
+            path = self.path_parser.parse(
+                self.path_parser.get_resource(resources, resource_id, trace0),
+                prepro['path'], trace1)
+
             if prepro_type == PreprocessingType.pmap:
-                value = cls.parse_pmap(default_resource_id, prepro, trace0)
+                value = self.parse_pmap(resource_id, path, prepro, trace0)
             elif prepro_type == PreprocessingType.pfilter:
-                value = cls.parse_pfilter(default_resource_id, prepro, trace0)
+                value = self.parse_pfilter_psplit(resource_id, path, prepro, trace0, PFilter)
+            elif prepro_type == PreprocessingType.psplit:
+                value = self.parse_pfilter_psplit(resource_id, path, prepro, trace0, PSplit)
             elif prepro_type == PreprocessingType.rmap:
-                value = cls.parse_rmap(default_resource_id, prepro, trace0)
+                value = self.parse_rmap(resource_id, path, prepro, trace0)
             else:
                 raise NotImplemented(f"Not implement the parser for preprocessing function with type {prepro_type}")
 
             result.append(Preprocessing(prepro_type, value))
         return result
 
-    @classmethod
-    def parse_pmap(cls, default_resource_id: str, prepro: dict, trace0: str) -> PMap:
-        if "resource_id" in prepro:
-            Validator.must_be_str(prepro["resource_id"], f"{trace0}\nParsing property `resource_id`")
-            resource_id = prepro['resource_id']
-        else:
-            resource_id = default_resource_id
-
-        trace1 = f"{trace0}\nParsing property `path`"
-        Validator.must_have(prepro, "path", trace1)
-        path = PathParser.parse(prepro['path'], trace1)
-
+    def parse_pmap(self, resource_id: str, path: Path, prepro: dict, trace0: str) -> PMap:
         trace1 = f"{trace0}\nParsing property `code`"
         Validator.must_have(prepro, "code", trace1)
         Validator.must_be_str(prepro["code"], trace1)
@@ -104,18 +111,7 @@ class PreprocessingParser:
 
         return PMap(resource_id, path, code, output, change_structure)
 
-    @classmethod
-    def parse_pfilter(cls, default_resource_id: str, prepro: dict, trace0: str) -> PFilter:
-        if "resource_id" in prepro:
-            Validator.must_be_str(prepro["resource_id"], f"{trace0}\nParsing property `resource_id`")
-            resource_id = prepro['resource_id']
-        else:
-            resource_id = default_resource_id
-
-        trace1 = f"{trace0}\nParsing property `path`"
-        Validator.must_have(prepro, "path", trace1)
-        path = PathParser.parse(prepro['path'], trace1)
-
+    def parse_pfilter_psplit(self, resource_id: str, path: Path, prepro: dict, trace0: str, cls: Union[Type[PFilter], Type[PSplit]]) -> PFilter:
         trace1 = f"{trace0}\nParsing property `code`"
         Validator.must_have(prepro, "code", trace1)
         Validator.must_be_str(prepro["code"], trace1)
@@ -128,20 +124,9 @@ class PreprocessingParser:
         else:
             output = None
 
-        return PFilter(resource_id, path, code, output)
+        return cls(resource_id, path, code, output)
 
-    @classmethod
-    def parse_rmap(cls, default_resource_id: str, prepro: dict, trace0: str) -> RMap:
-        if "resource_id" in prepro:
-            Validator.must_be_str(prepro["resource_id"], f"{trace0}\nParsing property `resource_id`")
-            resource_id = prepro['resource_id']
-        else:
-            resource_id = default_resource_id
-
-        trace1 = f"{trace0}\nParsing property `path`"
-        Validator.must_have(prepro, "path", trace1)
-        path = PathParser.parse(prepro['path'], trace1)
-
+    def parse_rmap(self, resource_id: str, path: Path, prepro: dict, trace0: str) -> RMap:
         trace1 = f"{trace0}\nParsing property `func_id`"
         Validator.must_have(prepro, "func_id", trace1)
         Validator.must_be_str(prepro["func_id"], trace1)

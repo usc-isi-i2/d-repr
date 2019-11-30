@@ -7,6 +7,7 @@ pub use self::graph_json::GraphJSONWriter;
 
 pub mod turtle;
 pub mod graph_json;
+pub mod data_frame;
 pub mod stream_writer;
 pub mod stream_class_writer;
 

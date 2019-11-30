@@ -8,6 +8,8 @@ pub enum PreprocessingFunc {
   PyMap(PyMap),
   #[serde(rename = "pfilter")]
   PyFilter(PyFilter),
+  #[serde(rename = "psplit")]
+  PySplit(PySplit),
   #[serde(rename = "rmap")]
   RuMap(RuMap),
 }
@@ -30,6 +32,14 @@ pub struct PyFilter {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct PySplit {
+  pub resource_id: usize,
+  pub path: PathExpr,
+  pub output: Option<usize>,
+  pub code: String,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct RuMap {
   pub resource_id: usize,
   pub path: PathExpr,
@@ -38,6 +48,7 @@ pub struct RuMap {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(tag = "t")]
 pub enum BuiltinRustMapFunc {
   #[serde(rename = "dict2items")]
   Dict2Items

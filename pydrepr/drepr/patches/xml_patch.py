@@ -1,29 +1,37 @@
-from typing import List, Dict, Tuple, Callable, Any, Optional, Union
+import copy
+from typing import Dict
 
 import ujson
-import xmltodict, uuid
-from drepr.models import DRepr
+import uuid
+import xmltodict
+
+from drepr.models import DRepr, ResourceType
+from drepr.patches import ResourceDataFile, ResourceData, ResourceDataString
 
 
-def patch(repr: DRepr, resources: Dict[str, str]) -> DRepr:
+def patch(repr: DRepr, resources: Dict[str, ResourceData]) -> DRepr:
     """
     This patch will turn any XML resources to JSON using xmltodict
     """
     need_patch = False
-    for rid, resource in repr.get_resources().items():
-        if resource['type'] == 'xml':
+    for resource in repr.resources:
+        if resource.type == ResourceType.XML:
             need_patch = True
 
     if need_patch:
-        repr = repr.clone()
-        for rid, resource in repr.get_resources().items():
-            if resource['type'] == 'xml':
-                with open(resources[rid], "r") as f:
-                    doc = xmltodict.parse(f.read())
+        repr = copy.deepcopy(repr)
+        for resource in repr.resources:
+            if resource.type == ResourceType.XML:
+                if isinstance(resources[resource.id], ResourceDataFile):
+                    with open(resources[resource.id].file_path, "r") as f:
+                        doc = xmltodict.parse(f.read())
+                else:
+                    doc = xmltodict.parse(resources[resource.id].value)
 
-                resources[rid] = f"/tmp/{str(uuid.uuid4())}.json"
-                resource['type'] = 'json'
-                with open(resources[rid], "w") as f:
+                resource.type = ResourceType.JSON
+                # resources[resource.id] = ResourceDataString(ujson.dumps(doc))
+                resources[resource.id] = ResourceDataFile(f"/tmp/{str(uuid.uuid4())}.json")
+                with open(resources[resource.id].file_path, "w") as f:
                     ujson.dump(doc, f)
 
     return repr

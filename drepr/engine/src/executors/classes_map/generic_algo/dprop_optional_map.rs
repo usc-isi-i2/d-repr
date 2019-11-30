@@ -8,7 +8,7 @@ pub fn generic_optional_dprop_map(readers: &[Box<dyn RAReader>], writer: &mut dy
   match dalign {
     AlignmentFunc::Single(f) => {
       let dval = readers[dplan.attribute.resource_id].get_value(f.align(subj_idx, subj_val, d_idx), 0);
-      if dplan.missing_values.len() > 0 && dplan.missing_values.contains(dval) {
+      if dplan.missing_values.len() > 0 && dval.is_hashable() && dplan.missing_values.contains(dval) {
         // checking if the missing values is > 0 to prevent hashing float values
         return;
       }
@@ -19,7 +19,7 @@ pub fn generic_optional_dprop_map(readers: &[Box<dyn RAReader>], writer: &mut dy
         let mut diter = f.iter_alignments(subj_idx, subj_val, d_idx);
         loop {
           let dval = readers[dplan.attribute.resource_id].get_value(diter.value(), 0);
-          if !dplan.missing_values.contains(dval) {
+          if dval.is_hashable() && !dplan.missing_values.contains(dval) {
             writer.write_data_property(subj_id, dplan.predicate_id, dval);
           }
           if !diter.advance() {

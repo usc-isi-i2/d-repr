@@ -22,6 +22,14 @@ class PFilter:
     output: Optional[str] = None
 
 
+@dataclass
+class PSplit:
+    resource_id: str
+    path: Path
+    code: str
+    output: Optional[str] = None
+
+
 class RMapFunc(Enum):
     Dict2Items = "dict2items"
 
@@ -37,6 +45,7 @@ class RMap:
 class PreprocessingType(Enum):
     pmap = "pmap"
     pfilter = "pfilter"
+    psplit = "psplit"
     rmap = "rmap"
 
 
@@ -53,6 +62,8 @@ class Preprocessing:
             value = PMap(**raw['value'])
         elif type == PreprocessingType.pfilter:
             value = PFilter(**raw['value'])
+        elif type == PreprocessingType.psplit:
+            value = PSplit(**raw['value'])
         elif type == PreprocessingType.rmap:
             value = RMap(**raw['value'])
         else:

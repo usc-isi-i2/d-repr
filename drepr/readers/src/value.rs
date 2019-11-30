@@ -5,6 +5,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::ser::SerializeMap;
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[serde(tag = "t", content = "c")]
 pub enum Value {
   Null,
   Bool(bool),
@@ -135,6 +136,19 @@ impl Value {
       Value::Bool(_) => true,
       Value::I64(_) => true,
       Value::F64(_) => true,
+      Value::Str(_) => true,
+      Value::Array(_) => false,
+      Value::Object(_) => false,
+    }
+  }
+
+  #[inline]
+  pub fn is_hashable(&self) -> bool {
+    match self {
+      Value::Null => true,
+      Value::Bool(_) => true,
+      Value::I64(_) => true,
+      Value::F64(_) => false,
       Value::Str(_) => true,
       Value::Array(_) => false,
       Value::Object(_) => false,

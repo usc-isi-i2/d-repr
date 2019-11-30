@@ -10,7 +10,7 @@ pub fn generic_mandatory_dprop_map<'a>(readers: &'a [Box<dyn RAReader>], writer:
     AlignmentFunc::Single(f) => {
       let dval = readers[dplan.attribute.resource_id].get_value(f.align(subj_idx, subj_val, d_idx), 0);
       // check if it is the missing value, and keep the record or not depends on if the link is optional
-      if dplan.missing_values.len() > 0 && dplan.missing_values.contains(dval) {
+      if dplan.missing_values.len() > 0 && dval.is_hashable() && dplan.missing_values.contains(dval) {
         // checking if the missing values is > 0 to prevent hashing float values
         return dplan.is_optional;
       }
@@ -21,7 +21,7 @@ pub fn generic_mandatory_dprop_map<'a>(readers: &'a [Box<dyn RAReader>], writer:
         let mut diter = f.iter_alignments(subj_idx, subj_val, d_idx);
         loop {
           let dval = readers[dplan.attribute.resource_id].get_value(diter.value(), 0);
-          if !dplan.missing_values.contains(dval) {
+          if dval.is_hashable() && !dplan.missing_values.contains(dval) {
             // not missing value, write now
             writer.write_data_property(dplan.predicate_id, dval);
           } else if !dplan.is_optional {

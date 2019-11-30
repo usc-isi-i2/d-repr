@@ -7,19 +7,25 @@ from typing import List, Dict, Any, NamedTuple, Optional
 import ujson
 from ruamel.yaml import YAML
 
+from drepr.models.parse_v2 import ReprV2Parser
 from drepr.utils.validator import Validator, InputError
 from .align import Alignment, RangeAlignment, AlignmentType, ValueAlignment, AlignedStep
 from .attr import Attr
 from .parse_v1 import ReprV1Parser
-from .preprocessing import Preprocessing, PMap, PFilter, RMap
+from .preprocessing import Preprocessing, PMap, PFilter, RMap, PSplit
 from .resource import Resource, CSVProp
 from .sm import SemanticModel, DataNode, ClassNode, LiteralNode
 
 yaml = YAML()
 yaml.Representer.add_representer(OrderedDict, yaml.Representer.represent_dict)
-EngineFormat = NamedTuple("EngineFormat", [("model", Dict[str, Any]),
-                                           ("resource_idmap", Dict[str, int]),
-                                           ("attribute_idmap", Dict[str, int])])
+
+
+@dataclass
+class EngineFormat:
+    model: Dict[str, Any]
+    edges_optional: List[bool]
+    resource_idmap: Dict[str, int]
+    attribute_idmap: Dict[str, int]
 
 
 @dataclass
@@ -37,7 +43,10 @@ class DRepr:
             model = ReprV1Parser.parse(raw)
             model.is_valid()
             return model
-
+        elif raw['version'] == '2':
+            model = ReprV2Parser.parse(raw)
+            model.is_valid()
+            return model
         raise InputError(f"Parsing error, get unknown version: {raw['version']}")
 
     @staticmethod
@@ -160,82 +169,7 @@ class DRepr:
                                                                         f"ontology predicate {edge.label}"
 
     def to_lang_format(self, simplify: bool = True, use_json_path: bool = False) -> dict:
-        version = "1"
-        # if simplify:
-        #     raise NotImplementedError()
-
-        sm = OrderedDict([("data_nodes", OrderedDict()), ("relations", []), ("literal_nodes", []),
-                          ("subjects", OrderedDict([])), ("prefixes", self.sm.prefixes)])
-
-        class_ids: Dict[str, Dict[str, str]] = defaultdict(lambda: {})
-        for node in self.sm.nodes.values():
-            if isinstance(node, ClassNode):
-                class_ids[node.label][node.node_id] = f"{node.label}:{len(class_ids[node.label]) + 1}"
-
-        for node in self.sm.nodes.values():
-            if isinstance(node, DataNode):
-                edge = [e for e in self.sm.edges if e.target_id == node.node_id][0]
-                sm['data_nodes'][
-                    node.attr_id] = f"{class_ids[self.sm.nodes[edge.source_id].label][edge.source_id]}--{edge.label}"
-                if node.data_type is not None:
-                    sm['data_nodes'][node.attr_id] += f"^^{node.data_type.value}"
-
-            if isinstance(node, LiteralNode):
-                edge = [e for e in self.sm.edges if e.target_id == node.node_id][0]
-                sm['literal_nodes'].append(
-                    f"{class_ids[self.sm.nodes[edge.source_id].label][edge.source_id]}--{edge.label}--{node.value}")
-                if node.data_type is not None:
-                    sm['literal_nodes'][-1] += f"^^{node.data_type.value}"
-
-        for edge in self.sm.edges:
-            if isinstance(self.sm.nodes[edge.source_id], ClassNode) and isinstance(
-                    self.sm.nodes[edge.target_id], ClassNode):
-                sm['relations'].append(
-                    f"{class_ids[self.sm.nodes[edge.source_id].label][edge.source_id]}--{edge.label}--{class_ids[self.sm.nodes[edge.target_id].label][edge.target_id]}"
-                )
-
-            if edge.is_subject:
-                sm['subjects'][class_ids[self.sm.nodes[edge.source_id].label][edge.source_id]] = self.sm.nodes[edge.target_id].attr_id
-
-        preprocessing: List[dict] = []
-        for prepro in self.preprocessing:
-            preprocessing.append(OrderedDict([
-                ("type", prepro.type.value)
-            ]))
-            for k, v in asdict(prepro.value).items():
-                preprocessing[-1][k] = v
-            preprocessing[-1]["path"] = prepro.value.path.to_lang_format(use_json_path)
-
-        return OrderedDict(
-            [("version", version),
-             ("resources",
-              OrderedDict(
-                  [(res.id,
-                    OrderedDict([("type", res.type.value)] +
-                                ([(k, v)
-                                  for k, v in asdict(res.prop).items()] if res.prop is not None else [])))
-                   for res in self.resources])),
-             ("preprocessing", preprocessing),
-             ("attributes",
-              OrderedDict([(attr.id,
-                            OrderedDict([("resource_id", attr.resource_id),
-                                         ("path", attr.path.to_lang_format(use_json_path)),
-                                         ("unique", attr.unique), ("sorted", attr.sorted.value),
-                                         ("value_type", attr.value_type.value),
-                                         ("missing_values", attr.missing_values)]))
-                           for attr in self.attrs])),
-             ("alignments", [
-                 OrderedDict([("type", AlignmentType.range.value), ("source", align.source),
-                              ("target", align.target),
-                              ("aligned_dims", [
-                                  OrderedDict([
-                                      ("source", step.source_idx),
-                                      ("target", step.target_idx),
-                                  ]) for step in align.aligned_steps
-                              ])]) if isinstance(align, RangeAlignment) else
-                 OrderedDict([("type", AlignmentType.value.value), ("source", align.source),
-                              ("target", align.target)]) for align in self.aligns
-             ]), ("semantic_model", sm)])
+        return ReprV1Parser.dump(self, simplify, use_json_path)
 
     def to_lang_yml(self, simplify: bool = True, use_json_path: bool = False) -> str:
         model = self.to_lang_format(simplify, use_json_path)
@@ -281,10 +215,10 @@ class DRepr:
             if isinstance(pref.value, PMap):
                 prepro['code'] = pref.value.code
                 prepro['change_structure'] = pref.value.change_structure
-            elif isinstance(pref.value, PFilter):
+            elif isinstance(pref.value, (PFilter, PSplit)):
                 prepro['code'] = pref.value.code
             elif isinstance(pref.value, RMap):
-                prepro['func_id'] = pref.value.func_id
+                prepro['func_id'] = {"t": pref.value.func_id.value}
             else:
                 raise NotImplementedError()
             preprocessing.append(prepro)
@@ -296,7 +230,7 @@ class DRepr:
             "unique": a.unique,
             "sorted": a.sorted.value,
             "vtype": a.value_type.value,
-            "missing_values": a.missing_values
+            "missing_values": [self._serde_engine_value(v) for v in a.missing_values]
         } for a in self.attrs]
 
         alignments = []
@@ -345,7 +279,7 @@ class DRepr:
                 nodes["lnodes"].append({
                     "type": "literal_node",
                     "node_id": node_id,
-                    "val": node.value,
+                    "val": self._serde_engine_value(node.value),
                     "data_type": node.data_type.value if node.data_type is not None else None,
                 })
             else:
@@ -369,13 +303,40 @@ class DRepr:
                 "is_subject": edge.is_subject
             })
 
+        edges_optional = [
+            not edge.is_required
+            for edge in self.sm.edges
+        ]
+
         return EngineFormat({
             "resources": resources,
             "preprocessing": preprocessing,
             "attributes": attributes,
             "alignments": alignments,
             "semantic_model": engine_sm
-        }, ridmap, aidmap)
+        }, edges_optional, ridmap, aidmap)
+
+    def _serde_engine_value(self, value: Any):
+        """Serialize a python value to a json representation of the Value struct in the Rust engine"""
+        if value is None:
+            return {"t": "Null"}
+        elif isinstance(value, bool):
+            return {"t": "Bool", "c": value}
+        elif isinstance(value, int):
+            return {"t": "I64", "c": value}
+        elif isinstance(value, float):
+            return {"t": "F64", "c": value}
+        elif isinstance(value, str):
+            return {"t": "Str", "c": value}
+        elif isinstance(value, list):
+            return {"t": "Array", "c": [self._serde_engine_value(v) for v in value]}
+        elif isinstance(value, (dict, OrderedDict)):
+            return {"t": "Object", "c": {
+                k: self._serde_engine_value(v)
+                for k, v in value.items()
+            }}
+        else:
+            raise InputError(f"Cannot serialize the value of type: {type(value)} to JSON")
 
     def remove_resource(self, resource_id: str):
         self.resources = [r for r in self.resources if r.id != resource_id]

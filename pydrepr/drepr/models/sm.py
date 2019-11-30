@@ -40,6 +40,7 @@ class Edge:
     target_id: str
     label: str
     is_subject: bool = False
+    is_required: bool = False
 
 
 Node = Union[LiteralNode, DataNode, ClassNode]

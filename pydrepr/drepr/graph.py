@@ -1,7 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from itertools import islice
-from typing import Union, Dict, List, Iterable, Optional
+from typing import Union, Dict, List, Iterable, Optional, Tuple
 
 import ujson
 
@@ -62,13 +61,41 @@ class Graph:
         ser_edges = result["edges"].split("\n")
         assert ser_nodes[-1] == "" and ser_edges[-1] == ""
 
+        # remove last elements
+        ser_nodes.pop()
+        ser_edges.pop()
+
+        nodes, edges = Graph._deserialize_drepr_output(ser_nodes, ser_edges)
+        return Graph(nodes, edges, ds_model)
+
+    @staticmethod
+    def from_drepr_output_file(node_file: str, edge_file: str) -> "Graph":
+        with open(node_file, "r") as f:
+            ser_nodes = f.readlines()
+
+        with open(edge_file, "r") as f:
+            ser_edges = f.readlines()
+
+        nodes, edges = Graph._deserialize_drepr_output(ser_nodes, ser_edges)
+        return Graph(nodes, edges, None)
+
+    def serialize(self, fpath: str):
+        with open(fpath, 'w') as f:
+            ujson.dump(f, {"prefixes": self.prefixes, "nodes": self.nodes, "edges": self.edges})
+
+    @staticmethod
+    def _deserialize_drepr_output(ser_nodes: List[str], ser_edges: List[str]) -> Tuple[List[Node], List[Edge]]:
         nodes = []
         edges = []
-        for ser_node in islice(ser_nodes, 0, len(ser_nodes) - 1):
-            u = ujson.loads(ser_node)
+        for ser_node in ser_nodes:
+            try:
+                u = ujson.loads(ser_node)
+            except:
+                print(ser_node)
+                raise
             nodes.append(Node(u['id'], u['data'], [], []))
 
-        for ser_edge in islice(ser_edges, 0, len(ser_edges) - 1):
+        for ser_edge in ser_edges:
             sid, tid, lbl = ser_edge.split("\t")
             sid = int(sid)
             tid = int(tid)
@@ -78,8 +105,4 @@ class Graph:
             nodes[tid].edges_in.append(eid)
             nodes[sid].edges_out.append(eid)
 
-        return Graph(nodes, edges, ds_model)
-
-    def serialize(self, fpath: str):
-        with open(fpath, 'w') as f:
-            ujson.dump(f, {"prefixes": self.prefixes, "nodes": self.nodes, "edges": self.edges})
+        return nodes, edges

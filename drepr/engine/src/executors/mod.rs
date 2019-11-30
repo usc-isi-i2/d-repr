@@ -28,6 +28,7 @@ pub enum PhysicalOutput {
 pub struct Executor {
   pub resources: Vec<PhysicalResource>,
   pub output: PhysicalOutput,
+  pub edges_optional: Vec<bool>,
   pub description: Description,
 }
 
@@ -41,12 +42,12 @@ impl Executor {
   }
   
   pub fn get_exec_plan(&self) -> ExecutionPlan {
-    let edges_optional = vec![true; self.description.semantic_model.edges.len()];
+//    let edges_optional = vec![true; self.description.semantic_model.edges.len()];
     let output_format = match &self.output {
       PhysicalOutput::File { fpath: _, format } => format,
       PhysicalOutput::String { format } => format
     };
-    let exec_plan = ClassesMapExecutionPlan::new(&self.description, output_format, &edges_optional);
+    let exec_plan = ClassesMapExecutionPlan::new(&self.description, output_format, &self.edges_optional);
     ExecutionPlan::ClassesMap(exec_plan)
   }
 }

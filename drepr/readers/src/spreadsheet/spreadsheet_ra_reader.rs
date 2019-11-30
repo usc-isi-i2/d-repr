@@ -7,15 +7,20 @@ use hashbrown::HashMap;
 
 #[derive(Debug)]
 pub struct SpreadsheetRAReader {
-  data: Value,
+  sheets: Vec<Value>,
+  sheet_names: Vec<String>,
+  name2index: HashMap<String, usize>,
 }
 
 impl SpreadsheetRAReader {
   pub fn from_file(fpath: &str) -> SpreadsheetRAReader {
     let mut workbook = open_workbook_auto(fpath).expect("Cannot open the resource file");
-    let mut data = HashMap::default();
     let sheet_names = workbook.sheet_names().to_vec();
-    for sheet_name in sheet_names {
+
+    let mut sheets = Vec::with_capacity(sheet_names.len());
+    let mut name2index: HashMap<String, usize> = HashMap::default();
+
+    for sheet_name in &sheet_names {
       if let Some(Ok(range)) = workbook.worksheet_range(&sheet_name) {
         let rows = range
           .rows()
@@ -36,33 +41,93 @@ impl SpreadsheetRAReader {
           })
           .collect::<Vec<_>>();
 
-        data.insert(sheet_name, Value::Array(rows));
+        sheets.push(Value::Array(rows));
+        name2index.insert(sheet_name.clone(), sheets.len() - 1);
       }
     }
 
-    return SpreadsheetRAReader { data: Value::Object(data) };
+    return SpreadsheetRAReader { sheets, name2index, sheet_names };
   }
 }
 
 impl RAReader for SpreadsheetRAReader {
+  fn set_value(&mut self, index: &[Index], start_idx: usize, val: Value) {
+    match &index[start_idx] {
+      Index::Idx(v) => {
+        if start_idx < index.len() - 1 {
+          self.sheets[*v].set_value(index, start_idx + 1, val);
+        } else {
+          self.sheets[*v] = val;
+        }
+      },
+      Index::Str(v) => {
+        if start_idx < index.len() - 1 {
+          self.sheets[self.name2index[v]].set_value(index, start_idx + 1, val);
+        } else {
+          self.sheets[self.name2index[v]] = val;
+        }
+      }
+    }
+  }
+
   fn get_value(&self, index: &[Index], start_idx: usize) -> &Value {
-    self.data.get_value(index, start_idx)
+    match &index[start_idx] {
+      Index::Idx(v) => {
+        if start_idx < index.len() - 1 {
+          self.sheets[*v].get_value(index, start_idx + 1)
+        } else {
+          &self.sheets[*v]
+        }
+      },
+      Index::Str(v) => {
+        if start_idx < index.len() - 1 {
+          self.sheets[self.name2index[v]].get_value(index, start_idx + 1)
+        } else {
+          &self.sheets[self.name2index[v]]
+        }
+      }
+    }
   }
 
   fn get_mut_value(&mut self, index: &[Index], start_idx: usize) -> &mut Value {
-    self.data.get_mut_value(index, start_idx)
-  }
-
-  fn set_value(&mut self, index: &[Index], start_idx: usize, val: Value) {
-    self.data.set_value(index, start_idx, val)
+    match &index[start_idx] {
+      Index::Idx(v) => {
+        if start_idx < index.len() - 1 {
+          self.sheets[*v].get_mut_value(index, start_idx + 1)
+        } else {
+          &mut self.sheets[*v]
+        }
+      },
+      Index::Str(v) => {
+        if start_idx < index.len() - 1 {
+          self.sheets[self.name2index[v]].get_mut_value(index, start_idx + 1)
+        } else {
+          &mut self.sheets[self.name2index[v]]
+        }
+      }
+    }
   }
 
   fn len(&self) -> usize {
-    self.data.len()
+    self.sheets.len()
   }
 
   fn remove(&mut self, index: &Index) {
-    self.data.remove(index)
+    let sheet_index = match index {
+      Index::Idx(v) => {
+        *v
+      },
+      Index::Str(v) => {
+        self.name2index[v]
+      }
+    };
+
+    self.sheets.remove(sheet_index);
+    self.name2index.remove(&self.sheet_names[sheet_index]);
+    self.sheet_names.remove(sheet_index);
+    for i in sheet_index..self.sheets.len() {
+      *self.name2index.get_mut(&self.sheet_names[i]).unwrap() -= 1;
+    }
   }
 
   fn ground_path(&self, loc: &mut PathExpr, start_idx: usize) {

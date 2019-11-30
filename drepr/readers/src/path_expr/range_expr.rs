@@ -15,7 +15,7 @@ impl RangeExpr {
       None => n_elements,
       Some(v) => {
         if v < 0 {
-          v as usize + n_elements
+          (n_elements as i64 + v) as usize
         } else {
           v as usize
         }
