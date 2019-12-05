@@ -1,0 +1,54 @@
+version: "2"
+resources: netcdf4
+preprocessing:
+  - type: pmap
+    path: $.@.MAP_PROJECTION
+    code: |
+      if value == "EQUIDISTANT CYLINDRICAL":
+        # https://epsg.io/32663 this is different to https://epsg.io/4326
+        return 32663
+      raise NotImplementedError()
+  - type: pmap
+    path: $.@.SOUTH_WEST_CORNER_LON
+    code: |
+      lat = context.get_value(["lat", "data"])
+attributes:
+  Rainf_tavg:
+    path: $.Rainf_tavg.data[:][:]
+    missing_values: [-9999]
+  latitude: $.lat.data[:]
+  longitude: $.lon.data[:]
+  projection: $.@.MAP_PRJECTION
+  x_res: $.@.DX
+  y_res: $.@.DY
+  x_min: $.@.SOUTH_WEST_CORNER_LON
+  y_min: $.@.SOUTH_WEST_CORNER_LAT
+alignments:
+  - type: dimension
+    value: Rainf_tavg:2 <-> latitude:2
+  - type: dimension
+    value: Rainf_tavg:3 <-> longitude:2
+semantic_model:
+  mint:Variable:1:
+    properties:
+      - [rdf:value, Rainf_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+    static_properties:
+      - [mint:standardName, precipitation_flux]
+#    links:
+#      - [mint:geo2d, mint:Geo2D:1]
+#  mint:Geo2D:1:
+#    properties:
+#      - [mint:epsg, projection]
+#      - [mint:long_min, x_min]
+#      - [mint:lat_min, y_min]
+#      - [mint:long_delta, x_res]
+#      - [mint:lat_delta, y_res]
+#    static_properties:
+#      - [mint:long_angle, 0]
+#      - [mint:lat_angle, 0]
+  prefixes:
+    mint: https://mint.isi.edu/
+    # do we need this? our latitude/longitude don't have CRS
+    mint-geo: https://mint.isi.edu/geo

@@ -1,0 +1,2 @@
+class PMapFunc:
+    pass

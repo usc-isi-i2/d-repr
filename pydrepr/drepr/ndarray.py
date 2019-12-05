@@ -1,6 +1,6 @@
 from typing import Dict, Union, Iterable, Any, List, Tuple, Optional
 import numpy as np
-from drepr import DRepr
+from drepr.models import DRepr
 from drepr.graph import Node, Edge
 from drepr.models.align import RangeAlignment
 from drepr.models.preprocessing import PreprocessingType, PMap

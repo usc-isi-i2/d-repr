@@ -35,9 +35,7 @@ class CFConventionNDArrayMap:
         """
         if ds_model.resources[0].type == ResourceType.GeoTIFF:
             return map_geotiff(ds_model, resource_file)
-        elif ds_model.resources[0].type == ResourceType.NetCDF4:
-            return map_netcdf(ds_model, resource_file, "4")
-        elif ds_model.resources[0].type == ResourceType.NetCDF3:
-            return map_netcdf(ds_model, resource_file, "3")
+        elif ds_model.resources[0].type in {ResourceType.NetCDF4, ResourceType.NetCDF3}:
+            return map_netcdf(ds_model, resource_file)
         else:
             raise ValueError("Invalid resource type %s" % ds_model.resources[0].type)
