@@ -1,9 +1,11 @@
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
+import numpy as np
 from netCDF4 import Dataset
 
 from drepr.executors.readers.ra_reader import NDArrayReader, Index
+from drepr.models import IndexExpr, RangeExpr
 
 
 class NetCDF4Reader(NDArrayReader):
@@ -55,3 +57,40 @@ class NetCDF4Reader(NDArrayReader):
 
     def set_value(self, index: List[Index], value):
         pass
+
+    def select(self, steps: List[Union[IndexExpr, RangeExpr]]):
+        # steps.0 must be index because there is no structure change
+        assert isinstance(steps[0], IndexExpr)
+        if steps[0].val == "@":
+            # select metadata
+            value = self.metadata
+            for i in range(1, len(steps)):
+                assert isinstance(steps[i], IndexExpr)
+                value = value[steps[i].val]
+            return value
+
+        # select variable
+        variable = self.variables[steps[0].val]
+        assert isinstance(steps[1], IndexExpr)
+        if steps[1].val == '@':
+            # select metadata of variable
+            value = variable['@']
+            for i in range(2, len(steps)):
+                assert isinstance(steps[i], IndexExpr)
+                value = value[steps[i].val]
+            return value
+
+        # select data of variables
+        assert steps[1].val == 'data'
+        if not isinstance(variable['data'], np.ndarray):
+            # lazy load numpy array otherwise, it will be netcdf dataset (data is living in disk)
+            variable['data'] = np.asarray(variable['data'])
+
+        # slicing through numpy array is a piece of cake
+        value = variable['data']
+        for i in range(2, len(steps)):
+            if isinstance(steps[i], IndexExpr):
+                value = value[steps[i].val]
+            else:
+                value = value[steps[i].start:steps[i].end:steps[i].step]
+        return value

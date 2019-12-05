@@ -59,6 +59,7 @@ def map_netcdf(ds_model: DRepr, resource_file: str):
             outgoing_edges = list(sm.iter_outgoing_edges(nid))
             pred_counts = Counter((e.label for e in outgoing_edges))
             assert all(pred_counts[k] == 1 for k in pred_counts.keys())
+            tables[nid] = {e: [] if c > 1 else None for e, c in pred_counts.items()}
             for e in outgoing_edges:
                 c = sm.nodes[e.target_id]
                 if isinstance(c, DataNode):
@@ -67,20 +68,16 @@ def map_netcdf(ds_model: DRepr, resource_file: str):
                         for align in ds_model.aligns
                         if c.attr_id in [align.target, align.source]
                     ]
-                    tables[nid][e.label] = ndarray.ColArray(attrs[c.attr_id], index_by, attrs[c.attr_id].shape)
+                    if isinstance(attrs[c.attr_id], np.ndarray):
+                        tables[nid][e.label] = ndarray.ColArray(attrs[c.attr_id], index_by, attrs[c.attr_id].shape)
+                    else:
+                        tables[nid][e.label] = ndarray.ColSingle(attrs[c.attr_id])
                 elif isinstance(c, LiteralNode):
                     tables[nid][e.label] = ndarray.ColSingle(c.value)
-                else:
-                    if nid not in relations:
-                        relations[nid] = {}
-                    if c.node_id not in relations:
-                        relations[c.node_id] = {}
 
-                    relations[id][c.node_id] = e.label
+            table_shps[nid] = []
+            for col in tables[nid].values():
+                if isinstance(col, ndarray.ColArray) and np.prod(table_shps[nid]) < col.get_original_size():
+                    table_shps[nid] = col.shape
 
-        table_shps[nid] = []
-        for col in tables[nid].values():
-            if isinstance(col, ndarray.ColArray) and np.prod(table_shps[nid]) < col.get_original_size():
-                table_shps[nid] = col.shape
-
-    return ndarray.NDArrayTables(tables, table_shps, relations)
+    return ndarray.NDArrayGraph(sm, tables, table_shps)

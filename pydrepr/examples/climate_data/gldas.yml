@@ -18,7 +18,7 @@ attributes:
     missing_values: [-9999]
   latitude: $.lat.data[:]
   longitude: $.lon.data[:]
-  projection: $.@.MAP_PRJECTION
+  projection: $.@.MAP_PROJECTION
   x_res: $.@.DX
   y_res: $.@.DY
   x_min: $.@.SOUTH_WEST_CORNER_LON
@@ -36,18 +36,18 @@ semantic_model:
       - [mint-geo:long, longitude]
     static_properties:
       - [mint:standardName, precipitation_flux]
-#    links:
-#      - [mint:geo2d, mint:Geo2D:1]
-#  mint:Geo2D:1:
-#    properties:
-#      - [mint:epsg, projection]
-#      - [mint:long_min, x_min]
-#      - [mint:lat_min, y_min]
-#      - [mint:long_delta, x_res]
-#      - [mint:lat_delta, y_res]
-#    static_properties:
-#      - [mint:long_angle, 0]
-#      - [mint:lat_angle, 0]
+    links:
+      - [mint:geo2d, mint:Geo2D:1]
+  mint:Geo2D:1:
+    properties:
+      - [mint:epsg, projection]
+      - [mint:long_min, x_min]
+      - [mint:lat_min, y_min]
+      - [mint:long_delta, x_res]
+      - [mint:lat_delta, y_res]
+    static_properties:
+      - [mint:long_angle, 0]
+      - [mint:lat_angle, 0]
   prefixes:
     mint: https://mint.isi.edu/
     # do we need this? our latitude/longitude don't have CRS
