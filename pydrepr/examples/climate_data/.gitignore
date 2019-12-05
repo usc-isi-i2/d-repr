@@ -2,3 +2,4 @@ gldas
 gpm
 *.tif
 *.nc
+*.tif*

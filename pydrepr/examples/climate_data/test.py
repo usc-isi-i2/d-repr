@@ -17,5 +17,10 @@ drepr_file = curr_dir + "gldas.yml"
 
 ndarray = NDArrayGraph.from_drepr(DRepr.parse_from_file(drepr_file), infile)
 class_id = next(ndarray.iter_class_ids("mint:Variable"))
-variable = ndarray.get_property_as_ndarray(class_id, "rdf:value", ["mint:Variable:1:mint-geo:lat", "mint-geo:long"])
+
+class_info = ndarray.sm.class2dict(class_id)
+print(class_info)
+
+variable = ndarray.edge_data_as_ndarray(class_info['rdf:value'], [class_info['mint-geo:lat'], class_info['mint-geo:long']])
+print(variable)
 print('>>> done')

@@ -63,17 +63,18 @@ def map_netcdf(ds_model: DRepr, resource_file: str):
             for e in outgoing_edges:
                 c = sm.nodes[e.target_id]
                 if isinstance(c, DataNode):
+                    # TODO: fix me!
                     index_by = [
-                        align.target if align.target != c.attr_id else align.source
+                        f"dnode:" + (align.target if align.target != c.attr_id else align.source)
                         for align in ds_model.aligns
                         if c.attr_id in [align.target, align.source]
                     ]
                     if isinstance(attrs[c.attr_id], np.ndarray):
-                        tables[nid][e.label] = ndarray.ColArray(attrs[c.attr_id], index_by, attrs[c.attr_id].shape)
+                        tables[nid][e.target_id] = ndarray.ColArray(attrs[c.attr_id], index_by, attrs[c.attr_id].shape)
                     else:
-                        tables[nid][e.label] = ndarray.ColSingle(attrs[c.attr_id])
+                        tables[nid][e.target_id] = ndarray.ColSingle(attrs[c.attr_id])
                 elif isinstance(c, LiteralNode):
-                    tables[nid][e.label] = ndarray.ColSingle(c.value)
+                    tables[nid][e.target_id] = ndarray.ColSingle(c.value)
 
             table_shps[nid] = []
             for col in tables[nid].values():
