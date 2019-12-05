@@ -11,7 +11,7 @@ class CFConventionNDArrayMap:
         if len(ds_model.resources) > 1:
             return False
 
-        # ensure it is geotiff, netcdf4
+        # ensure it is geotiff, netcdf
         if ds_model.resources[0].type not in {ResourceType.GeoTIFF, ResourceType.NetCDF3, ResourceType.NetCDF4}:
             return False
 
