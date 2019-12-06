@@ -20,8 +20,8 @@ class GeoTransform:
     x_res: float = 1.0
     x_angle: float = 0.0
     y_min: float = 0.0
-    y_angle: float = 0.0
     y_res: float = 1.0
+    y_angle: float = 0.0
 
     @staticmethod
     def from_gdal(t):
@@ -65,7 +65,7 @@ class Raster:
         self.nodata = nodata
 
         self.raster = gdal_array.OpenNumPyArray(array, True)
-        self.raster.SetGeoTransform(astuple(geotransform))
+        self.raster.SetGeoTransform(geotransform.to_gdal())
         srs = osr.SpatialReference()
         srs.ImportFromEPSG(epsg)
         self.raster.SetSpatialRef(srs)
@@ -77,10 +77,11 @@ class Raster:
     @staticmethod
     def from_geotiff(infile: str) -> 'Raster':
         ds = gdal.Open(infile)
+        print('reader', ds.GetGeoTransform())
         proj = osr.SpatialReference(wkt=ds.GetProjection())
-        epsg = int(proj.GetAttrValue('AUTHORITY', 1))
+        epsg = int(proj.GetAttrValue('AUTHORITY', 1) or '4326')
         data = ds.ReadAsArray()
-        nodata = set(ds.GetRasterBand(i).GetNoDataValue() for i in range(1, data.shape[0] + 1))
+        nodata = set(ds.GetRasterBand(i).GetNoDataValue() for i in range(1, data.shape[0] + 1 if len(data.shape) > 2 else 2))
         assert len(nodata) == 1, "Do not support multiple no data value by now"
         nodata = list(nodata)[0]
         return Raster(data, GeoTransform.from_gdal(ds.GetGeoTransform()), epsg, nodata)
@@ -91,7 +92,9 @@ class Raster:
         gdal_ds = gdal.Open("NETCDF:{0}:{1}".format(infile, varname), gdal.GA_ReadOnly)
 
         # TODO: check what [0] actually do
-        variable = ds.variables[varname][0][::-1]
+        # variable = ds.variables[varname][0][::-1]
+        # variable = ds.variables[varname][:, ::-1]
+        variable = ds.variables[varname]
         data = np.asarray(variable)
 
         # the coordinate is totally mess up, don't know about other datasets

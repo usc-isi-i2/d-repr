@@ -56,7 +56,22 @@ class NetCDF4Reader(NDArrayReader):
         return ptr
 
     def set_value(self, index: List[Index], value):
-        pass
+        # steps.0 must be index because there is no structure change
+        if index[0] == '@':
+            # update metadata
+            ptr = self.metadata
+            for i in range(1, len(index) - 1):
+                ptr = ptr[index[i]]
+            ptr[index[-1]] = value
+            return
+
+        # update variables, but can only update the metadata
+        assert index[1] == '@'
+        ptr = self.variables[index[0]]['@']
+        for i in range(2, len(index) - 2):
+            ptr = ptr[index[i]]
+        ptr[index[-1]] = value
+
 
     def select(self, steps: List[Union[IndexExpr, RangeExpr]]):
         # steps.0 must be index because there is no structure change

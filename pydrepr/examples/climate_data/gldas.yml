@@ -9,12 +9,26 @@ preprocessing:
         return 32663
       raise NotImplementedError()
   - type: pmap
-    path: $.@.SOUTH_WEST_CORNER_LON
+    path: $.@.DY
+    code: |
+      return -value
+  - type: pmap
+    path: $.@.SOUTH_WEST_CORNER_LAT
     code: |
       lat = context.get_value(["lat", "data"])
+      y_res = context.get_value(["@", "DY"])
+
+      y_min = value - len(lat) * y_res + y_res/2
+      return y_min
+  - type: pmap
+    path: $.@.SOUTH_WEST_CORNER_LON
+    code: |
+      x_res = context.get_value(["@", "DX"])
+      x_min = value - x_res/2
+      return x_min
 attributes:
   Rainf_tavg:
-    path: $.Rainf_tavg.data[:][:]
+    path: $.Rainf_f_tavg.data[0][:][:]
     missing_values: [-9999]
   latitude: $.lat.data[:]
   longitude: $.lon.data[:]
@@ -25,9 +39,9 @@ attributes:
   y_min: $.@.SOUTH_WEST_CORNER_LAT
 alignments:
   - type: dimension
-    value: Rainf_tavg:2 <-> latitude:2
+    value: Rainf_tavg:3 <-> latitude:2
   - type: dimension
-    value: Rainf_tavg:3 <-> longitude:2
+    value: Rainf_tavg:4 <-> longitude:2
 semantic_model:
   mint:Variable:1:
     properties:
@@ -37,8 +51,8 @@ semantic_model:
     static_properties:
       - [mint:standardName, precipitation_flux]
     links:
-      - [mint:geo2d, mint:Geo2D:1]
-  mint:Geo2D:1:
+      - [mint:geo2d, mint-geo:Geo2D:1]
+  mint-geo:Geo2D:1:
     properties:
       - [mint:epsg, projection]
       - [mint:long_min, x_min]

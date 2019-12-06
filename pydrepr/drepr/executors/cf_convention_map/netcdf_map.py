@@ -1,11 +1,11 @@
 import numpy as np
-from collections import Counter
 
 from drepr.executors.preprocessing.context import Context
 from drepr.executors.preprocessing.py_exec import PyExec
 from drepr.executors.readers.netcdf import NetCDF4Reader
-from drepr.models import DRepr, ResourceType, PreprocessingType, IndexExpr, ClassNode, DataNode, LiteralNode
-from drepr import ndarray
+from drepr.models import DRepr, ResourceType, PreprocessingType, IndexExpr, ClassNode, DataNode, LiteralNode, RangeExpr
+from drepr.ndarray.column import NoData, ColSingle, ColArray
+from drepr.ndarray import ndarray
 
 
 def map_netcdf(ds_model: DRepr, resource_file: str):
@@ -51,34 +51,50 @@ def map_netcdf(ds_model: DRepr, resource_file: str):
     # 4th: create tables from the semantic model
     sm = ds_model.sm
     tables = {}
-    table_shps = {}
-    relations = {}
+    alignments = {}
 
     for nid, node in sm.nodes.items():
         if isinstance(node, ClassNode):
             outgoing_edges = list(sm.iter_outgoing_edges(nid))
-            pred_counts = Counter((e.label for e in outgoing_edges))
-            assert all(pred_counts[k] == 1 for k in pred_counts.keys())
-            tables[nid] = {e: [] if c > 1 else None for e, c in pred_counts.items()}
+            tables[nid] = {}
             for e in outgoing_edges:
                 c = sm.nodes[e.target_id]
                 if isinstance(c, DataNode):
-                    # TODO: fix me!
-                    index_by = [
-                        f"dnode:" + (align.target if align.target != c.attr_id else align.source)
-                        for align in ds_model.aligns
-                        if c.attr_id in [align.target, align.source]
-                    ]
                     if isinstance(attrs[c.attr_id], np.ndarray):
-                        tables[nid][e.target_id] = ndarray.ColArray(attrs[c.attr_id], index_by, attrs[c.attr_id].shape)
+                        step2dim = []
+                        _attr = ds_model.get_attr_by_id(c.attr_id)
+                        path = _attr.path
+                        if len(_attr.missing_values) == 0:
+                            nodata = None
+                        elif len(_attr.missing_values) == 1:
+                            nodata = NoData(_attr.missing_values[0])
+                        else:
+                            # need to convert other values back to just one value and use it!
+                            raise NotImplementedError()
+
+                        count = 0
+                        for step in path.steps:
+                            if not isinstance(step, IndexExpr):
+                                # in this function all the shape of ndarray will be determined by range only,
+                                # and they will follow the order. Will we have other cases?
+                                assert isinstance(step, RangeExpr)
+                                step2dim.append(count)
+                                count += 1
+                            else:
+                                step2dim.append(None)
+                        tables[nid][e.target_id] = ColArray(e.target_id, attrs[c.attr_id], path, step2dim, nodata)
                     else:
-                        tables[nid][e.target_id] = ndarray.ColSingle(attrs[c.attr_id])
+                        tables[nid][e.target_id] = ColSingle(attrs[c.attr_id])
                 elif isinstance(c, LiteralNode):
-                    tables[nid][e.target_id] = ndarray.ColSingle(c.value)
+                    tables[nid][e.target_id] = ColSingle(c.value)
+                elif not isinstance(c, ClassNode):
+                    raise NotImplementedError()
 
-            table_shps[nid] = []
-            for col in tables[nid].values():
-                if isinstance(col, ndarray.ColArray) and np.prod(table_shps[nid]) < col.get_original_size():
-                    table_shps[nid] = col.shape
-
-    return ndarray.NDArrayGraph(sm, tables, table_shps)
+    # inferring alignments
+    for align in ds_model.aligns:
+        source = f"dnode:" + align.source
+        target = f"dnode:" + align.target
+        if source not in alignments:
+            alignments[source] = {}
+        alignments[source][target] = align
+    return ndarray.NDArrayGraph(sm, tables, alignments)
