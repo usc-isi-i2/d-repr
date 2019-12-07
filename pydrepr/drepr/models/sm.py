@@ -105,6 +105,26 @@ class SemanticModel:
             if self.edges[i].source_id == node_id or self.edges[i].target_id == node_id:
                 self.edges.pop(i)
 
+    def class2dict(self, class_id: str) -> Dict[str, Union[List[int], int]]:
+        info = {}
+        for eid, e in enumerate(self.edges):
+            if e.source_id != class_id:
+                continue
+
+            if e.label in info:
+                if not isinstance(info[e.label], list):
+                    info[e.label] = [info[e.label], eid]
+                else:
+                    info[e.label].append(eid)
+            else:
+                info[e.label] = eid
+        return info
+
+    def iter_class_nodes(self):
+        for n in self.nodes.values():
+            if isinstance(n, ClassNode):
+                yield n
+
     def iter_outgoing_edges(self, node_id: str):
         for e in self.edges:
             if e.source_id == node_id:

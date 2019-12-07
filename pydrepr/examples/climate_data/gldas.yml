@@ -1,0 +1,62 @@
+version: "2"
+resources: netcdf4
+preprocessing:
+  - type: pmap
+    path: $.@.MAP_PROJECTION
+    code: |
+      if value == "EQUIDISTANT CYLINDRICAL":
+        # https://epsg.io/32663 this is different to https://epsg.io/4326
+        return 32663
+      raise NotImplementedError()
+  - type: pmap
+    path: $.@.SOUTH_WEST_CORNER_LAT
+    code: |
+      dy = context.get_value(["@", "DY"])
+      y_min = value - dy/2
+      return y_min
+  - type: pmap
+    path: $.@.SOUTH_WEST_CORNER_LON
+    code: |
+      dx = context.get_value(["@", "DX"])
+      x_min = value - dx/2
+      return x_min
+attributes:
+  Rainf_tavg:
+    path: $.Rainf_f_tavg.data[0][:][:]
+    missing_values: [-9999]
+  latitude: $.lat.data[:]
+  longitude: $.lon.data[:]
+  projection: $.@.MAP_PROJECTION
+  dx: $.@.DX
+  dy: $.@.DY
+  x_min: $.@.SOUTH_WEST_CORNER_LON
+  y_min: $.@.SOUTH_WEST_CORNER_LAT
+alignments:
+  - type: dimension
+    value: Rainf_tavg:3 <-> latitude:2
+  - type: dimension
+    value: Rainf_tavg:4 <-> longitude:2
+semantic_model:
+  mint:Variable:1:
+    properties:
+      - [rdf:value, Rainf_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+    static_properties:
+      - [mint:standardName, precipitation_flux]
+    links:
+      - [mint:raster, mint-geo:Raster:1]
+  mint-geo:Raster:1:
+    properties:
+      - [mint-geo:epsg, projection]
+      - [mint-geo:x_min, x_min]
+      - [mint-geo:y_min, y_min]
+      - [mint-geo:dx, dx]
+      - [mint-geo:dy, dy]
+    static_properties:
+      - [mint-geo:x_slope, 0]
+      - [mint-geo:y_slope, 0]
+  prefixes:
+    mint: https://mint.isi.edu/
+    # do we need this? our latitude/longitude don't have CRS
+    mint-geo: https://mint.isi.edu/geo
