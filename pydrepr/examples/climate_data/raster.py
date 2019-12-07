@@ -14,21 +14,23 @@ from netCDF4 import Dataset
 
 @dataclass
 class GeoTransform:
+    # https://gdal.org/user/raster_data_model.html#affine-geotransform
     # x = longitude, y = latitude
-    # need to keep the order match with gdal: x_min,
-    x_min: float = 0.0
-    x_res: float = 1.0
-    x_angle: float = 0.0
-    y_min: float = 0.0
-    y_res: float = 1.0
-    y_angle: float = 0.0
+    # (x_min, y_max) represent the top-left pixel of the raster (not center) (north-up image!)
+    x_min: float = -180
+    y_max: float = 90.0
+
+    dx: float = 0.1
+    dy: float = -0.1  # north-up image, so the latitude is in descending order (need to be negative)
+    x_slope: float = 0.0
+    y_slope: float = 0.0
 
     @staticmethod
     def from_gdal(t):
-        return GeoTransform(x_min=t[0], x_res=t[1], x_angle=t[2], y_min=t[3], y_angle=t[4], y_res=t[5])
+        return GeoTransform(x_min=t[0], dx=t[1], x_slope=t[2], y_max=t[3], y_slope=t[4], dy=t[5])
 
     def to_gdal(self):
-        return self.x_min, self.x_res, self.x_angle, self.y_min, self.y_angle, self.y_res
+        return self.x_min, self.dx, self.x_slope, self.y_max, self.y_slope, self.dy
 
 
 class EPSG(IntEnum):
@@ -55,7 +57,7 @@ class ReSample(Enum):
 
 
 class Raster:
-    def __init__(self, array: np.ndarray, geotransform: GeoTransform, epsg: EPSG, nodata: float=None):
+    def __init__(self, array: np.ndarray, geotransform: GeoTransform, epsg: Union[int, EPSG], nodata: float=None):
         """
         @param nodata: which value should be no data
         """
@@ -91,21 +93,19 @@ class Raster:
         ds = Dataset(infile)
         gdal_ds = gdal.Open("NETCDF:{0}:{1}".format(infile, varname), gdal.GA_ReadOnly)
 
-        # TODO: check what [0] actually do
-        # variable = ds.variables[varname][0][::-1]
-        # variable = ds.variables[varname][:, ::-1]
         variable = ds.variables[varname]
         data = np.asarray(variable)
+        data = data[:, ::-1]
+        print(data.shape)
 
         # the coordinate is totally mess up, don't know about other datasets
         # re-arrange the geotransform because gdal netcdf geo-transformation is wrong
         gt = GeoTransform.from_gdal(gdal_ds.GetGeoTransform())
-        print("gdal geotransform=", gt)
-        x_max = gt.x_min + gt.x_res * data.shape[1]
-        y_max = gt.y_min + gt.y_res * data.shape[0]
-        # gt = GeoTransform(y_min=x_max, y_angle=gt.x_angle, y_res=-gt.x_res, x_min=y_max, x_angle=gt.y_angle, x_res=-gt.y_res)
-        # print("correct gdal geotransform", gt)
-        # data = np.rot90(data)  # counter clockwise
+        x_max = gt.x_min + gt.dx * data.shape[1]
+        y_max = gt.y_max + gt.dy * data.shape[0]
+        gt = GeoTransform(y_min=x_max, y_angle=gt.x_angle, y_res=-gt.dx, x_min=y_max, x_angle=gt.y_angle,
+                          x_res=-gt.dy)
+        data = np.rot90(data)  # counter clockwise
 
         nodata = gdal_ds.GetRasterBand(1).GetNoDataValue()
         if gdal_ds.GetProjection() != '':
@@ -115,7 +115,6 @@ class Raster:
             epsg = int(proj.GetAttrValue('AUTHORITY', 1))
         else:
             epsg = EPSG.WGS_84
-        print(epsg)
 
         return Raster(data, gt, epsg, nodata)
 

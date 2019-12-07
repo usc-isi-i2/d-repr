@@ -9,22 +9,16 @@ preprocessing:
         return 32663
       raise NotImplementedError()
   - type: pmap
-    path: $.@.DY
-    code: |
-      return -value
-  - type: pmap
     path: $.@.SOUTH_WEST_CORNER_LAT
     code: |
-      lat = context.get_value(["lat", "data"])
-      y_res = context.get_value(["@", "DY"])
-
-      y_min = value - len(lat) * y_res + y_res/2
+      dy = context.get_value(["@", "DY"])
+      y_min = value - dy/2
       return y_min
   - type: pmap
     path: $.@.SOUTH_WEST_CORNER_LON
     code: |
-      x_res = context.get_value(["@", "DX"])
-      x_min = value - x_res/2
+      dx = context.get_value(["@", "DX"])
+      x_min = value - dx/2
       return x_min
 attributes:
   Rainf_tavg:
@@ -33,8 +27,8 @@ attributes:
   latitude: $.lat.data[:]
   longitude: $.lon.data[:]
   projection: $.@.MAP_PROJECTION
-  x_res: $.@.DX
-  y_res: $.@.DY
+  dx: $.@.DX
+  dy: $.@.DY
   x_min: $.@.SOUTH_WEST_CORNER_LON
   y_min: $.@.SOUTH_WEST_CORNER_LAT
 alignments:
@@ -51,17 +45,17 @@ semantic_model:
     static_properties:
       - [mint:standardName, precipitation_flux]
     links:
-      - [mint:geo2d, mint-geo:Geo2D:1]
-  mint-geo:Geo2D:1:
+      - [mint:raster, mint-geo:Raster:1]
+  mint-geo:Raster:1:
     properties:
-      - [mint:epsg, projection]
-      - [mint:long_min, x_min]
-      - [mint:lat_min, y_min]
-      - [mint:long_delta, x_res]
-      - [mint:lat_delta, y_res]
+      - [mint-geo:epsg, projection]
+      - [mint-geo:x_min, x_min]
+      - [mint-geo:y_min, y_min]
+      - [mint-geo:dx, dx]
+      - [mint-geo:dy, dy]
     static_properties:
-      - [mint:long_angle, 0]
-      - [mint:lat_angle, 0]
+      - [mint-geo:x_slope, 0]
+      - [mint-geo:y_slope, 0]
   prefixes:
     mint: https://mint.isi.edu/
     # do we need this? our latitude/longitude don't have CRS

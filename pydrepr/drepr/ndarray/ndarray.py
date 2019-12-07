@@ -144,6 +144,7 @@ class NDArrayGraph:
         # find the new order of dimensions by sorting
         new_data_dims = []
         new_axies = []
+        axis = list(range(len(data_dims)))
         for i in range(len(data_dims)):
             min_j = i
             for j in range(i, len(data_dims)):
@@ -153,8 +154,9 @@ class NDArrayGraph:
             if min_j != i:
                 # we have to swap
                 data_dims[min_j], data_dims[i] = data_dims[i], data_dims[min_j]
-            new_data_dims.append(data_dims[min_j])
-            new_axies.append(min_j)
+                axis[min_j], axis[i] = axis[i], axis[min_j]
+            new_data_dims.append(data_dims[i])
+            new_axies.append(axis[i])
 
         # finally, return the range of each index columns from the new_data_dims to return
         index_col_positions = [IndexEdgeRange(len(index_cols) * 2, 0) for _ in range(len(index_cols))]
