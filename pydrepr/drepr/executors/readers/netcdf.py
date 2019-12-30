@@ -16,11 +16,10 @@ class NetCDF4Reader(NDArrayReader):
     def __init__(self, filename: str, dataset: Dataset):
         self.dataset = dataset
         # read metadata
-        self.metadata = {
-            "filename": filename
-        }
+        self.metadata = {}
         for attr in dataset.ncattrs():
             self.metadata[attr] = getattr(self.dataset, attr)
+        self.metadata["filename"] = filename
         self.variables = {
             k: {
                 "data": dataset.variables[k],
