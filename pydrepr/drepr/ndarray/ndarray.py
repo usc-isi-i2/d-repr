@@ -99,6 +99,8 @@ class NDArrayGraph:
             If we cannot make dimension of index columns continuous (e.g., mixed, or one dim have 3 index_cols), then
             we have to throw error because there is no way to handle that. It cannot be continuous when at one dimension,
             the list of indexed edges are not continuous e.g, at dim 2, it is indexed by both col 1 and 3 (missing col 2)
+
+            In that case, the users should use other functions to handle the situation yourself.
         """
         # 1st retrieve the data
         data = column.get_data()
