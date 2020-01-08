@@ -2,6 +2,10 @@ use cpython::*;
 
 use crate::executors::{Executor, PhysicalOutput};
 use crate::writers::stream_writer::OutputFormat;
+use crate::alignments::inference::AlignmentInference;
+use crate::execution_plans::ClassMapPlan;
+use crate::lang::{GraphNode, Alignment, AlignedDim, Description};
+use std::collections::HashMap;
 
 py_module_initializer!(drepr_engine, initdrepr_engine, PyInit_drepr_engine, |py, m | {
   m.add(py, "__doc__", "Rust D-REPR")?;
@@ -9,6 +13,7 @@ py_module_initializer!(drepr_engine, initdrepr_engine, PyInit_drepr_engine, |py,
   m.add(py, "create_executor", py_fn!(py, create_executor(args: String)))?;
   m.add(py, "destroy_executor", py_fn!(py, destroy_executor(ptr: usize)))?;
   m.add(py, "get_exec_plan", py_fn!(py, get_exec_plan(ptr: usize)))?;
+  m.add(py, "complete_description", py_fn!(py, complete_description(args: String)))?;
   m.add(py, "run_executor", py_fn!(py, run_executor(ptr: usize, output: String)))?;
   Ok(())
 });
@@ -68,6 +73,63 @@ fn run_executor(py: Python, ptr: usize, output: String) -> PyResult<PyDict> {
   Ok(dict)
 }
 
+/// Inferring missing information in the description such as alignments and subjects
+fn complete_description(py: Python, args: String) -> PyResult<PyDict> {
+  let desc = wtry!(serde_json::from_str::<Description>(&args), py);
+  let inference = AlignmentInference::new(&desc);
+  let n_class_nodes = desc.semantic_model.get_n_class_nodes();
+
+  // compute subjects
+  let mut class2subj: Vec<i64> = Vec::with_capacity(n_class_nodes);
+  for class_id in 0..n_class_nodes {
+    // TODO: temporary solution to handle the case where there is no data nodes (only literal nodes)
+    let subj = if desc.semantic_model.outgoing_edges[class_id].iter().all(|&eid| desc.semantic_model.get_target(eid).is_literal_node()) {
+      -1
+    } else {
+      ClassMapPlan::find_subject(&desc, class_id, &inference) as i64
+    };
+    class2subj.push(subj);
+  }
+
+  // generate alignments between subject and other data attributes
+  let mut aligned_funcs: HashMap<(usize, usize), Vec<Alignment>> = HashMap::new();
+  for class_id in 0..n_class_nodes {
+    if class2subj[class_id] == -1 {
+      continue;
+    }
+    let class_subj = class2subj[class_id] as usize;
+
+    for &eid in &desc.semantic_model.outgoing_edges[class_id] {
+      match desc.semantic_model.get_target(eid) {
+        GraphNode::DataNode(n) => {
+          if class_subj == n.attr_id {
+            continue;
+          }
+
+          let lst = inference.get_alignments(class_subj, n.attr_id);
+          aligned_funcs.insert((class_subj, n.attr_id), lst);
+        }
+        GraphNode::LiteralNode(n) => {
+          continue;
+        }
+        GraphNode::ClassNode(n) => {
+          if class2subj[n.node_id] == -1 {
+            continue;
+          }
+          let target_subj = class2subj[n.node_id] as usize;
+          let lst = inference.get_alignments(class_subj, target_subj);
+          aligned_funcs.insert((class_subj, target_subj), lst);
+        }
+      }
+    }
+  }
+
+  let dict = PyDict::new(py);
+  dict.set_item(py, "class2subj", class2subj);
+  dict.set_item(py, "aligned_funcs", aligned_funcs);
+  Ok(dict)
+}
+
 trait ToPyError {
   fn into_pyerr(self, py: Python) -> PyErr;
 }
@@ -84,5 +146,39 @@ impl ToPyError for String {
   }
 }
 
+impl ToPyObject for AlignedDim {
+  type ObjectType = PyDict;
+  fn to_py_object(&self, py: Python) -> Self::ObjectType {
+    let obj = PyDict::new(py);
+    obj.set_item(py, "source_idx", self.source_dim);
+    obj.set_item(py, "target_idx", self.target_dim);
+    obj
+  }
+}
+
+impl ToPyObject for Alignment {
+  type ObjectType = PyDict;
+
+  fn to_py_object(&self, py: Python) -> Self::ObjectType {
+    let obj = PyDict::new(py);
+    match self {
+      Alignment::IdenticalAlign => {
+        obj.set_item(py, "type", "identical");
+      }
+      Alignment::RangeAlign(align) => {
+        obj.set_item(py, "type", "range");
+        obj.set_item(py, "source", align.source);
+        obj.set_item(py, "target", align.target);
+        obj.set_item(py, "aligned_dims", &align.aligned_dims);
+      }
+      Alignment::ValueAlign(align) => {
+        obj.set_item(py, "type", "value");
+        obj.set_item(py, "source", align.source);
+        obj.set_item(py, "target", align.target);
+      }
+    }
+    obj
+  }
+}
 
 

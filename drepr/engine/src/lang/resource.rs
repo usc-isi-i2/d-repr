@@ -12,6 +12,8 @@ pub enum Resource {
   Spreadsheet(usize),
   #[serde(rename = "netcdf")]
   NetCDF(usize),
+  #[serde(rename = "np-dict")]
+  NPDict(usize)
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]

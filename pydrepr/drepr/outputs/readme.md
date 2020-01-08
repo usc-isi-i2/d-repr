@@ -37,16 +37,21 @@ For the array format, we need to maintain original linking values so that we can
 
 Filter based on has_link: howver, has link may not what they want..
 
-# Groupping data
+# Grouping data
 
 Group based on a property. we can use the index method above.
 
+# Assigning new value to the record
 
-class RDFSClass:
-    id: int
-    name: str
-    data_props: List[DataProperty]
-    link_props: List[ObjectProperty]
+Note that mutating values of a record may work a bit different than you may expected. 
+Modify property of a record may also modify values of the property in other records due to sharing
+pointer.
 
-    def iter_records(self) -> Iterable[ProxyRecord]:
-        pass
+# ID of a record
+
+There are three cases of a record:
+1. Has URI and URIs are not unique.
+2. Has URI and URIs are unique
+3. Do not have URI.
+
+If we choose to have three records 

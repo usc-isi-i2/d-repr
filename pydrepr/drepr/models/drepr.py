@@ -26,6 +26,7 @@ class EngineFormat:
     edges_optional: List[bool]
     resource_idmap: Dict[str, int]
     attribute_idmap: Dict[str, int]
+    sm_node_idmap: Dict[str, int]
 
 
 @dataclass
@@ -162,7 +163,7 @@ class DRepr:
                     prefix = node.label.split(":", 1)[0]
                     assert prefix in self.sm.prefixes, f"Unknown prefix `{prefix}` of the " \
                                                                             f"ontology class {node.label}"
-        for edge in self.sm.edges:
+        for edge in self.sm.edges.values():
             if self.sm.is_rel_iri(edge.label):
                 prefix = edge.label.split(":", 1)[0]
                 assert prefix in self.sm.prefixes, f"Unknown prefix `{prefix}` of the " \
@@ -293,9 +294,9 @@ class DRepr:
             nidmap[n['node_id']] = i
             n['node_id'] = i
 
-        for i, edge in enumerate(self.sm.edges):
+        for eid, edge in self.sm.edges.items():
             engine_sm['edges'].append({
-                "edge_id": i,
+                "edge_id": eid,
                 "source": nidmap[edge.source_id],
                 "target": nidmap[edge.target_id],
                 "rel_label": edge.label,
@@ -305,7 +306,7 @@ class DRepr:
 
         edges_optional = [
             not edge.is_required
-            for edge in self.sm.edges
+            for edge in self.sm.edges.values()
         ]
 
         return EngineFormat({
@@ -314,7 +315,7 @@ class DRepr:
             "attributes": attributes,
             "alignments": alignments,
             "semantic_model": engine_sm
-        }, edges_optional, ridmap, aidmap)
+        }, edges_optional, ridmap, aidmap, nidmap)
 
     def _serde_engine_value(self, value: Any):
         """Serialize a python value to a json representation of the Value struct in the Rust engine"""

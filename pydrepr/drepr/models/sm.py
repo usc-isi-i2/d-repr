@@ -36,6 +36,7 @@ class LiteralNode:
 
 @dataclass
 class Edge:
+    edge_id: int
     source_id: str
     target_id: str
     label: str
@@ -49,7 +50,7 @@ Node = Union[LiteralNode, DataNode, ClassNode]
 @dataclass
 class SemanticModel:
     nodes: Dict[str, Node]
-    edges: List[Edge]
+    edges: Dict[int, Edge]
     prefixes: Dict[str, str]
 
     @staticmethod
@@ -68,10 +69,11 @@ class SemanticModel:
             if cid not in aids:
                 break
         nodes = {cid: ClassNode(cid, "eg:Record")}
-        edges = []
+        edges = {}
         for attr in attrs:
             nodes[attr.id] = DataNode(attr.id, attr.id, None)
-            edges.append(Edge(cid, attr.id, f"eg:{attr.id}"))
+            edge_id = len(edges)
+            edges[edge_id] = Edge(edge_id, cid, attr.id, f"eg:{attr.id}")
 
         return SemanticModel(nodes, edges, prefixes)
 
@@ -96,18 +98,24 @@ class SemanticModel:
                 nodes[nid] = LiteralNode(n['node_id'], n['value'], DataType(n['data_type']) if n['data_type'] is not None else None)
             else:
                 raise NotImplementedError()
-        edges = [Edge(**e) for e in raw['edges']]
+        edges = {eid: Edge(**e) for eid, e in raw['edges'].items()}
         return SemanticModel(nodes, edges, raw['prefixes'])
 
     def remove_node(self, node_id: str):
         self.nodes.pop(node_id)
-        for i in range(len(self.edges) - 1, -1, -1):
-            if self.edges[i].source_id == node_id or self.edges[i].target_id == node_id:
-                self.edges.pop(i)
+        removed_edges = []
+        for eid, e in self.edges.items():
+            if e.source_id == node_id or e.target_id == node_id:
+                removed_edges.append(eid)
+        for eid in removed_edges:
+            self.edges.pop(eid)
 
     def class2dict(self, class_id: str) -> Dict[str, Union[List[int], int]]:
+        """
+        Get a dictionary that contains information (predicates) about a given class
+        """
         info = {}
-        for eid, e in enumerate(self.edges):
+        for eid, e in self.edges.items():
             if e.source_id != class_id:
                 continue
 
@@ -126,22 +134,22 @@ class SemanticModel:
                 yield n
 
     def iter_outgoing_edges(self, node_id: str):
-        for e in self.edges:
+        for e in self.edges.values():
             if e.source_id == node_id:
                 yield e
 
     def iter_incoming_edges(self, node_id: str):
-        for e in self.edges:
+        for e in self.edges.values():
             if e.target_id == node_id:
                 yield e
 
     def iter_child_nodes(self, node_id: str):
-        for e in self.edges:
+        for e in self.edges.values():
             if e.source_id == node_id:
                 yield self.nodes[e.source_id]
 
     def iter_parent_nodes(self, node_id: str):
-        for e in self.edges:
+        for e in self.edges.values():
             if e.target_id == node_id:
                 yield self.nodes[e.target_id]
 

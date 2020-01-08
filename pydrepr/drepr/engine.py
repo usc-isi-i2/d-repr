@@ -1,13 +1,15 @@
+import copy
 from dataclasses import dataclass, asdict
 from enum import Enum
-from typing import Dict, Union, Tuple, NamedTuple
+from typing import Dict, Union, Tuple, NamedTuple, List
 
 import ujson, traceback
 
 # noinspection PyUnresolvedReferences
 from drepr import drepr_engine
 from drepr.version import __engine_version__
-from drepr.models import DRepr, DEFAULT_RESOURCE_ID
+from drepr.models import DRepr, DEFAULT_RESOURCE_ID, SemanticModel, Alignment, AlignmentType, RangeAlignment, \
+    AlignedStep, ValueAlignment, LiteralNode, ClassNode
 from drepr.patches import ResourceData, ResourceDataFile, ResourceDataString, xml_patch, jp_propname_patch, nc_patch
 
 assert drepr_engine.__version__ == __engine_version__, f"You are using a different version of D-REPR" \
@@ -81,6 +83,82 @@ def execute(ds_model: DRepr,
     finally:
         if ptr is not None:
             drepr_engine.destroy_executor(ptr)
+
+
+def complete_description(ds_model: DRepr) -> 'CompleteDescription':
+    new_ds_model = jp_propname_patch.patch(ds_model, None)
+
+    engine_ds_model = new_ds_model.to_engine_format()
+    extra_info = drepr_engine.complete_description(ujson.dumps(engine_ds_model.model))
+
+    if ds_model is new_ds_model:
+        sm = copy.deepcopy(ds_model.sm)
+    else:
+        sm = new_ds_model.sm
+
+    # update subjects
+    subjs = {}
+    for n in sm.iter_class_nodes():
+        class_id = engine_ds_model.sm_node_idmap[n.node_id]
+        aidx = extra_info['class2subj'][class_id]
+        if aidx == -1:
+            # just need to pick a random literal node
+            for e in sm.iter_outgoing_edges(n.node_id):
+                if isinstance(sm.nodes[e.target_id], LiteralNode):
+                    subjs[n.node_id] = e.target_id
+                    # subjs.add((n.node_id, e.target_id))
+                    break
+        else:
+            subjs[n.node_id] = f'dnode:{new_ds_model.attrs[aidx].id}'
+            # subjs.add((n.node_id, f'dnode:{new_ds_model.attrs[aidx].id}'))
+
+    for e in sm.edges.values():
+        if subjs.get(e.source_id, None) == e.target_id:
+            e.is_subject = True
+
+    # update alignments
+    alignments = dict()
+    for align in new_ds_model.aligns:
+        alignments[(f"dnode:{align.source}", f"dnode:{align.target}")] = [align]
+
+    for (source, target), aligns_lst in extra_info['aligned_funcs'].items():
+        source = f"dnode:{ds_model.attrs[source].id}"
+        target = f"dnode:{ds_model.attrs[target].id}"
+        aligns = []
+        for align in aligns_lst:
+            align_type = AlignmentType(align['type'])
+            if align_type == AlignmentType.range:
+                aligns.append(RangeAlignment(
+                    ds_model.attrs[align['source']].id,
+                    ds_model.attrs[align['target']].id,
+                    [AlignedStep(**o) for o in align['aligned_dims']]
+                ))
+            elif align_type == AlignmentType.value:
+                aligns.append(ValueAlignment(
+                    ds_model.attrs[align['source']].id,
+                    ds_model.attrs[align['target']].id,
+                ))
+            else:
+                raise NotImplementedError()
+        alignments[source, target] = aligns
+
+    for n in sm.iter_class_nodes():
+        source = subjs[n.node_id]
+        for e in sm.iter_outgoing_edges(n.node_id):
+            v = sm.nodes[e.target_id]
+            if isinstance(v, LiteralNode) and v.node_id != source:
+                alignments[source, e.target_id] = [RangeAlignment(source, e.target_id, [])]
+            elif isinstance(v, ClassNode) and (source, e.target_id) not in alignments:
+                # link to literal class
+                alignments[source, e.target_id] = [RangeAlignment(source, e.target_id, [])]
+
+    return CompleteDescription(sm, alignments)
+
+
+@dataclass
+class CompleteDescription:
+    sm: SemanticModel
+    alignments: Dict[Tuple[str, str], List[Alignment]]
 
 
 class OutputFormat(Enum):
