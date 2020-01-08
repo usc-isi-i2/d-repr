@@ -12,33 +12,36 @@ from drepr.outputs.array_based.indexed_sm import IndexedSM, SMClass
 from drepr.outputs.array_based.types import AttrID, RecordID
 
 
-class DataProp:
-    attr: AttrID
-
-
 class ArrayClass:
     def __init__(self, backend: 'ArrayBackend', cls: SMClass):
         self.id = cls.node_id
         self.label = cls.label
         self.pk_attr = backend.attrs[cls.pk_attr]
         self.uri_attr = None
-        self.data_attr_ids = [
-            (p.label, p.data_id)
-            for lst in cls.predicates.values() for p in lst
-        ]
-        for lbl, data_id in self.data_attr_ids:
-            if lbl == 'drepr:uri':
-                self.uri_attr = backend.attrs[data_id]
+        # contains both values of data property and object property.
+        self.data_attr_ids = []
+        for lst in cls.predicates.values():
+            for p in lst:
+                if p.label != "drepr:uri":
+                    self.data_attr_ids.append((p.label, p.data_id))
+                else:
+                    self.uri_attr = backend.attrs[p.data_id]
 
         self.data_attrs: List[Attribute] = [
             backend.attrs[aid]
             for _1, aid in self.data_attr_ids
         ]
         self.pk2attr_funcs: List[IndexMapFunc] = [
-            self._get_pk2attr_func(backend.alignments[self.pk_attr.id, aid])
+            self._get_imfunc(backend.alignments[self.pk_attr.id, aid])
             if self.pk_attr.id != aid else IdentityFunc()
             for _1, aid in self.data_attr_ids
         ]
+        if self.uri_attr is not None:
+            if self.pk_attr.id == self.uri_attr.id:
+                self.pk2uri_func = IdentityFunc()
+            else:
+                self.pk2uri_func = self._get_imfunc(backend.alignments[self.pk_attr.id, self.uri_attr.id])
+
         self.pred2attrs: Dict[str, List[int]] = defaultdict(lambda: [])
         for i, x in enumerate(self.data_attr_ids):
             self.pred2attrs[x[0]].append(i)
@@ -57,8 +60,21 @@ class ArrayClass:
             for i in range(shape[0]):
                 for j in range(shape[1]):
                     yield ArrayRecord((i, j), self)
+        elif len(shape) == 3:
+            for i in range(shape[0]):
+                for j in range(shape[1]):
+                    for k in range(shape[2]):
+                        yield ArrayRecord((i, j, k), self)
+        elif len(shape) == 4:
+            for i in range(shape[0]):
+                for j in range(shape[1]):
+                    for k in range(shape[2]):
+                        for p in range(shape[3]):
+                            yield ArrayRecord((i, j, k, p), self)
         else:
-            raise NotImplementedError()
+            rid = [0] * len(shape)
+            for r in self._recur_iter_record(shape, 0, rid):
+                yield r
 
     def get_record_by_id(self, rid: RecordID):
         """
@@ -83,11 +99,13 @@ class ArrayClass:
     def filter(self, condition) -> 'ArrayClass':
         pass
 
-    def group_by(self, pred_id: str) -> Iterable[Tuple[Any, 'ArrayClass']]:
-        # self.pred2attrs[pred_id]
+    def group_by(self, predicate: str) -> Iterable[Tuple[Any, 'ArrayClass']]:
+        # perform group by the predicate id
+        # if self.pred2attrs[predicate]
+        # self.pred2attrs[predicate]
         pass
 
-    def _get_pk2attr_func(self, alignments: List[Alignment]) -> PK2AttrFunc:
+    def _get_imfunc(self, alignments: List[Alignment]) -> PK2AttrFunc:
         # constraint of the array-backend class, we have it until we figure out how to
         # handle chained join or value join efficiency. This constraint is supposed to
         # be always satisfied since it has been checked before writing data to array-backend
@@ -97,5 +115,14 @@ class ArrayClass:
         target2source = [s.source_idx - 1 for s in sorted(alignments[0].aligned_steps, key=lambda s: s.target_idx)]
         return PK2AttrFunc(target2source)
 
-
-
+    def _recur_iter_record(self, shp: Tuple[int, ...], dim: int, rid: Tuple[int, ...]):
+        if dim == len(shp) - 1:
+            for i in range(shp[dim]):
+                rid[dim] = i
+                yield ArrayRecord(rid, self)
+        else:
+            for i in range(shp[dim]):
+                rid[dim] = i
+                for r in self._recur_iter_record(shp, dim+1, rid):
+                    yield r
+        

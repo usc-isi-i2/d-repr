@@ -10,8 +10,8 @@ from drepr.outputs.array_based.indexed_sm import IndexedSM
 
 
 def test_array_backend():
-    ds_model = DRepr.parse_from_file("/workspace/d-repr/pydrepr/tests/resources/synthesis_s2/model.yml")
-    resource_file = "/workspace/d-repr/pydrepr/tests/resources/synthesis_s2/resource.json"
+    ds_model = DRepr.parse_from_file("C:\\workspace\\Github\\d-repr\\pydrepr\\tests\\resources\\synthesis_s2\\model.yml")
+    resource_file = "C:\\workspace\\Github\\d-repr\\pydrepr\\tests\\resources\\synthesis_s2\\resource.json"
     plan = complete_description(ds_model)
     result, attrs = CFConventionNDArrayMap.execute(ds_model, resource_file)
     sm = IndexedSM(plan.sm)

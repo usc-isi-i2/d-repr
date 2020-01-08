@@ -54,4 +54,4 @@ There are three cases of a record:
 2. Has URI and URIs are unique
 3. Do not have URI.
 
-If we choose to have three records 
+Because of these behaviours, we have a separated property that returns ID of a record instead of using the same interface that get value of a predicate

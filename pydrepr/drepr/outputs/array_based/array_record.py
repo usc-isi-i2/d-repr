@@ -18,13 +18,11 @@ class ArrayRecord:
 
     @property
     def id(self):
-        """
-        ID of a record is not guarantee to be the `pk_attr`
-        Shorthand for "drepr:uri" predicate if the uri is there. otherwise
-        """
+        """Get ID of the record"""
         if self._cls.uri_attr is None:
+            # blank node
             return self._id
-        return
+        return self.uri_attr.get_value(self._cls.pk2uri_func(self._id))
 
     def s(self, predicate: str):
         """Get value of a predicate, guarantee to return the first single value"""
