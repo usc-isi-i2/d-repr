@@ -35,29 +35,52 @@ class DataProp:
         return self.edge.label
 
 
-class SMClass:
-    def __init__(self, sm: SemanticModel, node_id: str):
-        self.sm = sm
-        self.node_id = node_id
-        self.pk_attr = None
-        self.predicates = defaultdict(lambda: [])
-        self.index_po = defaultdict(lambda: [])
+class ObjectProp:
+    def __init__(self, indexed_sm: 'IndexedSM', edge: Edge, object: 'SMClass'):
+        self.indexed_sm = indexed_sm
+        self.edge = edge
+        self.object: SMClass = object
 
-        for e in sm.iter_outgoing_edges(node_id):
-            if isinstance(sm.nodes[e.target_id], ClassNode):
-                self.index_po[(e.label, sm.nodes[e.target_id].label)].append(SMClass(sm, e.target_id))
+    @property
+    def label(self):
+        return self.edge.label
+
+
+class SMClass:
+    def __init__(self, indexed_sm: 'IndexedSM', node_id: str):
+        self.indexed_sm = indexed_sm
+        self.sm = indexed_sm.sm
+        self.node_id = node_id
+        self.pk_attr: str = ""
+        self.uri_attr: Optional[str] = None
+        self.predicates: Dict[str, List[Union[DataProp, ObjectProp]]] = defaultdict(lambda: [])
+        self.index_po: Dict[Tuple[str, str], List[SMClass]] = defaultdict(lambda: [])
+
+    def _init(self):
+        for e in self.sm.iter_outgoing_edges(self.node_id):
+            if isinstance(self.sm.nodes[e.target_id], ClassNode):
+                o_uri = self.sm.nodes[e.target_id].label
+                o = self.indexed_sm.get_class_by_id(e.target_id)
+                self.index_po[(e.label, o_uri)].append(o)
+                self.predicates[e.label].append(ObjectProp(self.indexed_sm, e, o))
             else:
-                self.predicates[e.label].append(DataProp(sm, e))
+                if e.label == 'drepr:uri':
+                    self.uri_attr = e.target_id
+                else:
+                    self.predicates[e.label].append(DataProp(self.sm, e))
 
             if e.is_subject:
                 # this requires us to analyze the d-repr output first.
                 self.pk_attr = e.target_id
 
+    def is_blank(self) -> bool:
+        return self.uri_attr is None
+
     @property
     def label(self):
         return self.sm.nodes[self.node_id].label
 
-    def p(self, predicate_uri: str) -> List[DataProp]:
+    def p(self, predicate_uri: str) -> List[Union[DataProp, ObjectProp]]:
         """Get list of predicates by their uri"""
         return self.predicates[predicate_uri]
 
@@ -69,9 +92,16 @@ class SMClass:
 class IndexedSM:
     def __init__(self, sm: SemanticModel):
         self.sm = sm
-        self.sm_classes = defaultdict(lambda: [])
+        self.sm_classes: Dict[str, List[SMClass]] = defaultdict(lambda: [])
+        self.id2cls: Dict[str, SMClass] = {}
+
         for n in sm.iter_class_nodes():
-            self.sm_classes[n.label].append(SMClass(sm, n.node_id))
+            cls = SMClass(self, n.node_id)
+            self.sm_classes[n.label].append(cls)
+            self.id2cls[n.node_id] = cls
+
+        for c in self.id2cls.values():
+            c._init()
 
     def c(self, class_uri: str) -> List[SMClass]:
         """
@@ -79,10 +109,9 @@ class IndexedSM:
         """
         return self.sm_classes[class_uri]
 
+    def get_class_by_id(self, node_id: str) -> SMClass:
+        return self.id2cls[node_id]
+
     # noinspection PyMethodMayBeStatic
     def ns(self, uri: str) -> Namespace:
         return Namespace(uri)
-
-
-# 51 tan thanh
-# 40/3 duong bau cat 1

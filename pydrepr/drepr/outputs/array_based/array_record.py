@@ -27,22 +27,23 @@ class ArrayRecord:
     def s(self, predicate: str):
         """Get value of a predicate, guarantee to return the first single value"""
         aid = self._cls.pred2attrs[predicate][0]
-        return self._cls.data_attrs[aid].get_value(self._cls.pk2attr_funcs[aid](self._id))
+        return self._cls.attrs[aid].get_sval(self._id)
 
     def m(self, predicate: str):
         """Get values of a predicate, always return a list"""
         result = []
         for aid in self._cls.pred2attrs[predicate]:
-            result.append(self._cls.data_attrs[aid].get_value(self._cls.pk2attr_funcs[aid](self._id)))
+            result += self._cls.attrs[aid].get_mval(self._id)
         return result
 
     def us(self, predicate: str, val: Any):
         aid = self._cls.pred2attrs[predicate][0]
-        self._cls.data_attrs[aid].set_value(self._cls.pk2attr_funcs[aid](self._id), val)
+        self._cls.attrs[aid].set_value(self._id, val)
 
     def um(self, predicate: str, values: List[Any]):
+        values = iter(values)
         for i, aid in enumerate(self._cls.pred2attrs[predicate]):
-            self._cls.data_attrs[aid].set_value(self._cls.pk2attr_funcs[aid](self._id), values[i])
+            self._cls.attrs[aid].set_value(self._id, values)
 
     def to_dict(self) -> dict:
         info = {'@id': self.id}

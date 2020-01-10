@@ -39,7 +39,29 @@ Filter based on has_link: howver, has link may not what they want..
 
 # Grouping data
 
-Group based on a property. we can use the index method above.
+Group records based on a predicate. There are three cases:
+
+1. We only have one class and one attribute of the predicate.
+    a. If the number of different items of the predicate is 1, then we only has one group, and we don't have to do anything
+    b. Otherwise:
+        i. if the attribute is unique, we just need to loop through each value of the predicate and yield the group.
+        ii. if the property is not unique, but is sorted, then we can still loop through each value and add it to the current group, the group
+            will be yielded when encounter new value.
+        iii. create a mapping from values of the predicate to record ids. then iterate through each value and yield the group.
+    
+    If the predicate is an object property (link to instances of other class), then in the worst case, the other class
+    has URI and the URI is not the PK attribute and we have to perform chain join. The conditions in branch b can be re-written
+    as follow:
+    
+    b'.
+        i. if the @id is blank node, it is equivalent to b.i
+        ii. otherwise, @id is unique, then uri attr should be pk attr as well, therefore, this case is equivalent to b.i
+        iii. @id is not unique, we can handle as b.ii or b.iii
+2. We have one class and multiple attribuets of the predicate: values of the predicate of a single record is a list, and 
+    we cannot perform group by in this case.
+3. We have multiple classes and one attribute of the predicate per class.
+    There is no guarantee that the values across different attributes aren't overlapped. Therefore, we have to create
+    a mapping from values of the predicate to record ids as in 1.b.iii, then iterate through each value and yield the group.
 
 # Assigning new value to the record
 
@@ -47,7 +69,18 @@ Note that mutating values of a record may work a bit different than you may expe
 Modify property of a record may also modify values of the property in other records due to sharing
 pointer.
 
-# ID of a record
+# Data structure
+
+1. Attributes hold the data
+2. To get values of an attribute, we can use the function `get_value` to get value at an index, or get the attribute as 
+a whole array.
+3. To get a value of a predicate, the idea is to applying a mapping fucntion to the position of the corresponding primary key value to get the position of the desired value. The tricky case is the object link.
+    3.1 If the target class is blank, then we just return the id of the pk attr
+    3.2 If the target class is non-blank, with uri and eventhough uri attr != pk attr, we only need to 
+    perform a chain join.
+
+
+## ID of a record
 
 There are three cases of a record:
 1. Has URI and URIs are not unique.
@@ -55,3 +88,4 @@ There are three cases of a record:
 3. Do not have URI.
 
 Because of these behaviours, we have a separated property that returns ID of a record instead of using the same interface that get value of a predicate
+

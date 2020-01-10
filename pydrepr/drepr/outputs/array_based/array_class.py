@@ -1,50 +1,55 @@
 import numpy as np
 from dataclasses import dataclass
-from typing import List, Dict, Iterable, Any, Tuple, TYPE_CHECKING
+from typing import List, Dict, Iterable, Any, Tuple, TYPE_CHECKING, Union
 
 from drepr.models import Alignment, defaultdict, RangeAlignment
 from drepr.outputs.array_based.array_attr import Attribute
 if TYPE_CHECKING:
     from drepr.outputs.array_based.array_backend import ArrayBackend
 from drepr.outputs.array_based.array_record import ArrayRecord
-from drepr.outputs.array_based.index_map_func import PK2AttrFunc, IndexMapFunc, IdentityFunc
-from drepr.outputs.array_based.indexed_sm import IndexedSM, SMClass
+from drepr.outputs.array_based.index_map_func import O2ORange0Func, X2OFunc, IdentityFunc, X2MFunc
+from drepr.outputs.array_based.indexed_sm import IndexedSM, SMClass, DataProp, ObjectProp
 from drepr.outputs.array_based.types import AttrID, RecordID
 
 
 class ArrayClass:
     def __init__(self, backend: 'ArrayBackend', cls: SMClass):
+        self.cls = cls
         self.id = cls.node_id
         self.label = cls.label
+
         self.pk_attr = backend.attrs[cls.pk_attr]
-        self.uri_attr = None
+
+        if cls.is_blank():
+            self.uri_attr = PolymorphismAttribute(self.pk_attr, IdentityFunc, True, True)
+        else:
+            self.uri_attr = PolymorphismAttribute(backend.attrs[cls.uri_attr],
+                                                  self._get_imfunc(backend.alignments[self.pk_attr.id, cls.uri_attr]),
+                                                  True, False)
+
         # contains both values of data property and object property.
-        self.data_attr_ids = []
+        self.attrs = []
+        self.pred2attrs: Dict[str, List[int]] = defaultdict(lambda: [])
         for lst in cls.predicates.values():
             for p in lst:
-                if p.label != "drepr:uri":
-                    self.data_attr_ids.append((p.label, p.data_id))
+                self.pred2attrs[p.label].append(len(self.attrs))
+                if isinstance(p, DataProp):
+                    self.attrs.append(PolymorphismAttribute(
+                        backend.attrs[p.data_id],
+                        self._get_imfunc(backend.alignments[self.pk_attr.id, p.data_id]),
+                        True, False
+                    ))
                 else:
-                    self.uri_attr = backend.attrs[p.data_id]
-
-        self.data_attrs: List[Attribute] = [
-            backend.attrs[aid]
-            for _1, aid in self.data_attr_ids
-        ]
-        self.pk2attr_funcs: List[IndexMapFunc] = [
-            self._get_imfunc(backend.alignments[self.pk_attr.id, aid])
-            if self.pk_attr.id != aid else IdentityFunc()
-            for _1, aid in self.data_attr_ids
-        ]
-        if self.uri_attr is not None:
-            if self.pk_attr.id == self.uri_attr.id:
-                self.pk2uri_func = IdentityFunc()
-            else:
-                self.pk2uri_func = self._get_imfunc(backend.alignments[self.pk_attr.id, self.uri_attr.id])
-
-        self.pred2attrs: Dict[str, List[int]] = defaultdict(lambda: [])
-        for i, x in enumerate(self.data_attr_ids):
-            self.pred2attrs[x[0]].append(i)
+                    p: ObjectProp
+                    if p.object.is_blank():
+                        imfunc = self._get_imfunc(backend.alignments[self.pk_attr.id, p.object.pk_attr])
+                    else:
+                        imfunc = self._get_imfunc(backend.alignments[self.pk_attr.id, p.object.uri_attr])
+                    self.attrs.append(PolymorphismAttribute(
+                        backend.attrs[p.object.uri_attr],
+                        imfunc,
+                        imfunc.is_x2o, p.object.is_blank()
+                    ))
 
     def iter_records(self):
         """
@@ -101,11 +106,17 @@ class ArrayClass:
 
     def group_by(self, predicate: str) -> Iterable[Tuple[Any, 'ArrayClass']]:
         # perform group by the predicate id
+        if len(self.pred2attrs[predicate]) > 1:
+            raise Exception("Key of group_by operator cannot be a list")
+
+        if self.cls.is_object_prop(predicate):
+            pass
+            # guarantee
         # if self.pred2attrs[predicate]
         # self.pred2attrs[predicate]
         pass
 
-    def _get_imfunc(self, alignments: List[Alignment]) -> PK2AttrFunc:
+    def _get_imfunc(self, alignments: List[Alignment]) -> Union[X2OFunc, X2MFunc]:
         # constraint of the array-backend class, we have it until we figure out how to
         # handle chained join or value join efficiency. This constraint is supposed to
         # be always satisfied since it has been checked before writing data to array-backend
@@ -113,9 +124,9 @@ class ArrayClass:
         assert len(alignments) == 1 and isinstance(alignments[0], RangeAlignment)
         # TODO: fix me! bug if there is missing values
         target2source = [s.source_idx - 1 for s in sorted(alignments[0].aligned_steps, key=lambda s: s.target_idx)]
-        return PK2AttrFunc(target2source)
+        return O2ORange0Func(target2source)
 
-    def _recur_iter_record(self, shp: Tuple[int, ...], dim: int, rid: Tuple[int, ...]):
+    def _recur_iter_record(self, shp: Tuple[int, ...], dim: int, rid: List[int, ...]):
         if dim == len(shp) - 1:
             for i in range(shp[dim]):
                 rid[dim] = i
@@ -125,4 +136,44 @@ class ArrayClass:
                 rid[dim] = i
                 for r in self._recur_iter_record(shp, dim+1, rid):
                     yield r
-        
+
+
+@dataclass
+class PolymorphismAttribute:
+    """
+    Represent attribute of one of possible three types: data property, blank object property, and uri object property
+    """
+    attr: Attribute
+    im_func: Union[X2OFunc, X2MFunc]
+    is_x2o_func: bool
+    is_blank: bool
+
+    def get_sval(self, id: RecordID):
+        if self.is_blank:
+            if self.is_x2o_func:
+                return self.im_func(id)
+            else:
+                return next(self.im_func(id))
+        if self.is_x2o_func:
+            return self.attr.get_value(self.im_func(id))
+        return self.attr.get_value(next(self.im_func(id)))
+
+    def get_mval(self, id: RecordID):
+        if self.is_blank:
+            if self.is_x2o_func:
+                return [self.im_func(id)]
+            else:
+                return list(self.im_func(id))
+        if self.is_x2o_func:
+            return [self.attr.get_value(self.im_func(id))]
+        return [self.attr.get_value(x) for x in self.im_func(id)]
+
+    def set_value(self, id: RecordID, val: Any):
+        if self.is_blank:
+            raise Exception("Cannot assign value to blank instances")
+        if self.is_x2o_func:
+            self.attr.set_value(self.im_func(id), val)
+        else:
+            # expect value to be an iterator
+            for i, x in enumerate(self.im_func(id)):
+                self.attr.set_value(x, next(val))
