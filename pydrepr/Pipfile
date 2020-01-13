@@ -7,6 +7,9 @@ verify_ssl = true
 pipenv-setup = "*"
 
 [packages]
+xmltodict = "*"
+ruamel-yaml = ">=0.15.0"
+ujson = "*"
 
 [requires]
 python_version = "3.7"

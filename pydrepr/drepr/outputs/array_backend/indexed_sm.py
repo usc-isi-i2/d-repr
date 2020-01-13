@@ -34,6 +34,10 @@ class DataProp:
     def label(self):
         return self.edge.label
 
+    @property
+    def edge_id(self):
+        return self.edge.edge_id
+
 
 class ObjectProp:
     def __init__(self, indexed_sm: 'IndexedSM', edge: Edge, object: 'SMClass'):
@@ -44,6 +48,10 @@ class ObjectProp:
     @property
     def label(self):
         return self.edge.label
+
+    @property
+    def edge_id(self):
+        return self.edge.edge_id
 
 
 class SMClass:

@@ -79,6 +79,9 @@ a whole array.
     3.2 If the target class is non-blank, with uri and eventhough uri attr != pk attr, we only need to 
     perform a chain join.
 
+## ID of a record
+
+ID of a record is something that uniquely identify it. However, for graph-based 
 
 ## ID of a record
 

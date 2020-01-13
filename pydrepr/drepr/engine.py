@@ -148,9 +148,10 @@ def complete_description(ds_model: DRepr) -> 'CompleteDescription':
             v = sm.nodes[e.target_id]
             if isinstance(v, LiteralNode) and v.node_id != source:
                 alignments[source, e.target_id] = [RangeAlignment(source, e.target_id, [])]
-            elif isinstance(v, ClassNode) and (source, e.target_id) not in alignments:
+            elif isinstance(v, ClassNode) and (source, subjs[e.target_id]) not in alignments:
                 # link to literal class
-                alignments[source, e.target_id] = [RangeAlignment(source, e.target_id, [])]
+                assert isinstance(sm.nodes[subjs[e.target_id]], LiteralNode)
+                alignments[source, subjs[e.target_id]] = [RangeAlignment(source, subjs[e.target_id], [])]
 
     return CompleteDescription(sm, alignments)
 
