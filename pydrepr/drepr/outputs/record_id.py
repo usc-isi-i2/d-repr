@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, Callable, Any, Optional
+from typing import List, Dict, Tuple, Callable, Any, Optional, Union
 
 
 class BlankRecordID(tuple):
@@ -10,7 +10,7 @@ class BlankRecordID(tuple):
         self.class_id = class_id
 
 
-class RecordID(str):
+class URIRecordID(str):
     def __new__(cls, uri: str, index: Any, class_id: str):
         return super().__new__(cls, uri)
 
@@ -28,7 +28,25 @@ class GroupRecordID(str):
         self.class_id = class_id
 
 
+class GraphRecordID(str):
+    def __new__(cls, id: str, class_id: str) -> Any:
+        return super().__new__(cls, id)
+
+    def __init__(self, id: str, class_id: str):
+        self.class_id = class_id
+
+    def __copy__(self):
+        return GraphRecordID(self, self.class_id)
+
+    def __deepcopy__(self, memodict={}):
+        return GraphRecordID(self, self.class_id)
+
+
+ArrayRecordID = Union[BlankRecordID, URIRecordID, GroupRecordID]
+RecordID = Union[GraphRecordID, ArrayRecordID]
+
+
 if __name__ == '__main__':
-    rid = RecordID("https://example.org", (1, 2, 3))
+    rid = URIRecordID("https://example.org", (1, 2, 3))
     print(rid)
     print(rid.index)

@@ -2,17 +2,19 @@ from typing import *
 
 from drepr.engine import complete_description
 from drepr.executors.cf_convention_map.cf_convention_map import CFConventionNDArrayMap
-from drepr.models import Alignment, DRepr
+from drepr.models import Alignment, DRepr, SemanticModel, defaultdict
+from drepr.outputs.array_backend.array_attr import Attribute
+from drepr.outputs.array_backend.array_class import ArrayClass
+from drepr.outputs.array_backend.indexed_sm import IndexedSM
+from drepr.outputs.array_backend.lst_array_class import LstArrayClass
+from drepr.outputs.record_id import ArrayRecordID
+from drepr.outputs.base_output_sm import BaseOutputSM
+from drepr.outputs.base_record import BaseRecord
+from drepr.outputs.base_lst_output_class import BaseLstOutputClass
+from drepr.outputs.base_output_class import BaseOutputClass
 
-from drepr.outputs.array_based.array_attr import Attribute
-from drepr.outputs.array_based.array_class import ArrayClass
-from drepr.outputs.array_based.array_record import ArrayRecord
-from drepr.outputs.array_based.indexed_sm import IndexedSM
-from drepr.outputs.array_based.lst_array_class import LstArrayClass
-from drepr.outputs.array_based.record_id import RecordID
 
-
-class ArrayBackend:
+class ArrayBackend(BaseOutputSM):
     """
     Array-based output. In particular, each property of a class is an array.
     A class will contains the subject property (similar to primary key column). It also has alignments between
@@ -23,37 +25,51 @@ class ArrayBackend:
     URI of a record, and it will be the index in the subject's array.
     To iter through all records of a class, we only need to loop through each index. 
     """
-    def __init__(self, sm: IndexedSM, attrs: Dict[str, Attribute],
+
+    def __init__(self, sm: SemanticModel, attrs: Dict[str, Attribute],
                  alignments: Dict[Tuple[str, str], List[Alignment]]):
         """
         @param sm
         @param attrs
         @param alignments get alignment from (source_id, target_id) where source_id and target_id are IDs of attributes.
         """
+        # semantic model
         self.sm = sm
+        # a mapping from attribute id to the attribute
         self.attrs = attrs
+        # a mapping from a pair of two attributes to their alignments
         self.alignments = alignments
-        self.classes = {}
-        for lst in sm.sm_classes.values():
-            for c in lst:
-                self.classes[c.node_id] = ArrayClass(self, c)
+        # a mapping from node id to class node
+        self.classes: Dict[str, ArrayClass] = {}
+        self.uri2classes: Dict[str, List[ArrayClass]] = defaultdict(list)
 
-    @staticmethod
-    def from_drepr(drepr_file: str, resources: Union[str, Dict[str, str]]):
+        for c in sm.iter_class_nodes():
+            self.classes[c.node_id] = ArrayClass(self, c.node_id)
+        for c in self.classes.values():
+            c._init_schema()
+        for c in self.classes.values():
+            c._init_data()
+            self.uri2classes[c.uri].append(c)
+
+    @classmethod
+    def from_drepr(cls, drepr_file: str, resources: Union[str, Dict[str, str]]) -> BaseOutputSM:
         ds_model = DRepr.parse_from_file(drepr_file)
-        resource_file = next(resources.values()) if isinstance(resources, dict) else resources
+        resource_file = next(iter(resources.values())) if isinstance(resources, dict) else resources
         plan = complete_description(ds_model)
         result, attrs = CFConventionNDArrayMap.execute(ds_model, resource_file)
-        sm = IndexedSM(plan.sm)
-        return ArrayBackend(sm, attrs, plan.alignments)
+        return cls(plan.sm, attrs, plan.alignments)
 
-    def get_class_by_id(self, node_id: str):
-        return self.classes[node_id]
+    def iter_classes(self) -> Iterable[BaseOutputClass]:
+        return iter(self.classes.values())
 
-    def get_classes_by_uri(self, cls_name: str):
-        if len(self.sm.sm_classes[cls_name]) == 1:
-            return self.classes[self.sm.sm_classes[cls_name][0].node_id]
-        return LstArrayClass([self.classes[c.node_id] for c in self.sm.sm_classes[cls_name]])
-
-    def get_record_by_id(self, rid: RecordID) -> ArrayRecord:
+    def get_record_by_id(self, rid: ArrayRecordID) -> BaseRecord:
         return self.classes[rid.class_id].get_record_by_id(rid)
+
+    def c(self, class_uri: str) -> BaseLstOutputClass:
+        return LstArrayClass(self.uri2classes[class_uri])
+
+    def cid(self, class_id: str) -> ArrayClass:
+        return self.classes[class_id]
+
+    def _get_sm(self) -> SemanticModel:
+        return self.sm

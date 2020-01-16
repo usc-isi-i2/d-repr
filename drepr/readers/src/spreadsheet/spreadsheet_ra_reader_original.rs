@@ -65,7 +65,7 @@ impl RAReader for SpreadsheetRAReader {
     self.data.remove(index)
   }
 
-  fn ground_path(&self, loc: &mut PathExpr, start_idx: usize) {
+  fn ground_path(&self, _loc: &mut PathExpr, _start_idx: usize) {
     unimplemented!()
   }
 

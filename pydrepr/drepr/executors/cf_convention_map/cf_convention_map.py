@@ -8,9 +8,7 @@ from drepr.executors.preprocessing.context import Context
 from drepr.executors.preprocessing.py_exec import PyExec
 from drepr.executors.readers.netcdf import NetCDF4Reader
 from drepr.models import DRepr, ResourceType, PreprocessingType, IndexExpr, ClassNode, DataNode, LiteralNode, RangeExpr
-from drepr.ndarray.column import NoData, ColSingle, ColArray
-from drepr.ndarray import ndarray
-from drepr.outputs.array_based.array_attr import ArrayAttr, ScalarAttr
+from drepr.outputs.array_backend.array_attr import ArrayAttr, ScalarAttr, NoData
 
 
 class CFConventionNDArrayMap:
@@ -143,11 +141,13 @@ class CFConventionNDArrayMap:
                                     count += 1
                                 else:
                                     step2dim.append(None)
-                            tables[nid][e.target_id] = ColArray(e.target_id, attrs[c.attr_id], path, step2dim, nodata)
+                            # tables[nid][e.target_id] = ColArray(e.target_id, attrs[c.attr_id], path, step2dim, nodata)
                         else:
-                            tables[nid][e.target_id] = ColSingle(attrs[c.attr_id])
+                            pass
+                            # tables[nid][e.target_id] = ColSingle(attrs[c.attr_id])
                     elif isinstance(c, LiteralNode):
-                        tables[nid][e.target_id] = ColSingle(c.value)
+                        pass
+                        # tables[nid][e.target_id] = ColSingle(c.value)
                     elif not isinstance(c, ClassNode):
                         raise NotImplementedError()
             elif isinstance(node, LiteralNode):
@@ -160,4 +160,5 @@ class CFConventionNDArrayMap:
             if source not in alignments:
                 alignments[source] = {}
             alignments[source][target] = align
-        return ndarray.NDArrayGraph(sm, tables, alignments), new_attrs
+        return None, new_attrs
+        # return ndarray.NDArrayGraph(sm, tables, alignments), new_attrs

@@ -30,6 +30,7 @@ fancy-regex = "0.1.0"
 lazy_static = "1.3.0"
 
 [dependencies.cpython]
-version = "0.2.1"
+#version = "0.3.1"
+git = "https://github.com/binh-vu/rust-cpython"
 # Note: enable this feature generating error when running test or building binary package. See README.md for more information
 #features = ["extension-module"]

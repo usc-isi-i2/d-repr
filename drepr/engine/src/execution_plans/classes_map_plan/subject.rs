@@ -72,7 +72,7 @@ impl<'a> Subject<'a> {
       // always true for blank
       Subject::BlankSubject(_) => true,
       Subject::InternalIDSubject(s) => s.attr.unique,
-      Subject::ExternalIDSubject(s) => s.real_id.0.unique
+      Subject::ExternalIDSubject(s) => s.real_id.0.unique,
     }
   }
 }

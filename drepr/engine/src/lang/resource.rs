@@ -10,8 +10,8 @@ pub enum Resource {
   JSON(usize),
   #[serde(rename = "spreadsheet")]
   Spreadsheet(usize),
-  #[serde(rename = "netcdf")]
-  NetCDF(usize),
+  #[serde(rename = "netcdf4")]
+  NetCDF4(usize),
   #[serde(rename = "np-dict")]
   NPDict(usize)
 }

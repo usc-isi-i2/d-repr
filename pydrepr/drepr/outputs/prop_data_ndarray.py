@@ -3,12 +3,14 @@ from typing import List, Optional
 
 import numpy as np
 
-from drepr.outputs.array_based.array_attr import NoData
+from drepr.outputs.array_backend.array_attr import NoData
 
 
 @dataclass
 class IndexPropRange:
+    # start dimension
     start: int
+    # end dimension
     end: int
 
 

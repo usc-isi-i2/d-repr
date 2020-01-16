@@ -165,12 +165,12 @@ dependencies = [
 
 [[package]]
 name = "cpython"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+version = "0.3.1"
+source = "git+https://github.com/binh-vu/rust-cpython#8ab4db49631e30d5fed949bd5aaabfb865f95ece"
 dependencies = [
  "libc 0.2.62 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "python3-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "python3-sys 0.3.0 (git+https://github.com/binh-vu/rust-cpython)",
 ]
 
 [[package]]
@@ -238,7 +238,7 @@ version = "1.0.5"
 dependencies = [
  "chrono 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "cpython 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cpython 0.3.1 (git+https://github.com/binh-vu/rust-cpython)",
  "fancy-regex 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fnv 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "hashbrown 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -435,8 +435,8 @@ dependencies = [
 
 [[package]]
 name = "python3-sys"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+version = "0.3.0"
+source = "git+https://github.com/binh-vu/rust-cpython#8ab4db49631e30d5fed949bd5aaabfb865f95ece"
 dependencies = [
  "libc 0.2.62 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -475,7 +475,7 @@ version = "0.2.1"
 dependencies = [
  "calamine 0.15.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "cpython 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cpython 0.3.1 (git+https://github.com/binh-vu/rust-cpython)",
  "csv 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "fancy-regex 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fnv 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -811,7 +811,7 @@ dependencies = [
 "checksum chrono 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)" = "27429a03ca54100bf6bdc726c09adc46a74187ac93f9ce96dc7aaa9594ebf707"
 "checksum clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5067f5bb2d80ef5d68b4c87db81601f0b75bca627bc2ef76b141d7b846a3c6d9"
 "checksum codepage 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8b0e9222c0cdf2c6ac27d73f664f9520266fa911c3106329d359f8861cb8bde9"
-"checksum cpython 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b489034e723e7f5109fecd19b719e664f89ef925be785885252469e9822fa940"
+"checksum cpython 0.3.1 (git+https://github.com/binh-vu/rust-cpython)" = "<none>"
 "checksum crc32fast 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ba125de2af0df55319f41944744ad91c71113bf74a4646efff39afe1f6842db1"
 "checksum csv 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "37519ccdfd73a75821cac9319d4fce15a81b9fcf75f951df5b9988aa3a0af87d"
 "checksum csv-core 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "9b5cadb6b25c77aeff80ba701712494213f4a8418fcda2ee11b6560c3ad0bf4c"
@@ -844,7 +844,7 @@ dependencies = [
 "checksum podio 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "780fb4b6698bbf9cf2444ea5d22411cef2953f0824b98f33cf454ec5615645bd"
 "checksum proc-macro2 0.4.30 (registry+https://github.com/rust-lang/crates.io-index)" = "cf3d2011ab5c909338f7887f4fc896d35932e29146c12c8d01da6b22a80ba759"
 "checksum proc-macro2 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "175a40b9cf564ce9bf050654633dbf339978706b8ead1a907bb970b63185dd95"
-"checksum python3-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "61e4aac43f833fd637e429506cb2ac9d7df672c4b68f2eaaa163649b7fdc0444"
+"checksum python3-sys 0.3.0 (git+https://github.com/binh-vu/rust-cpython)" = "<none>"
 "checksum quick-xml 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)" = "713703273f75ed6976d016fe595df7302710de19604c3e95dce57ef98849a606"
 "checksum quote 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)" = "6ce23b6b870e8f94f81fb0a363d65d86675884b34a09043c81e5562f11c1f8e1"
 "checksum quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "053a8c8bcc71fcce321828dc897a98ab9760bef03a4fc36693c231e5b3216cfe"

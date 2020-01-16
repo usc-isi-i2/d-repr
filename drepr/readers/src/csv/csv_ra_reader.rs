@@ -115,7 +115,7 @@ impl RAReader for CSVRAReader {
     self.data.remove(index.as_idx());
   }
 
-  fn ground_path(&self, path: &mut PathExpr, start_idx: usize) {
+  fn ground_path(&self, _path: &mut PathExpr, _start_idx: usize) {
     unimplemented!()
   }
   

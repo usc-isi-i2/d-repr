@@ -1,18 +1,18 @@
-from dataclasses import dataclass
-from typing import List, Dict, Tuple, Callable, Any, Optional, TYPE_CHECKING
+from typing import List, Tuple, Any, TYPE_CHECKING
 
-from drepr.outputs.array_based.record_id import RecordID
+from drepr.outputs.record_id import RecordID
+from drepr.outputs.base_record import BaseRecord
 
 if TYPE_CHECKING:
-    from drepr.outputs.array_based.array_class import ArrayClass
+    from drepr.outputs.array_backend.array_class import ArrayClass
 
 
-@dataclass
-class ArrayRecord:
+class ArrayRecord(BaseRecord):
     """
     This record assumes that there is one to one mapping between an item in the pk attribute with the subject attribute.
     If this assumption does not hold, we have to perform a group by the subject attribute to gather duplicated record first.
     """
+
     def __init__(self, index: Tuple[int, ...], array_class: 'ArrayClass'):
         self._index = index
         self._cls = array_class
@@ -48,4 +48,3 @@ class ArrayRecord:
         for k in self._cls.pred2attrs.keys():
             info[k] = self.m(k)
         return info
-

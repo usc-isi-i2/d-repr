@@ -20,8 +20,8 @@ pub enum PhysicalResource {
 pub enum PhysicalOutput {
   #[serde(rename = "file")]
   File { fpath: String, format: OutputFormat },
-  #[serde(rename = "string")]
-  String { format: OutputFormat },
+  #[serde(rename = "memory")]
+  Memory { format: OutputFormat }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -45,7 +45,7 @@ impl Executor {
 //    let edges_optional = vec![true; self.description.semantic_model.edges.len()];
     let output_format = match &self.output {
       PhysicalOutput::File { fpath: _, format } => format,
-      PhysicalOutput::String { format } => format
+      PhysicalOutput::Memory { format } => format
     };
     let exec_plan = ClassesMapExecutionPlan::new(&self.description, output_format, &self.edges_optional);
     ExecutionPlan::ClassesMap(exec_plan)
@@ -56,7 +56,7 @@ impl PhysicalOutput {
   pub fn get_format(&self) -> &OutputFormat {
     match self {
       PhysicalOutput::File { fpath: _, format } => format,
-      PhysicalOutput::String { format } => format
+      PhysicalOutput::Memory { format } => format
     }
   }
 }

@@ -8,7 +8,7 @@ from pathlib import Path
 import ujson
 from ruamel.yaml import YAML
 
-from drepr.engine import execute, FileOutput, OutputFormat, StringOutput
+from drepr.engine import execute, FileOutput, OutputFormat, MemoryOutput
 from drepr.models import DRepr
 
 if __name__ == '__main__':
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     if args.output is not None:
         output = FileOutput(args.output, OutputFormat(args.format))
     else:
-        output = StringOutput(OutputFormat(args.format))
+        output = MemoryOutput(OutputFormat(args.format))
 
     start = time.time()
     result = execute(ds_model, resources, output, args.verbose > 1)

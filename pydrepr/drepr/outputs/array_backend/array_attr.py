@@ -44,6 +44,7 @@ class ScalarAttr:
         self.id = id
         self.value = value
         self.values = None
+        self.nodata = None
 
     @property
     def shape(self) -> Tuple[int, ...]:

@@ -56,7 +56,7 @@ fn run_executor(py: Python, ptr: usize, output: String) -> PyResult<PyDict> {
   
   match &executor.output {
     PhysicalOutput::File { fpath: _, format: _ } => {}
-    PhysicalOutput::String { format } => {
+    PhysicalOutput::Memory { format } => {
       match format {
         OutputFormat::TTL => {
           dict.set_item(py, "value", result.into_str1())?;
@@ -65,6 +65,9 @@ fn run_executor(py: Python, ptr: usize, output: String) -> PyResult<PyDict> {
           let (nodes, edges) = result.into_str2();
           dict.set_item(py, "nodes", nodes)?;
           dict.set_item(py, "edges", edges)?;
+        }
+        OutputFormat::GraphPy => {
+          dict.set_item(py, "class2nodes", result.into_graphpy())?;
         }
       }
     }
@@ -109,7 +112,7 @@ fn complete_description(py: Python, args: String) -> PyResult<PyDict> {
           let lst = inference.get_alignments(class_subj, n.attr_id);
           aligned_funcs.insert((class_subj, n.attr_id), lst);
         }
-        GraphNode::LiteralNode(n) => {
+        GraphNode::LiteralNode(_n) => {
           continue;
         }
         GraphNode::ClassNode(n) => {
@@ -125,8 +128,8 @@ fn complete_description(py: Python, args: String) -> PyResult<PyDict> {
   }
 
   let dict = PyDict::new(py);
-  dict.set_item(py, "class2subj", class2subj);
-  dict.set_item(py, "aligned_funcs", aligned_funcs);
+  dict.set_item(py, "class2subj", class2subj).unwrap();
+  dict.set_item(py, "aligned_funcs", aligned_funcs).unwrap();
   Ok(dict)
 }
 
@@ -150,8 +153,8 @@ impl ToPyObject for AlignedDim {
   type ObjectType = PyDict;
   fn to_py_object(&self, py: Python) -> Self::ObjectType {
     let obj = PyDict::new(py);
-    obj.set_item(py, "source_idx", self.source_dim);
-    obj.set_item(py, "target_idx", self.target_dim);
+    obj.set_item(py, "source_idx", self.source_dim).unwrap();
+    obj.set_item(py, "target_idx", self.target_dim).unwrap();
     obj
   }
 }
@@ -163,18 +166,18 @@ impl ToPyObject for Alignment {
     let obj = PyDict::new(py);
     match self {
       Alignment::IdenticalAlign => {
-        obj.set_item(py, "type", "identical");
+        obj.set_item(py, "type", "identical").unwrap();
       }
       Alignment::RangeAlign(align) => {
-        obj.set_item(py, "type", "range");
-        obj.set_item(py, "source", align.source);
-        obj.set_item(py, "target", align.target);
-        obj.set_item(py, "aligned_dims", &align.aligned_dims);
+        obj.set_item(py, "type", "range").unwrap();
+        obj.set_item(py, "source", align.source).unwrap();
+        obj.set_item(py, "target", align.target).unwrap();
+        obj.set_item(py, "aligned_dims", &align.aligned_dims).unwrap();
       }
       Alignment::ValueAlign(align) => {
-        obj.set_item(py, "type", "value");
-        obj.set_item(py, "source", align.source);
-        obj.set_item(py, "target", align.target);
+        obj.set_item(py, "type", "value").unwrap();
+        obj.set_item(py, "source", align.source).unwrap();
+        obj.set_item(py, "target", align.target).unwrap();
       }
     }
     obj

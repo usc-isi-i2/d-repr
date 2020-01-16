@@ -7,7 +7,7 @@ use crate::executors::classes_map::generic_algo::generic_class_map;
 use crate::executors::preprocessing::exec_preprocessing;
 use crate::lang::{Description, Resource};
 use crate::writers::stream_writer::{OutputFormat};
-use crate::writers::stream_writer::{GraphJSONWriter, TTLStreamWriter};
+use crate::writers::stream_writer::{GraphJSONWriter, TTLStreamWriter, GraphPyWriter};
 use crate::writers::stream_writer::stream_writer::{StreamWriterResult, WriteResult};
 use crate::execution_plans::classes_map_plan::class_map_plan::ClassMapExecStrategy;
 #[cfg(feature = "enable-exec-macro-cls-map")]
@@ -55,6 +55,17 @@ pub fn classes_map(resource_files: &[PhysicalResource], desc: &Description, plan
           }
         };
         readers.push(reader);
+      },
+      Resource::NPDict(_) => {
+        let reader = match &resource_files[i] {
+          PhysicalResource::File(fpath) => {
+            Box::new(JSONRAReader::from_file(fpath))
+          }
+          PhysicalResource::String(content) => {
+            Box::new(JSONRAReader::from_str(content))
+          }
+        };
+        readers.push(reader);
       }
       _ => unimplemented!()
     }
@@ -74,11 +85,17 @@ pub fn classes_map(resource_files: &[PhysicalResource], desc: &Description, plan
             &format!("{}.edge", fpath),
             &desc.semantic_model))
         }
-        PhysicalOutput::String { format: OutputFormat::TTL } => {
+        PhysicalOutput::File { fpath: _, format: OutputFormat::GraphPy } => {
+          unimplemented!()
+        }
+        PhysicalOutput::Memory { format: OutputFormat::TTL } => {
           Box::new(TTLStreamWriter::write2str(&desc.semantic_model))
         }
-        PhysicalOutput::String { format: OutputFormat::GraphJSON } => {
+        PhysicalOutput::Memory { format: OutputFormat::GraphJSON } => {
           Box::new(GraphJSONWriter::write2str(&desc.semantic_model))
+        }
+        PhysicalOutput::Memory { format: OutputFormat::GraphPy } => {
+          Box::new(GraphPyWriter::write2mem(&desc.semantic_model))
         }
       };
       

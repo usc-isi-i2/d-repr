@@ -10,7 +10,8 @@ from drepr import drepr_engine
 from drepr.version import __engine_version__
 from drepr.models import DRepr, DEFAULT_RESOURCE_ID, SemanticModel, Alignment, AlignmentType, RangeAlignment, \
     AlignedStep, ValueAlignment, LiteralNode, ClassNode
-from drepr.patches import ResourceData, ResourceDataFile, ResourceDataString, xml_patch, jp_propname_patch, nc_patch
+from drepr.patches import ResourceData, ResourceDataFile, ResourceDataString, xml_patch, jp_propname_patch, nc_patch, \
+    static_class_patch
 
 assert drepr_engine.__version__ == __engine_version__, f"You are using a different version of D-REPR" \
                                                           f": {drepr_engine.__version__}. The correct one is" \
@@ -38,6 +39,7 @@ def execute(ds_model: DRepr,
     ds_model = nc_patch.patch(ds_model, resources)
     ds_model = xml_patch.patch(ds_model, resources)
     ds_model = jp_propname_patch.patch(ds_model, resources)
+    ds_model, resources = static_class_patch.patch(ds_model, resources)
 
     if isinstance(output, FileOutput):
         engine_output = {
@@ -46,9 +48,9 @@ def execute(ds_model: DRepr,
                 "format": output.format.value
             }
         }
-    elif isinstance(output, StringOutput):
+    elif isinstance(output, MemoryOutput):
         engine_output = {
-            "string": {
+            "memory": {
                 "format": output.format.value
             }
         }
@@ -56,19 +58,19 @@ def execute(ds_model: DRepr,
         raise NotImplementedError()
 
     try:
-        ds_model = ds_model.to_engine_format()
+        engine_model = ds_model.to_engine_format()
         if debug:
             print(">>> the engine is going to execute the below drepr model")
-            print(ujson.dumps(ds_model.model, indent=4))
+            print(ujson.dumps(engine_model.model, indent=4))
 
         ptr = drepr_engine.create_executor(ujson.dumps({
             "resources": [
                 {"file": resources[rid].file_path} if isinstance(resources[rid], ResourceDataFile) else {"string": resources[rid].value}
-                for rid in sorted(resources.keys(), key=lambda k: ds_model.resource_idmap[k])
+                for rid in sorted(resources.keys(), key=lambda k: engine_model.resource_idmap[k])
             ],
             "output": engine_output,
-            "edges_optional": ds_model.edges_optional,
-            "description": ds_model.model
+            "edges_optional": engine_model.edges_optional,
+            "description": engine_model.model
         }))
         if debug:
             print(f"""
@@ -78,28 +80,36 @@ def execute(ds_model: DRepr,
 ******************************************
 """)
 
-        results = drepr_engine.run_executor(ptr, ujson.dumps(engine_output))
-        return results
+        result = drepr_engine.run_executor(ptr, ujson.dumps(engine_output))
+        if isinstance(output, MemoryOutput) and output.format == OutputFormat.GraphPy:
+            class2nodes = {}
+            for u in ds_model.sm.iter_class_nodes():
+                class2nodes[u.node_id] = result['class2nodes'][engine_model.sm_node_idmap[u.node_id]]
+            return class2nodes
+        return result
     finally:
         if ptr is not None:
             drepr_engine.destroy_executor(ptr)
 
 
 def complete_description(ds_model: DRepr) -> 'CompleteDescription':
-    new_ds_model = jp_propname_patch.patch(ds_model, None)
+    patched_model = jp_propname_patch.patch(ds_model, None)
+    # Note: do not patch the static class because we do post-update
+    # description for the static class
+    # patched_model, resources = static_class_patch.patch(ds_model, resources)
 
-    engine_ds_model = new_ds_model.to_engine_format()
-    extra_info = drepr_engine.complete_description(ujson.dumps(engine_ds_model.model))
+    engine_model = patched_model.to_engine_format()
+    extra_info = drepr_engine.complete_description(ujson.dumps(engine_model.model))
 
-    if ds_model is new_ds_model:
+    if ds_model is patched_model:
         sm = copy.deepcopy(ds_model.sm)
     else:
-        sm = new_ds_model.sm
+        sm = patched_model.sm
 
     # update subjects
     subjs = {}
     for n in sm.iter_class_nodes():
-        class_id = engine_ds_model.sm_node_idmap[n.node_id]
+        class_id = engine_model.sm_node_idmap[n.node_id]
         aidx = extra_info['class2subj'][class_id]
         if aidx == -1:
             # just need to pick a random literal node
@@ -109,7 +119,7 @@ def complete_description(ds_model: DRepr) -> 'CompleteDescription':
                     # subjs.add((n.node_id, e.target_id))
                     break
         else:
-            subjs[n.node_id] = f'dnode:{new_ds_model.attrs[aidx].id}'
+            subjs[n.node_id] = f'dnode:{patched_model.attrs[aidx].id}'
             # subjs.add((n.node_id, f'dnode:{new_ds_model.attrs[aidx].id}'))
 
     for e in sm.edges.values():
@@ -118,7 +128,7 @@ def complete_description(ds_model: DRepr) -> 'CompleteDescription':
 
     # update alignments
     alignments = dict()
-    for align in new_ds_model.aligns:
+    for align in patched_model.aligns:
         alignments[(f"dnode:{align.source}", f"dnode:{align.target}")] = [align]
 
     for (source, target), aligns_lst in extra_info['aligned_funcs'].items():
@@ -165,6 +175,7 @@ class CompleteDescription:
 class OutputFormat(Enum):
     TTL = "ttl"
     GraphJSON = "graph_json"
+    GraphPy = "graph_py"
     NDArray = "ndarray"
 
 
@@ -175,8 +186,8 @@ class FileOutput:
 
 
 @dataclass
-class StringOutput:
+class MemoryOutput:
     format: OutputFormat
 
 
-Output = Union[FileOutput, StringOutput]
+Output = Union[FileOutput, MemoryOutput]

@@ -1,108 +1,52 @@
 from collections import defaultdict
-from dataclasses import dataclass
-from typing import Union, Dict, List, Iterable, Optional, Tuple
+from typing import Union, Dict, List, Iterable
 
-import ujson
-
-from drepr.models import DRepr
-from drepr.engine import execute, StringOutput, OutputFormat
-from drepr.models.sm import ClassNode
-
-
-@dataclass
-class Edge:
-    id: int
-    source: int
-    target: int
-    label: str
+from drepr.engine import execute, MemoryOutput, OutputFormat
+from drepr.models import DRepr, SemanticModel
+from drepr.outputs.base_lst_output_class import BaseLstOutputClass
+from drepr.outputs.base_output_class import BaseOutputClass
+from drepr.outputs.base_output_sm import BaseOutputSM
+from drepr.outputs.base_record import BaseRecord
+from drepr.outputs.graph_backend.graph_class import GraphClass
+from drepr.outputs.graph_backend.lst_graph_class import LstGraphClass
+from drepr.outputs.namespace import Namespace
+from drepr.outputs.record_id import GraphRecordID
 
 
-@dataclass
-class Node:
-    id: int
-    data: dict
-    edges_out: List[int]
-    edges_in: List[int]
+class GraphBackend(BaseOutputSM):
 
+    def __init__(self, class2nodes: Dict[str, List[dict]], drepr: DRepr):
+        self.drepr = drepr
+        self.sm = drepr.sm
+        self.classes: Dict[str, GraphClass] = {}
+        self.uri2classes: Dict[str, List[GraphClass]] = defaultdict(list)
 
-class Graph:
-    def __init__(self, nodes: List[Node], edges: List[Edge], ds_model: Optional[DRepr] = None):
-        self.nodes = nodes
-        self.edges = edges
+        for class_id, nodes in class2nodes.items():
+            for u in nodes:
+                u['@id'] = GraphRecordID(u['@id'], class_id)
 
-        if ds_model is not None:
-            self.prefixes: Dict[str, str] = ds_model.sm.prefixes
-            self.class2nodes: Dict[str, List[int]] = {
-                n.label: []
-                for n in ds_model.sm.nodes.values() if isinstance(n, ClassNode)
-            }
-        else:
-            self.prefixes: Dict[str, str] = {}
-            self.class2nodes: Dict[str, List[int]] = defaultdict(lambda: [])
+        for c in self.sm.iter_class_nodes():
+            self.classes[c.node_id] = GraphClass(self, c, class2nodes[c.node_id])
+            self.uri2classes[c.label].append(self.classes[c.node_id])
 
-        self.class2nodes[None] = []
-        for n in nodes:
-            self.class2nodes[n.data.get('@type', None)].append(n.id)
+    @classmethod
+    def from_drepr(cls, drepr_file: str, resources: Union[str, Dict[str, str]]) -> "GraphBackend":
+        ds_model = DRepr.parse_from_file(drepr_file)
+        class2nodes = execute(ds_model, resources, MemoryOutput(OutputFormat.GraphPy))
+        return cls(class2nodes, ds_model)
 
-    def iter_nodes(self) -> Iterable[Node]:
-        return self.nodes
+    def iter_classes(self) -> Iterable[BaseOutputClass]:
+        return iter(self.classes.values())
 
-    def iter_nodes_by_class(self, cls: str) -> Iterable[Node]:
-        for nid in self.class2nodes[cls]:
-            yield self.nodes[nid]
+    def get_record_by_id(self, rid: GraphRecordID) -> BaseRecord:
+        return self.classes[rid.class_id].get_record_by_id(rid)
 
-    def iter_edges(self) -> Iterable[Edge]:
-        return self.edges
+    def c(self, class_uri: str) -> BaseLstOutputClass:
+        return LstGraphClass(self.uri2classes[class_uri])
 
-    @staticmethod
-    def from_drepr(ds_model: DRepr, resources: Union[str, Dict[str, str]]) -> "Graph":
-        result = execute(ds_model, resources, StringOutput(OutputFormat.GraphJSON))
-        ser_nodes = result["nodes"].split("\n")
-        ser_edges = result["edges"].split("\n")
-        assert ser_nodes[-1] == "" and ser_edges[-1] == ""
+    def cid(self, class_id: str) -> BaseOutputClass:
+        return self.classes[class_id]
 
-        # remove last elements
-        ser_nodes.pop()
-        ser_edges.pop()
+    def _get_sm(self) -> SemanticModel:
+        return self.sm
 
-        nodes, edges = Graph._deserialize_drepr_output(ser_nodes, ser_edges)
-        return Graph(nodes, edges, ds_model)
-
-    @staticmethod
-    def from_drepr_output_file(node_file: str, edge_file: str) -> "Graph":
-        with open(node_file, "r") as f:
-            ser_nodes = f.readlines()
-
-        with open(edge_file, "r") as f:
-            ser_edges = f.readlines()
-
-        nodes, edges = Graph._deserialize_drepr_output(ser_nodes, ser_edges)
-        return Graph(nodes, edges, None)
-
-    def serialize(self, fpath: str):
-        with open(fpath, 'w') as f:
-            ujson.dump(f, {"prefixes": self.prefixes, "nodes": self.nodes, "edges": self.edges})
-
-    @staticmethod
-    def _deserialize_drepr_output(ser_nodes: List[str], ser_edges: List[str]) -> Tuple[List[Node], List[Edge]]:
-        nodes = []
-        edges = []
-        for ser_node in ser_nodes:
-            try:
-                u = ujson.loads(ser_node)
-            except:
-                print(ser_node)
-                raise
-            nodes.append(Node(u['id'], u['data'], [], []))
-
-        for ser_edge in ser_edges:
-            sid, tid, lbl = ser_edge.split("\t")
-            sid = int(sid)
-            tid = int(tid)
-
-            eid = len(edges)
-            edges.append(Edge(eid, sid, tid, lbl))
-            nodes[tid].edges_in.append(eid)
-            nodes[sid].edges_out.append(eid)
-
-        return nodes, edges
