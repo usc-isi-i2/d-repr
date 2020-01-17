@@ -1,7 +1,7 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
 name = "engine"
-version = "1.0.5"   # ___PKG_VERSION___: DO NOT MODIFY the version here. Update it via version_manager.py!
+version = "1.0.6"   # ___PKG_VERSION___: DO NOT MODIFY the version here. Update it via version_manager.py!
 authors = ["Binh Vu <binh@toan2.com>"]
 edition = "2018"
 
