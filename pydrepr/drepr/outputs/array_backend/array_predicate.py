@@ -4,6 +4,7 @@ import numpy as np
 
 from drepr.models import RangeAlignment, Edge
 from drepr.outputs.array_backend.array_attr import Attribute
+from drepr.outputs.array_backend.lst_array_class import LstArrayClass
 from drepr.outputs.prop_data_ndarray import PropDataNDArray, IndexPropRange
 
 if TYPE_CHECKING:
@@ -12,11 +13,10 @@ from drepr.outputs.base_output_predicate import BaseOutputPredicate
 
 
 class ArrayDataPredicate(BaseOutputPredicate):
-    def __init__(self, backend: 'ArrayBackend', edge: Edge):
-        self.id = edge.edge_id
+    def __init__(self, backend: 'ArrayBackend', edges: List[Edge]):
         self.backend = backend
-        self.uri = edge.label
-        self.attr = backend.attrs[edge.target_id]
+        self.edges = edges
+        self.uri = edges[0].label
 
     def as_ndarray(self, index_predicates: List[Union['ArrayDataPredicate', 'ArrayObjectPredicate']]) -> PropDataNDArray:
         """
@@ -30,8 +30,13 @@ class ArrayDataPredicate(BaseOutputPredicate):
         must be dimension alignment for now (then we don't need to do a join but only swapping and arranging dimension). In case the
         alignment are chained, then we have to join, and create new table?
         """
+        if len(self.edges) > 1 or any(len(p.edges) > 1 for p in index_predicates):
+            raise Exception("Cannot convert values of this predicate to an ndarray indexed by other predicates "
+                            "because values for one entry may be greater than one")
+
+        attr = self.attr(0)
         # these index columns may also be in high-dimensional array
-        index_attrs: List[Attribute] = [p.attr for p in index_predicates]
+        index_attrs: List[Attribute] = [p.attr(0) for p in index_predicates]
 
         """
         1. The algorithm works by first retrieve original nd-array of the column called C.
@@ -60,10 +65,10 @@ class ArrayDataPredicate(BaseOutputPredicate):
             In that case, the users should use other functions to handle the situation yourself.
         """
         # 1st retrieve the data
-        data = self.attr.get_data()
+        data = attr.get_data()
         data_dims = [[] for _ in range(len(data.shape))]
 
-        alignments: List[List[RangeAlignment]] = [self.backend.alignments[self.attr.id, iattr.id] for iattr in
+        alignments: List[List[RangeAlignment]] = [self.backend.alignments[attr.id, iattr.id] for iattr in
                                                   index_attrs]
         for aligns, index_col, index_col_idx in zip(alignments, index_attrs, range(len(index_attrs))):
             # source is always col_id
@@ -87,7 +92,7 @@ class ArrayDataPredicate(BaseOutputPredicate):
 
             # 3.2 mark dimension of data, saying which dimension is linked to which dimension of ICi
             for col_step_idx in col_aligned_steps:
-                col_dim = self.attr.step2dim[col_step_idx]
+                col_dim = attr.step2dim[col_step_idx]
                 data_dims[col_dim].append(index_col_idx)
 
         # now is the swapping dimensions part, although numpy may just return different view,
@@ -122,29 +127,36 @@ class ArrayDataPredicate(BaseOutputPredicate):
                 index_attr_positions[j].start = min(i, index_attr_positions[j].start)
                 index_attr_positions[j].end = max(i + 1, index_attr_positions[j].end)
         data = np.transpose(data, new_axies)
-        return PropDataNDArray(data, self.attr.nodata, index_attr_positions, [a.get_data() for a in index_attrs])
+        return PropDataNDArray(data, attr.nodata, index_attr_positions, [a.get_data() for a in index_attrs])
 
-    def o(self) -> Optional['BaseOutputClass']:
+    def o(self) -> Optional['LstArrayClass']:
         return None
+
+    def attr(self, idx: int):
+        return self.backend.attrs[self.edges[idx].target_id]
 
 
 class ArrayObjectPredicate(BaseOutputPredicate):
-    def __init__(self, backend: 'ArrayBackend', edge: Edge):
-        self.uri = edge.label
-        self.target = backend.cid(edge.target_id)
-        self.attr: Attribute
+    def __init__(self, backend: 'ArrayBackend', edges: List[Edge]):
+        self.uri = edges[0].label
+        self.edges = edges
+        self.targets = LstArrayClass([backend.cid(e.target_id) for e in edges])
 
     def _init(self, backend):
-        if self.target.is_blank():
-            self.attr = backend.attrs[self.target.pk_attr_id]
-        else:
-            self.attr = backend.attrs[self.target.uri_attr_id]
+        self.attrs = [
+            backend.attrs[target.pk_attr_id] if target.is_blank()
+            else backend.attrs[target.uri_attr_id]
+            for target in self.targets
+        ]
 
-    def as_ndarray(self, indexed_predicates: List['BaseOutputPredicate']) -> PropDataNDArray:
+    def as_ndarray(self, indexed_predicates: List['ArrayPredicate']) -> PropDataNDArray:
         raise NotImplementedError()
 
-    def o(self) -> Optional['BaseOutputClass']:
-        return self.target
+    def o(self) -> Optional['LstArrayClass']:
+        return self.targets
+
+    def attr(self, idx: int):
+        return self.attrs[idx]
 
 
 ArrayPredicate = Union[ArrayDataPredicate, ArrayObjectPredicate]

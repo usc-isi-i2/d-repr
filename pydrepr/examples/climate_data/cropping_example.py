@@ -18,10 +18,14 @@ def get_data():
 
     for c in sm.c(mint.Variable).filter(outputs.FCondition(mint.standardName, "==", varname)):
         for raster_id, sc in c.group_by(mint_geo.raster):
-            data = sc.p(rdf.value)[0].as_ndarray([sc.p(mint_geo.lat)[0], sc.p(mint_geo.long)[0]])
+            data = sc.p(rdf.value).as_ndarray([sc.p(mint_geo.lat), sc.p(mint_geo.long)])
             gt_info = sm.get_record_by_id(raster_id)
 
-            data.data = data.data[::-1]
+            if data.index_props[0].size > 1 and data.index_props[0][1] > data.index_props[0][0]:
+                # create north-up image
+                data.data = data.data[::-1]
+                data.index_props[0] = data.index_props[0][::-1]
+
             result.append({
                 "gt": dict(x_min=gt_info.s(mint_geo.x_min),
                           y_max=gt_info.s(mint_geo.y_min) + gt_info.s(mint_geo.dy) * data.data.shape[0],
@@ -38,9 +42,10 @@ def get_data():
     assert len(result) > 0
     return result
 
-# data = get_data()
-# with open("./tmp.pkl", "wb") as f:
-#     pickle.dump(data, f)
+data = get_data()
+with open("./tmp.pkl", "wb") as f:
+    pickle.dump(data, f)
+exit(0)
 
 with open("./tmp.pkl", "rb") as f:
     data = pickle.load(f)

@@ -37,30 +37,41 @@ class ArrayClass(BaseOutputClass):
         # the wrapper of the attribute which contains URIs of the class.
         self.uri_attr: PolymorphismAttribute
         # a mapping from predicate uris to the list of predicates of this class
-        self.predicates: Dict[str, List[Union[ArrayDataPredicate, ArrayObjectPredicate]]] = defaultdict(list)
-        # a mapping from a pair of (predicate uri, class uri) to the list of target classes
-        self.index_po: Dict[Tuple[str, str], List[ArrayClass]] = defaultdict(list)
+        self.predicates: Dict[str, Union[ArrayDataPredicate, ArrayObjectPredicate]] = {}
         # the list of wrapped attributes which contains data of predicates of this class
         self.attrs: List[PolymorphismAttribute] = []
         # a mapping from predicate uris to the index of the wrapped attributes
         self.pred2attrs: Dict[str, List[int]] = defaultdict(list)
 
     def _init_schema(self):
+        uri2edges = defaultdict(list)
+        uri2type = {}
         for e in self.sm.iter_outgoing_edges(self.id):
             if isinstance(self.sm.nodes[e.target_id], ClassNode):
-                o_uri = self.sm.nodes[e.target_id].label
-                o = self.backend.cid(e.target_id)
-                self.index_po[(e.label, o_uri)].append(o)
-                self.predicates[e.label].append(ArrayObjectPredicate(self.backend, e))
+                if e.label in uri2type:
+                    assert uri2type[e.label] == "object", "Violate the assumption"
+                else:
+                    uri2type[e.label] = "object"
+                uri2edges[e.label].append(e)
             else:
                 if e.label == 'drepr:uri':
                     self.uri_attr_id = e.target_id
                 else:
-                    self.predicates[e.label].append(ArrayDataPredicate(self.backend, e))
+                    if e.label in uri2type:
+                        assert uri2type[e.label] == "data", "Violate the assumption"
+                    else:
+                        uri2type[e.label] = "data"
+                    uri2edges[e.label].append(e)
 
             if e.is_subject:
                 # this requires us to analyze the d-repr output first.
                 self.pk_attr_id = e.target_id
+
+        for uri, edges in uri2edges.items():
+            if uri2type[uri] == "object":
+                self.predicates[uri] = ArrayObjectPredicate(self.backend, edges)
+            else:
+                self.predicates[uri] = ArrayDataPredicate(self.backend, edges)
 
     def _init_data(self):
         self.pk_attr = self.backend.attrs[self.pk_attr_id]
@@ -77,26 +88,25 @@ class ArrayClass(BaseOutputClass):
         # contains both values of data property and object property.
         self.attrs = []
         self.pred2attrs: Dict[str, List[int]] = defaultdict(list)
-        for lst in self.predicates.values():
-            for p in lst:
-                self.pred2attrs[p.uri].append(len(self.attrs))
-                if isinstance(p, ArrayDataPredicate):
-                    if self.pk_attr.id == p.attr.id:
+        for p in self.predicates.values():
+            if isinstance(p, ArrayDataPredicate):
+                for i, e in enumerate(p.edges):
+                    self.pred2attrs[p.uri].append(len(self.attrs))
+                    if self.pk_attr.id == p.attr(i).id:
                         imfunc = IdentityFunc()
                     else:
-                        imfunc = self._get_imfunc(self.backend.alignments[self.pk_attr.id, p.attr.id])
-
+                        imfunc = self._get_imfunc(self.backend.alignments[self.pk_attr.id, p.attr(i).id])
                     self.attrs.append(PolymorphismAttribute(
-                        self.backend.attrs[p.attr.id],
-                        imfunc, True
+                        p.attr(i), imfunc, True
                     ))
-                else:
-                    p: ArrayObjectPredicate
-                    p._init(self.backend)
-                    imfunc = self._get_imfunc(self.backend.alignments[self.pk_attr.id, p.attr.id])
+            else:
+                p._init(self.backend)
+                for i, e in enumerate(p.edges):
+                    self.pred2attrs[p.uri].append(len(self.attrs))
+                    imfunc = self._get_imfunc(self.backend.alignments[self.pk_attr.id, p.attr(i).id])
                     self.attrs.append(PolymorphismAttribute(
-                        p.attr, imfunc,
-                        imfunc.is_x2o, p.target.is_blank(), p.target.id,
+                        p.attr(i), imfunc,
+                        imfunc.is_x2o, p.targets[i].is_blank(), p.targets[i].id,
                     ))
 
     def is_blank(self) -> bool:
@@ -121,13 +131,10 @@ class ArrayClass(BaseOutputClass):
         """
         return ArrayRecord(rid.index, self)
 
-    def p(self, predicate_uri: str) -> List[BaseOutputPredicate]:
+    def p(self, predicate_uri: str) -> BaseOutputPredicate:
         return self.predicates[predicate_uri]
 
-    def o(self, predicate_uri: str, target_uri: str) -> List['BaseOutputClass']:
-        return self.index_po[predicate_uri, target_uri]
-
-    def filter(self, conditions: List[FCondition]) -> SubsetArrayClass:
+    def filter(self, conditions: List[FCondition]) -> 'ArrayClass':
         if type(conditions) is list:
             if len(conditions) > 1:
                 raise NotImplementedError()

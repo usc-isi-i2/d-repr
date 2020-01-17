@@ -20,19 +20,20 @@ class GraphClass(BaseOutputClass):
         self.backend = backend
         self.cls = u
         self.nodes = {v['@id']: GraphRecord(v) for v in nodes}
-        self.predicates: Dict[str, List[GraphPredicate]] = defaultdict(list)
-        self.index_po: Dict[Tuple[str, str], List[GraphClass]] = defaultdict(list)
+        self.predicates: Dict[str, GraphPredicate] = defaultdict(list)
         self._is_blank = True
+        uri2edges = defaultdict(list)
         for e in backend.drepr.sm.iter_outgoing_edges(u.node_id):
             if e.label == 'drepr:uri':
                 self._is_blank = False
-            self.predicates[e.label].append(GraphPredicate(backend.drepr, self, e))
+            uri2edges[e.label].append(e)
+
+        for uri, edges in uri2edges.items():
+            self.predicates[uri] = GraphPredicate(backend, self, edges)
 
     def _init(self, backend: 'GraphBackend'):
-        for e in backend.sm.iter_outgoing_edges(self.cls.node_id):
-            v = backend.sm.nodes[e.target_id]
-            if isinstance(v, ClassNode):
-                self.index_po[e.label, v.label].append(backend.classes[v.node_id])
+        for pred in self.predicates.values():
+            pred._init(backend)
 
     @property
     def id(self):

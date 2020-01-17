@@ -1,16 +1,18 @@
-from typing import List, Dict, Tuple, Callable, Any, Optional, Iterable, Union
+from typing import List, Dict, Tuple, Callable, Any, Optional, Iterable, Union, TYPE_CHECKING
 
 from drepr.outputs.base_output_predicate import BaseOutputPredicate
 from drepr.outputs.base_record import BaseRecord
 from drepr.outputs.base_lst_output_class import BaseLstOutputClass
 from drepr.outputs.base_output_class import BaseOutputClass
-from drepr.outputs.graph_backend.graph_class import GraphClass
+
+if TYPE_CHECKING:
+    from drepr.outputs.graph_backend.graph_class import GraphClass
 from drepr.outputs.record_id import GraphRecordID
 
 
 class LstGraphClass(BaseLstOutputClass):
 
-    def __init__(self, classes: List[GraphClass]) -> None:
+    def __init__(self, classes: List['GraphClass']) -> None:
         super().__init__()
         self.classes = classes
 

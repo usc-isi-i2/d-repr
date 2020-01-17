@@ -45,7 +45,7 @@ def test_get_prop_as_ndarray(s01: List[BaseOutputSM], s02: List[BaseOutputSM], s
         mint_geo = sm.ns("https://mint.isi.edu/geo")
 
         for c in sm.c(mint.Variable):
-            data = c.p(rdf.value)[0].as_ndarray([c.p(mint_geo.lat)[0], c.p(mint_geo.long)[0]])
+            data = c.p(rdf.value).as_ndarray([c.p(mint_geo.lat), c.p(mint_geo.long)])
             assert len(data.index_props) == 2
 
             records = list(c.iter_records())

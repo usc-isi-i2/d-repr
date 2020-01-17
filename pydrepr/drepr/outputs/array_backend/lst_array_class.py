@@ -1,6 +1,7 @@
-from typing import List, Dict, Tuple, Callable, Any, Optional, Iterable
+from typing import List, Dict, Tuple, Callable, Any, Optional, Iterable, TYPE_CHECKING
 
-from drepr.outputs.array_backend.array_class import ArrayClass
+if TYPE_CHECKING:
+    from drepr.outputs.array_backend.array_class import ArrayClass
 from drepr.outputs.array_backend.array_record import ArrayRecord
 from drepr.outputs.array_backend.subset_array_class import SubsetArrayClass
 from drepr.outputs.record_id import RecordID
@@ -11,7 +12,7 @@ from drepr.outputs.base_output_class import BaseOutputClass
 
 class LstArrayClass(BaseLstOutputClass):
 
-    def __iter__(self) -> Iterable[BaseOutputClass]:
+    def __iter__(self) -> Iterable['ArrayClass']:
         return iter(self.classes)
 
     def __len__(self) -> int:
@@ -26,7 +27,7 @@ class LstArrayClass(BaseLstOutputClass):
     def o(self, predicate_uri: str, target_uri: str) -> 'BaseOutputClass':
         pass
 
-    def __init__(self, classes: List[ArrayClass]):
+    def __init__(self, classes: List['ArrayClass']):
         self.classes = classes
 
     def iter_records(self) -> Iterable[ArrayRecord]:

@@ -44,7 +44,7 @@ class GraphBackend(BaseOutputSM):
     def c(self, class_uri: str) -> BaseLstOutputClass:
         return LstGraphClass(self.uri2classes[class_uri])
 
-    def cid(self, class_id: str) -> BaseOutputClass:
+    def cid(self, class_id: str) -> GraphClass:
         return self.classes[class_id]
 
     def _get_sm(self) -> SemanticModel:

@@ -11,6 +11,8 @@ class BaseLstOutputClass(ABC):
 
     @abstractmethod
     def iter_records(self) -> Iterable[BaseRecord]:
+        """
+        """
         pass
 
     @abstractmethod
@@ -18,7 +20,7 @@ class BaseLstOutputClass(ABC):
         pass
 
     @abstractmethod
-    def group_by(self, predicate: Union[str, BaseOutputPredicate]) -> Iterable[Tuple[Any, 'BaseSubsetOutputClass']]:
+    def group_by(self, predicate: Union[str, BaseOutputPredicate]) -> Iterable[Tuple[Any, 'BaseLstOutputClass']]:
         """Group records of this classes by values of a predicate"""
         pass
 
