@@ -33,7 +33,7 @@ class SMParser:
     @classmethod
     def parse(cls, sm: dict) -> SemanticModel:
         nodes = {}
-        edges = []
+        edges = {}
 
         prefixes = sm.pop('prefixes', {})
         trace0 = f"Parsing `prefixes` of the semantic model"
@@ -88,7 +88,7 @@ class SMParser:
 
                 node = DataNode(node_id=f"dnode:{attr_id}", attr_id=attr_id, data_type=data_type)
                 nodes[node.node_id] = node
-                edges.append(Edge(class_id, node.node_id, predicate, is_required=is_required))
+                edges[len(edges)] = Edge(len(edges), class_id, node.node_id, predicate, is_required=is_required)
 
             for i, link_conf in enumerate(class_conf.get('links', [])):
                 trace1 = f"{trace0}\nParsing link {i}: {link_conf}"
@@ -97,7 +97,7 @@ class SMParser:
                         f"{trace1}\nERROR: Expect value of the link to be an array of two "
                         f"items (<predicate>, <class_id>)")
                 predicate, object_class_id = link_conf
-                edges.append(Edge(class_id, object_class_id, predicate))
+                edges[len(edges)] = Edge(len(edges), class_id, object_class_id, predicate)
 
             for i, prop in enumerate(class_conf.get('static_properties', [])):
                 trace1 = f"{trace0}\nParsing static properties {i}: {prop}"
@@ -118,7 +118,7 @@ class SMParser:
 
                 node = LiteralNode(node_id=f"lnode:{len(nodes)}", value=value, data_type=data_type)
                 nodes[node.node_id] = node
-                edges.append(Edge(class_id, node.node_id, predicate))
+                edges[len(edges)] = Edge(len(edges), class_id, node.node_id, predicate)
 
         for class_id, class_conf in sm.items():
             trace0 = f"Parsing class `{class_id}` of the semantic model"
@@ -126,7 +126,7 @@ class SMParser:
                 trace1 = f"{trace0}\nParsing subject"
                 attr_id = class_conf['subject']
                 target_id = f"dnode:{attr_id}"
-                for edge in edges:
+                for edge in edges.values():
                     if edge.source_id == class_id and edge.target_id == target_id:
                         edge.is_subject = True
                         break

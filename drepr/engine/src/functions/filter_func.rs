@@ -28,7 +28,7 @@ impl<'a, F> FilterFunc<'a, F>
           }
         }
         StepExpr::Range(r) => {
-          let mut end = r.get_end(reader.len());
+          let end = r.get_end(reader.len());
           let mut idx = [Index::Idx(r.start)];
           for i in (r.start..end).step_by(r.step).rev() {
             idx[0] = Index::Idx(i);

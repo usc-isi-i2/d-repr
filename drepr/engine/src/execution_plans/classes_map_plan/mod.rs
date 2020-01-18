@@ -82,7 +82,7 @@ impl<'a> ClassesMapExecutionPlan<'a> {
       
       let write_mode = WriteMode::create(
         !cls_plan.is_optional(), cls_plan.subject.is_unique(),
-          match &cls_plan.subject {
+        match &cls_plan.subject {
             Subject::BlankSubject(_) => Some(true),
             Subject::InternalIDSubject(s) => if s.missing_values.len() > 0 && s.is_optional {
               // uri is missing sometime so we have to use blank node
@@ -98,7 +98,7 @@ impl<'a> ClassesMapExecutionPlan<'a> {
               // always uri
               Some(false)
             },
-          }, obj_blank_or_uri);
+        }, obj_blank_or_uri);
       
       class_write_modes[cls_plan.class_id] = write_mode;
     }

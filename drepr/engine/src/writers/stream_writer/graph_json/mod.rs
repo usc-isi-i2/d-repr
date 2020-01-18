@@ -14,9 +14,9 @@ use self::class_writers::track_withurioptional_writer::TrackWithURIOptionalWrite
 use crate::writers::stream_writer::stream_writer::{ExtractWriterResult, WriteResult, StreamWriterResult};
 use crate::writers::stream_writer::graph_json::json_value_fmt::JSONValueFmt;
 
-pub mod temp_object_props;
+mod temp_object_props;
 mod class_writers;
-mod json_value_fmt;
+pub mod json_value_fmt;
 
 /// A writer that write records with custom graph_json format
 ///

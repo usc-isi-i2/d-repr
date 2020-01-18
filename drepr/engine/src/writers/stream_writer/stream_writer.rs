@@ -1,6 +1,7 @@
 use super::stream_class_writer::StreamClassWriter;
 use super::WriteMode;
 use readers::into_enum_type_impl;
+use cpython::PyDict;
 
 pub trait StreamWriter {
   /// Tell the writer that we start to write records. This method must be invoked only once, and
@@ -32,11 +33,13 @@ pub trait StreamWriterResult: StreamWriter + ExtractWriterResult {
 pub enum WriteResult {
   None,
   Str1(String),
-  Str2(String, String)
+  Str2(String, String),
+  GraphPy(Vec<Vec<PyDict>>)
 }
 
 impl WriteResult {
-  into_enum_type_impl!(WriteResult, into_str1, Str1, "(String)", String);
+  into_enum_type_impl!(WriteResult, into_str1, Str1, "String", String);
+  into_enum_type_impl!(WriteResult, into_graphpy, GraphPy, "Vec<Vec<PyDict>>", Vec<Vec<PyDict>>);
   
   pub fn into_str2(self) -> (String, String) {
     match self {

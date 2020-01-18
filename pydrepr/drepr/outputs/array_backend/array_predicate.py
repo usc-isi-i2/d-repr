@@ -1,80 +1,42 @@
-from dataclasses import dataclass
+from typing import List, Optional, TYPE_CHECKING, Union
 
 import numpy as np
-from typing import Dict, Union, Iterable, List, Optional
 
-import drepr.executors.cf_convention_map.cf_convention_map as cf_convention_map
-from drepr.models import DRepr, SemanticModel, Alignment
-from drepr.models.align import RangeAlignment
-from drepr.ndarray.column import NoData, NDArrayColumn, ColSingle
+from drepr.models import RangeAlignment, Edge
+from drepr.outputs.array_backend.array_attr import Attribute
+from drepr.outputs.array_backend.lst_array_class import LstArrayClass
+from drepr.outputs.prop_data_ndarray import PropDataNDArray, IndexPropRange
 
-
-@dataclass
-class IndexEdgeRange:
-    start: int
-    end: int
+if TYPE_CHECKING:
+    from drepr.outputs.array_backend.array_backend import ArrayBackend
+from drepr.outputs.base_output_predicate import BaseOutputPredicate
 
 
-@dataclass
-class NodeProxy:
-    pass
+class ArrayDataPredicate(BaseOutputPredicate):
+    def __init__(self, backend: 'ArrayBackend', edges: List[Edge]):
+        self.backend = backend
+        self.edges = edges
+        self.uri = edges[0].label
 
-
-@dataclass
-class EdgeDataNDArray:
-    data: np.ndarray
-    nodata: Optional[NoData]
-    index_edges: List[IndexEdgeRange]
-
-
-class NDArrayGraph:
-    def __init__(self, sm: SemanticModel, tables: Dict[str, Dict[str, NDArrayColumn]],
-                 alignments: Dict[str, Dict[str, Alignment]]):
-        self.sm = sm
-        self.tables = tables
-        self.alignments = alignments
-
-    @staticmethod
-    def from_drepr(ds_model: DRepr, resources: Union[str, Dict[str, str]]):
-        # check if we can create a NDArray representation of the dataset
-        # the convention that we support is CF convention
-        if not cf_convention_map.CFConventionNDArrayMap.analyze(ds_model):
-            raise NotImplementedError()
-
-        if isinstance(resources, dict):
-            resource = next(iter(resources.values()))
-        else:
-            resource = resources
-
-        return cf_convention_map.CFConventionNDArrayMap.execute(ds_model, resource)
-
-    def iter_class_ids(self, cls: str):
-        for node in self.sm.iter_class_nodes():
-            if node.label == cls:
-                yield node.node_id
-
-    def edge_data_as_ndarray(self, edge_id: int, index_edges: List[int]) -> EdgeDataNDArray:
+    def as_ndarray(self, index_predicates: List[Union['ArrayDataPredicate', 'ArrayObjectPredicate']]) -> PropDataNDArray:
         """
-        Get edge data (identified by `edge_id` as a high-dimensional array). The original data may already be in high-dimension
+        Get predicate data (identified by `pred_id` as a high-dimensional array). The original data may already be in high-dimension
         array or may be not, but the returned value must be a high-dimensional array.
 
         The supplied `index_edges` are list of edges that will occupied first dimensions. If an edge in index_edges are
-        high-dimensional array as well, then its value will be flatten. Each
+        high-dimensional array as well, then its value will be flatten.
 
         There must be an alignment between the edge_id and other index edges (the alignment represent the join). The alignment
         must be dimension alignment for now (then we don't need to do a join but only swapping and arranging dimension). In case the
         alignment are chained, then we have to join, and create new table?
-
         """
-        edge = self.sm.edges[edge_id]
-        table_id = edge.source_id
-        col_id = edge.target_id
-        table = self.tables[table_id]
-        column = table[edge.target_id]
+        if len(self.edges) > 1 or any(len(p.edges) > 1 for p in index_predicates):
+            raise Exception("Cannot convert values of this predicate to an ndarray indexed by other predicates "
+                            "because values for one entry may be greater than one")
 
+        attr = self.attr(0)
         # these index columns may also be in high-dimensional array
-        index_col_ids = [self.sm.edges[eid].target_id for eid in index_edges]
-        index_cols = [self.tables[self.sm.edges[eid].source_id][cid] for eid, cid in zip(index_edges, index_col_ids)]
+        index_attrs: List[Attribute] = [p.attr(0) for p in index_predicates]
 
         """
         1. The algorithm works by first retrieve original nd-array of the column called C.
@@ -95,23 +57,23 @@ class NDArrayGraph:
             1 1 1
             |-|-|-|
               2 2 2
-            
+
             If we cannot make dimension of index columns continuous (e.g., mixed, or one dim have 3 index_cols), then
             we have to throw error because there is no way to handle that. It cannot be continuous when at one dimension,
             the list of indexed edges are not continuous e.g, at dim 2, it is indexed by both col 1 and 3 (missing col 2)
+
+            In that case, the users should use other functions to handle the situation yourself.
         """
         # 1st retrieve the data
-        data = column.get_data()
+        data = attr.get_data()
         data_dims = [[] for _ in range(len(data.shape))]
 
-        alignments: List[RangeAlignment] = [self.alignments[col_id][icid] for icid in index_col_ids]
-        for align, index_col, index_col_idx in zip(alignments, index_cols, range(len(index_cols))):
-            # if align.source == index_col.id:
-            #     index_col_aligned_steps = {step.source_idx for step in align.aligned_steps}
-            #     col_aligned_steps = {step.target_idx for step in align.aligned_steps}
-            # else:
-
+        alignments: List[List[RangeAlignment]] = [self.backend.alignments[attr.id, iattr.id] for iattr in
+                                                  index_attrs]
+        for aligns, index_col, index_col_idx in zip(alignments, index_attrs, range(len(index_attrs))):
             # source is always col_id
+            assert len(aligns) == 1
+            align = aligns[0]
             col_aligned_steps = {step.source_idx for step in align.aligned_steps}
             index_col_aligned_steps = {step.target_idx for step in align.aligned_steps}
 
@@ -130,7 +92,7 @@ class NDArrayGraph:
 
             # 3.2 mark dimension of data, saying which dimension is linked to which dimension of ICi
             for col_step_idx in col_aligned_steps:
-                col_dim = column.step2dim[col_step_idx]
+                col_dim = attr.step2dim[col_step_idx]
                 data_dims[col_dim].append(index_col_idx)
 
         # now is the swapping dimensions part, although numpy may just return different view,
@@ -159,32 +121,42 @@ class NDArrayGraph:
             new_axies.append(axis[i])
 
         # finally, return the range of each index columns from the new_data_dims to return
-        index_col_positions = [IndexEdgeRange(len(index_cols) * 2, 0) for _ in range(len(index_cols))]
+        index_attr_positions = [IndexPropRange(len(index_attrs) * 2, 0) for _ in range(len(index_attrs))]
         for i, icis in enumerate(new_data_dims):
             for j in icis:
-                index_col_positions[j].start = min(i, index_col_positions[j].start)
-                index_col_positions[j].end = max(i + 1, index_col_positions[j].end)
+                index_attr_positions[j].start = min(i, index_attr_positions[j].start)
+                index_attr_positions[j].end = max(i + 1, index_attr_positions[j].end)
         data = np.transpose(data, new_axies)
-        return EdgeDataNDArray(data, column.nodata, index_col_positions)
+        return PropDataNDArray(data, attr.nodata, index_attr_positions, [a.get_data() for a in index_attrs])
 
-    def iter_nodes_by_class(self, cls: str) -> Iterable[NodeProxy]:
-        """
-        Iterate through each node in the table, and edit the value directly there.
-        """
+    def o(self) -> Optional['LstArrayClass']:
+        return None
+
+    def attr(self, idx: int):
+        return self.backend.attrs[self.edges[idx].target_id]
+
+
+class ArrayObjectPredicate(BaseOutputPredicate):
+    def __init__(self, backend: 'ArrayBackend', edges: List[Edge]):
+        self.uri = edges[0].label
+        self.edges = edges
+        self.targets = LstArrayClass([backend.cid(e.target_id) for e in edges])
+
+    def _init(self, backend):
+        self.attrs = [
+            backend.attrs[target.pk_attr_id] if target.is_blank()
+            else backend.attrs[target.uri_attr_id]
+            for target in self.targets
+        ]
+
+    def as_ndarray(self, indexed_predicates: List['ArrayPredicate']) -> PropDataNDArray:
         raise NotImplementedError()
 
-    def _deprecated_get1rowtbl(self, cls: str) -> dict:
-        class_id = next(self.iter_class_ids(cls))
-        table = self.tables[class_id]
-        record = {}
-        for k, v in table.items():
-            assert isinstance(v, ColSingle), v
-            pred = next(self.sm.iter_incoming_edges(k)).label
-            if pred not in record:
-                record[pred] = v.value
-            else:
-                if isinstance(record[pred], list):
-                    record[pred].append(v.value)
-                else:
-                    record[pred] = [v.value]
-        return record
+    def o(self) -> Optional['LstArrayClass']:
+        return self.targets
+
+    def attr(self, idx: int):
+        return self.attrs[idx]
+
+
+ArrayPredicate = Union[ArrayDataPredicate, ArrayObjectPredicate]

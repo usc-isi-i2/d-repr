@@ -9,6 +9,11 @@ def get_examples_dir():
     return testdir.parent / "examples"
 
 
+@pytest.fixture()
+def resource_dir():
+    return Path(os.path.dirname(os.path.abspath(__file__))) / "resources"
+
+
 @pytest.fixture(params=[
     item for item in get_examples_dir().iterdir()
     if item.is_dir() and not (item / ".ignore").exists()

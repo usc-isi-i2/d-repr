@@ -20,7 +20,7 @@ semantic_model:
     static_properties:
       - [mint:standardName, precipitation_flux]
     links:
-      - [mint:raster, mint-geo:Raster:1]
+      - [mint-geo:raster, mint-geo:Raster:1]
   mint-geo:Raster:1:
     static_properties:
       - [mint-geo:epsg, 4326]

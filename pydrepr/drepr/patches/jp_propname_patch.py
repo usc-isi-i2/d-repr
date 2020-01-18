@@ -7,7 +7,7 @@ from drepr.models import DRepr, WildcardExpr, StepExpr, RangeExpr, Expr, IndexEx
 from drepr.patches import ResourceData
 
 
-def patch(repr: DRepr, resources: Dict[str, ResourceData]) -> DRepr:
+def patch(repr: DRepr, _resources: Dict[str, ResourceData]) -> DRepr:
     """
     This patch will fix json path that select property names, before we officially support
     selecting property names

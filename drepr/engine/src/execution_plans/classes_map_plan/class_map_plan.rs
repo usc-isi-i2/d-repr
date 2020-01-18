@@ -67,18 +67,18 @@ impl<'a> ClassMapPlan<'a> {
         }
         GraphNode::LiteralNode(n) => {
           literal_props.push(LiteralProp {
-            predicate_id: desc.semantic_model.get_edge(class_id, n.node_id).unwrap().edge_id,
+            predicate_id: eid,
             value: n.val.clone(),
           });
         }
         GraphNode::ClassNode(n) => {
           let attribute = &desc.attributes[class2subj[n.node_id]];
-          let predicate_id = desc.semantic_model.get_edge(class_id, n.node_id).unwrap().edge_id;
+          let predicate_id = eid;
           // a class node is optional if all of its properties are optional
           let is_target_optional = desc.semantic_model.outgoing_edges[n.node_id]
             .iter().all(|&eid| edges_optional[eid]);
           let alignments = inference.get_alignments(subj, attribute.id);
-          
+
           let prop = if n.is_blank_node(&desc.semantic_model) {
             ObjectProp::BlankObject(BlankObject {
               attribute,
@@ -106,7 +106,7 @@ impl<'a> ClassMapPlan<'a> {
                 .collect::<HashSet<_>>(),
             })
           };
-          
+
           if removed_edges[predicate_id] {
             buffered_object_props.push(prop);
           } else {

@@ -65,8 +65,7 @@ impl ClassNode {
     
     format!("{}{}", short_lbl, self.node_id)
   }
-  
-  
+
   pub fn is_blank_node(&self, sm: &SemanticModel) -> bool {
     for &e in &sm.outgoing_edges[self.node_id] {
       if sm.edges[e].rel_label == DREPR_URI {

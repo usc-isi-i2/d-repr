@@ -5,7 +5,7 @@ from typing import Union, Dict, List, Iterable, Optional, Tuple
 import ujson
 
 from drepr.models import DRepr
-from drepr.engine import execute, StringOutput, OutputFormat
+from drepr.engine import execute, MemoryOutput, OutputFormat
 from drepr.models.sm import ClassNode
 
 
@@ -56,7 +56,7 @@ class Graph:
 
     @staticmethod
     def from_drepr(ds_model: DRepr, resources: Union[str, Dict[str, str]]) -> "Graph":
-        result = execute(ds_model, resources, StringOutput(OutputFormat.GraphJSON))
+        result = execute(ds_model, resources, MemoryOutput(OutputFormat.GraphJSON))
         ser_nodes = result["nodes"].split("\n")
         ser_edges = result["edges"].split("\n")
         assert ser_nodes[-1] == "" and ser_edges[-1] == ""

@@ -37,3 +37,10 @@ else
 
     echo ${MINICONDA_VERSION} > ${MINICONDA_HOME}/travis-${MINICONDA_VERSION}-20191015.txt
 fi
+
+##########################
+# INSTALL RUST for Travis Windows
+if [ "${TRAVIS_OS_NAME}" = "windows" ]; then
+    echo "Install x86_64-pc-windows-msvc target on windows"
+    rustup target add x86_64-pc-windows-msvc
+fi

@@ -4,10 +4,11 @@ pub use self::stream_class_writer::StreamClassWriter;
 pub use self::stream_writer::{StreamWriter};
 pub use self::turtle::TTLStreamWriter;
 pub use self::graph_json::GraphJSONWriter;
+pub use self::graph_py::GraphPyWriter;
 
 pub mod turtle;
 pub mod graph_json;
-pub mod data_frame;
+pub mod graph_py;
 pub mod stream_writer;
 pub mod stream_class_writer;
 
@@ -56,7 +57,9 @@ pub enum OutputFormat {
   #[serde(rename = "ttl")]
   TTL,
   #[serde(rename = "graph_json")]
-  GraphJSON
+  GraphJSON,
+  #[serde(rename = "graph_py")]
+  GraphPy
 }
 
 impl WriteMode {
