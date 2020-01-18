@@ -26,6 +26,13 @@ def get_data():
                 data.data = data.data[::-1]
                 data.index_props[0] = data.index_props[0][::-1]
 
+            # gt = GeoTransform(x_min=gt_info.s(mint_geo.x_min),
+            #                   y_max=gt_info.s(mint_geo.y_min) + gt_info.s(mint_geo.y) * data.data.shape[0],
+            #                   dx=gt_info.s(mint_geo.dx), dy=-gt_info.s(mint_geo.y))
+            # raster = Raster(data.data, gt, int(gt_info.s(mint_geo.epsg)),
+            #        data.nodata.value if data.nodata is not None else None)
+            # raster.to_geotiff(curr_dir + f"{varname}.drepr.tif")
+
             result.append({
                 "gt": dict(x_min=gt_info.s(mint_geo.x_min),
                           y_max=gt_info.s(mint_geo.y_min) + gt_info.s(mint_geo.dy) * data.data.shape[0],
@@ -33,12 +40,6 @@ def get_data():
                 "data": [data.data, int(gt_info.s(mint_geo.epsg)),
                data.nodata.value if data.nodata is not None else None]
             })
-            # gt = GeoTransform(x_min=gt_info.s(mint_geo.x_min),
-            #                   y_max=gt_info.s(mint_geo.y_min) + gt_info.s(mint_geo.y) * data.data.shape[0],
-            #                   dx=gt_info.s(mint_geo.dx), dy=-gt_info.s(mint_geo.y))
-            # raster = Raster(data.data, gt, int(gt_info.s(mint_geo.epsg)),
-            #        data.nodata.value if data.nodata is not None else None)
-            # raster.to_geotiff(curr_dir + f"{varname}.drepr.tif")
     assert len(result) > 0
     return result
 
