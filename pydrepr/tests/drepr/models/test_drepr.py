@@ -2,7 +2,7 @@ from drepr import DRepr
 from drepr.models.align import RangeAlignment, AlignedStep
 from drepr.models.attr import Attr, Sorted, ValueType
 from drepr.models.drepr import yaml
-from drepr.models.parse_v1.path_parser import PathParser
+from drepr.models.parse_v1.path_parser import PathParser, PathParserV1
 from drepr.models.preprocessing import Preprocessing, PMap, PreprocessingType
 from drepr.models.resource import Resource, ResourceType, CSVProp
 from drepr.models.sm import ClassNode, DataNode, SemanticModel, DataType, Edge
@@ -54,16 +54,17 @@ semantic_model:
 
 def test_parse():
     ds_model = DRepr.parse(yaml.load(content))
+    gold_resource = Resource("default", ResourceType.CSV, CSVProp(delimiter=","))
     gold_ds_model = DRepr(
-        [Resource("default", ResourceType.CSV, CSVProp(delimiter=","))],
+        [gold_resource],
         [Preprocessing(PreprocessingType.pmap,
-                       PMap("default", PathParser.parse("$[2:][1:]", ""), "return float(value)\n", None, None))],
+                       PMap("default", PathParserV1().parse(gold_resource, "$[2:][1:]", ""), "return float(value)\n", None, None))],
         [
-            Attr("area", "default", PathParser.parse("$[2:][0]", ""), [-999], True, Sorted.Ascending,
+            Attr("area", "default", PathParserV1().parse(gold_resource, "$[2:][0]", ""), [-999], True, Sorted.Ascending,
                  ValueType.List_Int),
-            Attr("gender", "default", PathParser.parse("$[1][1:]", ""), [], False, Sorted.Null, ValueType.Unspecified),
-            Attr("period", "default", PathParser.parse("$[0][1:]", ""), [], False, Sorted.Null, ValueType.Unspecified),
-            Attr("obs", "default", PathParser.parse("$[2:][1:]", ""), [], False, Sorted.Null,
+            Attr("gender", "default", PathParserV1().parse(gold_resource, "$[1][1:]", ""), [], False, Sorted.Null, ValueType.Unspecified),
+            Attr("period", "default", PathParserV1().parse(gold_resource, "$[0][1:]", ""), [], False, Sorted.Null, ValueType.Unspecified),
+            Attr("obs", "default", PathParserV1().parse(gold_resource, "$[2:][1:]", ""), [], False, Sorted.Null,
                  ValueType.Unspecified),
         ],
         [
@@ -79,24 +80,24 @@ def test_parse():
                 'dnode:period': DataNode('dnode:period', 'period', DataType('xsd:anyURI')),
                 'dnode:obs': DataNode('dnode:obs', 'obs')
             },
-            edges=[
-                Edge('qb:Observation:1',
+            edges={
+                0: Edge(0, 'qb:Observation:1',
                      'dnode:area',
                      'eg:refArea',
                      ),
-                Edge('qb:Observation:1',
+                1: Edge(1, 'qb:Observation:1',
                      'dnode:gender',
                      'eg:gender',
                      ),
-                Edge('qb:Observation:1',
+                2: Edge(2, 'qb:Observation:1',
                      'dnode:period',
                      'eg:refPeriod',
                      ),
-                Edge('qb:Observation:1',
+                3: Edge(3, 'qb:Observation:1',
                      'dnode:obs',
                      'smdx-measure:obsValue',
                      )
-            ],
+            },
             prefixes={
                 'qb': 'http://purl.org/linked-data/cube#',
                 'smdx-measure': 'http://purl.org/linked-data/sdmx/2009/measure#',

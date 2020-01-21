@@ -42,7 +42,7 @@ class SMParser:
         Validator.must_be_dict(sm['data_nodes'], trace0)
 
         nodes = {}
-        edges = []
+        edges = {}
 
         for attr_id, stype in sm['data_nodes'].items():
             trace1 = f"{trace0}\nParsing data node `{attr_id}`"
@@ -67,7 +67,7 @@ class SMParser:
 
             data_node = DataNode(node_id=f"dnode:{attr_id}", attr_id=attr_id, data_type=data_type)
             nodes[data_node.node_id] = data_node
-            edges.append(Edge(class_id, data_node.node_id, predicate))
+            edges[len(edges)] = Edge(len(edges), class_id, data_node.node_id, predicate)
 
         if 'relations' in sm:
             trace0 = f"Parsing `relations` of the semantic model"
@@ -79,7 +79,7 @@ class SMParser:
                 if m is None:
                     raise InputError(f"{trace1}\nERROR: value of the relation does not match with the format")
 
-                edges.append(Edge(source_id=m.group(1), target_id=m.group(3), label=m.group(2)))
+                edges[len(edges)] = Edge(len(edges), source_id=m.group(1), target_id=m.group(3), label=m.group(2))
 
         if 'literal_nodes' in sm:
             trace0 = f"Parsing `literal_nodes` of the semantic model"
@@ -108,7 +108,7 @@ class SMParser:
                     value=m.group(3),
                     data_type=data_type)
                 nodes[literal_node.node_id] = literal_node
-                edges.append(Edge(source_id=class_id, target_id=literal_node.node_id, label=predicate))
+                edges[len(edges)] = Edge(len(edges), source_id=class_id, target_id=literal_node.node_id, label=predicate)
 
         if 'prefixes' in sm:
             trace0 = f"Parsing `prefixes` of the semantic model"
@@ -126,7 +126,7 @@ class SMParser:
             for class_id, attr_id in sm['subjects'].items():
                 Validator.must_be_str(attr_id, f"{trace0}\nParsing subject of class {class_id}")
                 target_id = f"dnode:{attr_id}"
-                for edge in edges:
+                for edge in edges.values():
                     if edge.source_id == class_id and edge.target_id == target_id:
                         edge.is_subject = True
                         break
