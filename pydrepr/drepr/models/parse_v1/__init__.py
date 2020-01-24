@@ -83,7 +83,7 @@ class ReprV1Parser:
 
         for node in drepr.sm.nodes.values():
             if isinstance(node, DataNode):
-                edge = [e for e in drepr.sm.edges if e.target_id == node.node_id][0]
+                edge = [e for e in drepr.sm.edges.values() if e.target_id == node.node_id][0]
                 sm['data_nodes'][
                     node.
                     attr_id] = f"{class_ids[drepr.sm.nodes[edge.source_id].label][edge.source_id]}--{edge.label}"
@@ -98,7 +98,7 @@ class ReprV1Parser:
                 if node.data_type is not None:
                     sm['literal_nodes'][-1] += f"^^{node.data_type.value}"
 
-        for edge in drepr.sm.edges:
+        for edge in drepr.sm.edges.values():
             if isinstance(drepr.sm.nodes[edge.source_id], ClassNode) and isinstance(
                     drepr.sm.nodes[edge.target_id], ClassNode):
                 sm['relations'].append(

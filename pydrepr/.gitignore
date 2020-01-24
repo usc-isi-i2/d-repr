@@ -6,3 +6,4 @@ __pycache__
 !.gitignore
 drepr.egg-info
 dist
+download-executed-*.txt

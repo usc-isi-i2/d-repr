@@ -209,32 +209,40 @@ def test_serialize():
             }
         ],
         'sm': {
-            'edges': [
-                {
+            'edges': {
+                0: {
+                    'edge_id': 0,
+                    'is_required': False,
                     'is_subject': False,
                     'label': 'eg:refArea',
                     'source_id': 'qb:Observation:1',
                     'target_id': 'dnode:area'
                 },
-                {
+                1: {
+                    'edge_id': 1,
+                    'is_required': False,
                     'is_subject': False,
                     'label': 'eg:gender',
                     'source_id': 'qb:Observation:1',
                     'target_id': 'dnode:gender'
                 },
-                {
+                2: {
+                    'edge_id': 2,
+                    'is_required': False,
                     'is_subject': False,
                     'label': 'eg:refPeriod',
                     'source_id': 'qb:Observation:1',
                     'target_id': 'dnode:period'
                 },
-                {
+                3: {
+                    'edge_id': 3,
+                    'is_required': False,
                     'is_subject': False,
                     'label': 'smdx-measure:obsValue',
                     'source_id': 'qb:Observation:1',
                     'target_id': 'dnode:obs'
                 }
-            ],
+            },
             'nodes': {
                 'dnode:area': {
                     'type': 'data_node',
