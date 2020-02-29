@@ -35,3 +35,10 @@ class NDArrayReader(ABC):
         Get length of the current node.
         """
         pass
+
+    @abstractmethod
+    def len_range(self) -> int:
+        """
+        Get length of the current node (range only).
+        """
+        pass

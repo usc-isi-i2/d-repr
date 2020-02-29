@@ -31,6 +31,9 @@ class GeoTIFFReader(NDArrayReader):
     def len(self) -> int:
         return self.data.shape[0] + 1
 
+    def len_range(self) -> int:
+        return self.data.shape[0]
+
     def select(self, steps: List[Union[IndexExpr, RangeExpr]]):
         if isinstance(steps[0], IndexExpr) and steps[0].val == '@':
             # select metadata

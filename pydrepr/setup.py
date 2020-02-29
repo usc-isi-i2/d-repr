@@ -44,6 +44,6 @@ setup(name="drepr",
       python_requires='>3.6',
       license="MIT",
       install_requires=['ujson', 'ruamel.yaml>=0.15.0',
-                        'dataclasses;python_version<"3.7"', 'xmltodict', 'netcdf4',
+                        'dataclasses;python_version<"3.7"', 'xmltodict', 'netcdf4', 'fiona',
                         'pillow'],
       package_data={'': ['*.so', '*.pyd']})

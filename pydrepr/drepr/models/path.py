@@ -14,6 +14,9 @@ class RangeExpr:
     end: Optional[Union[int, Expr]]
     step: Union[int, Expr]
 
+    def is_select_all(self) -> bool:
+        return self.start == 0 and self.end is None and self.step == 1
+
 
 @dataclass
 class IndexExpr:

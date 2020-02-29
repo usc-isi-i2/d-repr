@@ -45,15 +45,19 @@ class ArrayBackend(BaseOutputSM):
 
         for c in sm.iter_class_nodes():
             self.classes[c.node_id] = ArrayClass(self, c.node_id)
+
         for c in self.classes.values():
             c._init_schema()
+
         for c in self.classes.values():
             c._init_data()
             self.uri2classes[c.uri].append(c)
 
     @classmethod
-    def from_drepr(cls, drepr_file: str, resources: Union[str, Dict[str, str]]) -> BaseOutputSM:
-        ds_model = DRepr.parse_from_file(drepr_file)
+    def from_drepr(cls, ds_model: Union[DRepr, str], resources: Union[str, Dict[str, str]]) -> BaseOutputSM:
+        if type(ds_model) is str:
+            ds_model = DRepr.parse_from_file(ds_model)
+
         resource_file = next(iter(resources.values())) if isinstance(resources, dict) else resources
         plan = complete_description(ds_model)
         result, attrs = CFConventionNDArrayMap.execute(ds_model, resource_file)

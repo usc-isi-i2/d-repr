@@ -13,7 +13,13 @@ pub enum Resource {
   #[serde(rename = "netcdf4")]
   NetCDF4(usize),
   #[serde(rename = "np-dict")]
-  NPDict(usize)
+  NPDict(usize),
+  #[serde(rename = "geotiff")]
+  GeoTIFF(usize),
+  #[serde(rename = "shapefile")]
+  Shapefile(usize),
+  #[serde(rename = "container")]
+  Container(usize)
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]

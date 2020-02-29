@@ -12,6 +12,8 @@ class ResourceType(Enum):
     NetCDF3 = "netcdf3"
     GeoTIFF = "geotiff"
     NPDict = "np-dict"
+    Shapefile = "shapefile"
+    Container = "container"
 
 
 @dataclass

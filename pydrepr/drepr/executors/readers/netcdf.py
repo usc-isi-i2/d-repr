@@ -40,6 +40,9 @@ class NetCDF4Reader(NDArrayReader):
         # count the global metadata at '@'
         return len(self.dataset.variables.keys()) + 1
 
+    def len_range(self) -> int:
+        raise Exception("Error in your drepr model")
+
     def get_value(self, index: List[Index]):
         if index[0] == '@':
             # read metadata
@@ -70,7 +73,6 @@ class NetCDF4Reader(NDArrayReader):
         for i in range(2, len(index) - 2):
             ptr = ptr[index[i]]
         ptr[index[-1]] = value
-
 
     def select(self, steps: List[Union[IndexExpr, RangeExpr]]):
         # steps.0 must be index because there is no structure change

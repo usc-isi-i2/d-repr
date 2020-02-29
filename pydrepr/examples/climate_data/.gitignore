@@ -4,3 +4,4 @@ gpm
 *.nc
 *.tif*
 *.nc4
+data/*

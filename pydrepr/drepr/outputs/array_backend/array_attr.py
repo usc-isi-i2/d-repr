@@ -15,6 +15,7 @@ class ArrayAttr:
     def __init__(self, id: str, values: np.ndarray, path: Path, step2dim: List[Optional[int]], nodata: Optional[NoData]):
         self.id = id
         self.values = values
+        self.values_shp = values.shape[:sum(int(d is not None) for d in step2dim)]
         self.steps = path.steps
         self.step2dim = step2dim
         self.nodata = nodata

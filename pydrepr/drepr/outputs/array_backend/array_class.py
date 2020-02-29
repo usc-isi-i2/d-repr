@@ -5,7 +5,7 @@ import numpy as np
 
 from drepr.models import Alignment, defaultdict, RangeAlignment, ClassNode
 
-from drepr.outputs.array_backend.array_attr import Attribute
+from drepr.outputs.array_backend.array_attr import Attribute, ArrayAttr
 from drepr.outputs.array_backend.array_predicate import ArrayObjectPredicate, ArrayDataPredicate, ArrayPredicate
 from drepr.outputs.array_backend.subset_array_class import SubsetArrayClass
 from drepr.outputs.base_output_class import BaseOutputClass
@@ -116,14 +116,17 @@ class ArrayClass(BaseOutputClass):
         """
         Iterate through all records of this class
         """
-        if self.pk_attr.nodata is not None:
-            for index in np.ndindex(*self.pk_attr.shape):
-                if self.uri_attr.get_sval(index) is None:
-                    continue
-                yield ArrayRecord(index, self)
+        if isinstance(self.pk_attr, ArrayAttr):
+            if self.pk_attr.nodata is not None:
+                for index in np.ndindex(*self.pk_attr.values_shp):
+                    if self.uri_attr.get_sval(index) is None:
+                        continue
+                    yield ArrayRecord(index, self)
+            else:
+                for index in np.ndindex(*self.pk_attr.values_shp):
+                    yield ArrayRecord(index, self)
         else:
-            for index in np.ndindex(*self.pk_attr.shape):
-                yield ArrayRecord(index, self)
+            yield ArrayRecord((0,), self)
 
     def get_record_by_id(self, rid: RecordID):
         """
@@ -211,6 +214,10 @@ class PolymorphismAttribute:
     def get_sval(self, index: Tuple[int, ...]):
         if self.class_id is not None:
             if self.is_blank:
+                return BlankRecordID(
+                    self.im_func(index) if self.is_x2o_func else next(self.im_func(index)),
+                    self.class_id)
+            else:
                 if self.is_x2o_func:
                     idx = self.im_func(index)
                     val = self.attr.get_value(idx)
@@ -229,10 +236,6 @@ class PolymorphismAttribute:
                         val = self.attr.get_value(idx)
 
                 return URIRecordID(val, idx, self.class_id)
-            else:
-                return BlankRecordID(
-                    self.im_func(index) if self.is_x2o_func else next(self.im_func(index)),
-                    self.class_id)
         else:
             if self.is_x2o_func:
                 val = self.attr.get_value(self.im_func(index))

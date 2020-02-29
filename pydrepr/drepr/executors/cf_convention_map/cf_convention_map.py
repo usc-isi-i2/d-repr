@@ -1,6 +1,8 @@
 from drepr.executors.readers.geotiff import GeoTIFFReader
 from drepr.executors.readers.netcdf import NetCDF4Reader
 from drepr.executors.readers.np_dict import NPDictReader
+from drepr.executors.readers.reader_container import ReaderContainer
+from drepr.executors.readers.shapefile import ShapefileReader
 from drepr.models import DRepr, ResourceType, RangeAlignment, PMap
 import numpy as np
 
@@ -56,6 +58,10 @@ class CFConventionNDArrayMap:
             reader = GeoTIFFReader.from_file(resource_file)
         elif resource.type == ResourceType.NPDict:
             reader = NPDictReader.from_file(resource_file)
+        elif resource.type == ResourceType.Shapefile:
+            reader = ShapefileReader.from_file(resource_file)
+        elif resource.type == ResourceType.Container:
+            reader = ReaderContainer.get_instance().get(resource_file)
         else:
             raise NotImplementedError()
 
@@ -64,12 +70,32 @@ class CFConventionNDArrayMap:
         for preprocess_fn in ds_model.preprocessing:
             if preprocess_fn.type == PreprocessingType.pmap:
                 steps = preprocess_fn.value.path.steps
-                assert all(isinstance(step, IndexExpr) for step in steps), "Range selection should use numpy map"
-
-                index = [step.val for step in steps]
+                n_range_exprs = sum(int(not isinstance(step, IndexExpr)) for step in steps)
                 fn = PyExec.compile(preprocess_fn.value.code)
-                value = fn.exec(reader.get_value(index), index, context)
-                reader.set_value(index, value)
+
+                if n_range_exprs == 0:
+                    index = [step.val for step in steps]
+                    value = fn.exec(reader.get_value(index), index, context)
+                    reader.set_value(index, value)
+                else:
+                    # TODO: improve it
+                    range_indices = [i for i in range(len(steps)) if isinstance(steps[i], RangeExpr)]
+                    index = [step.start if isinstance(step, RangeExpr) else step.val for step in steps]
+                    if n_range_exprs == 1:
+                        range_idx = range_indices[0]
+                        if steps[range_idx].end is None:
+                            if range_idx == 0:
+                                end = reader.len_range()
+                            else:
+                                end = len(reader.get_value(index[:range_idx]))
+                        else:
+                            end = steps[range_idx].end
+                        for i in range(steps[range_idx].start, end, steps[range_idx].step):
+                            index[range_idx] = i
+                            value = fn.exec(reader.get_value(index), index, context)
+                            reader.set_value(index, value)
+                    else:
+                        raise NotImplementedError()
             else:
                 raise Exception("You found a bug")
 
@@ -100,8 +126,10 @@ class CFConventionNDArrayMap:
                         count += 1
                     else:
                         step2dim.append(None)
+
                 new_attrs[f"dnode:{attr.id}"] = ArrayAttr(f"dnode:{attr.id}", attrs[attr.id], path, step2dim, nodata)
             else:
+                # TODO: this is wrong if the value are the list!
                 new_attrs[f"dnode:{attr.id}"] = ScalarAttr(f"dnode:{attr.id}", attrs[attr.id])
             # assert all(isinstance(step, IndexExpr) for step in attr.path.steps)
             # index = [step.val for step in steps]

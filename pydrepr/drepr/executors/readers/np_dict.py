@@ -34,3 +34,6 @@ class NPDictReader(NDArrayReader):
 
     def len(self) -> int:
         return len(self.data)
+
+    def len_range(self) -> int:
+        raise Exception("Error in your drepr model")
