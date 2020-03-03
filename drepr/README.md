@@ -62,12 +62,20 @@ On MacOS, cargo produces dynamic linking for libstd (`@rpath\libstd...`)
 
 You can check linking on MacOS using otool 
 
-### Awared Issues
+### Known Issues
 
 1. It is very slow to build
 
 Rust-cpython is very slow to build. You can disable the python feature if you are in the debug mode using `--features "disable-python readers/disable-python"` flag.
-However, it only works if you are in the crate folder, cargo does not support passing `features` flag in the workspace folder yet ([see more](https://github.com/rust-lang/cargo/issues/5015))
+However, it only works if you are in the crate folder, cargo does not support passing `features` flag in the workspace folder yet ([see more](https://github.com/rust-lang/cargo/issues/5015)).
+For example, you need to be in the engine folder to set the flag.
+
+Note: if you run test, disable python features will also significantly improve the building time but remember to change the working directory. Here is one example of the command:
+
+```.env
+cargo test --features "disable-python readers/disable-python" --package engine --test main alignments::inference::test_infer_func::smoke_test -- --exact
+```
+
 
 
 # Useful commands

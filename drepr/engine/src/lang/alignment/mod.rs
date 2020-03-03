@@ -8,7 +8,7 @@ use readers::{is_enum_type_impl, as_enum_type_impl, into_enum_type_impl};
 pub mod range_alignment;
 pub mod value_alignment;
 
-#[derive(Deserialize, Debug, Clone, Serialize)]
+#[derive(Deserialize, Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "type")]
 pub enum Alignment {
   #[serde(rename = "range")]

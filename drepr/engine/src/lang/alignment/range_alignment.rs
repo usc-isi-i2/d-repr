@@ -4,7 +4,7 @@ use crate::lang::alignment::Cardinality;
 use hashbrown::HashSet;
 use std::iter::FromIterator;
 
-#[derive(Debug, Clone, Deserialize, PartialEq, Serialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq, Serialize)]
 pub struct AlignedDim {
   #[serde(rename = "source")]
   pub source_dim: usize,
@@ -12,7 +12,7 @@ pub struct AlignedDim {
   pub target_dim: usize,
 }
 
-#[derive(Deserialize, Debug, Clone, Serialize)]
+#[derive(Deserialize, Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct RangeAlignment {
   pub source: usize,
   pub target: usize,

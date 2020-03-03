@@ -75,5 +75,5 @@ class ArrayBackend(BaseOutputSM):
     def cid(self, class_id: str) -> ArrayClass:
         return self.classes[class_id]
 
-    def _get_sm(self) -> SemanticModel:
+    def get_sm(self) -> SemanticModel:
         return self.sm

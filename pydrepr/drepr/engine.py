@@ -1,7 +1,7 @@
 import copy
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Union, Tuple, NamedTuple, List
+from typing import Dict, Union, Tuple, List
 
 import ujson, traceback
 
@@ -23,7 +23,6 @@ def execute(ds_model: DRepr,
             output: "Output",
             debug: bool = False):
     ptr = None
-
     if isinstance(resources, (str, tuple)):
         resources = {DEFAULT_RESOURCE_ID: resources}
 
@@ -176,7 +175,6 @@ class OutputFormat(Enum):
     TTL = "ttl"
     GraphJSON = "graph_json"
     GraphPy = "graph_py"
-    NDArray = "ndarray"
 
 
 @dataclass

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use crate::lang::alignment::Cardinality;
 use crate::lang::description::Description;
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct ValueAlignment {
   pub source: usize,
   pub target: usize,

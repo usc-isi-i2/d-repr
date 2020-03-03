@@ -1,0 +1,106 @@
+version: "2"
+resources: netcdf4
+preprocessing:
+  - type: pmap
+    path: $.@.MAP_PROJECTION
+    code: |
+      if value == "EQUIDISTANT CYLINDRICAL":
+        # https://epsg.io/32663 this is different to https://epsg.io/4326
+        return 32663
+      raise NotImplementedError()
+  - type: pmap
+    path: $.@.SOUTH_WEST_CORNER_LAT
+    code: |
+      dy = context.get_value(["@", "DY"])
+      y_0 = value - dy/2
+      return y_0
+  - type: pmap
+    path: $.@.SOUTH_WEST_CORNER_LON
+    code: |
+      dx = context.get_value(["@", "DX"])
+      x_0 = value - dx/2
+      return x_0
+attributes:
+  latitude: $.lat.data[:]
+  longitude: $.lon.data[:]
+  projection: $.@.MAP_PROJECTION
+  dx: $.@.DX
+  dy: $.@.DY
+  x_0: $.@.SOUTH_WEST_CORNER_LON
+  y_0: $.@.SOUTH_WEST_CORNER_LAT
+  time: $.time.data[0]
+  # list of variables
+  Rainf_f_tavg:
+    path: $.Rainf_f_tavg.data[0][:][:]
+    missing_values: [-9999]
+  Albedo_inst:
+    path: $.Albedo_inst.data[0][:][:]
+    missing_values: [-9999]
+alignments:
+  - type: dimension
+    value: Rainf_f_tavg:3 <-> latitude:2
+  - type: dimension
+    value: Rainf_f_tavg:4 <-> longitude:2
+  - type: dimension
+    source: Rainf_f_tavg
+    target: time
+    aligned_dims: []
+  - type: dimension
+    source: Rainf_f_tavg
+    target: projection
+    aligned_dims: []
+  - type: dimension
+    source: projection
+    target: x_0
+    aligned_dims: []
+  - type: dimension
+    source: projection
+    target: y_0
+    aligned_dims: []
+  - type: dimension
+    source: projection
+    target: dx
+    aligned_dims: []
+  - type: dimension
+    source: projection
+    target: dy
+    aligned_dims: []
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Albedo_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+semantic_model:
+  mint:Variable:1:
+    properties:
+      - [rdf:value, Rainf_f_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, atmosphere_water__precipitation_mass_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:2:
+    properties:
+      - [rdf:value, Albedo_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface__albedo]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint-geo:Raster:1:
+    properties:
+      - [mint-geo:epsg, projection]
+      - [mint-geo:x_0, x_0]
+      - [mint-geo:y_0, y_0]
+      - [mint-geo:dx, dx]
+      - [mint-geo:dy, dy]
+    static_properties:
+      - [mint-geo:x_slope, 0]
+      - [mint-geo:y_slope, 0]
+  prefixes:
+    mint: https://mint.isi.edu/
+    # do we need this? our latitude/longitude don't have CRS
+    mint-geo: https://mint.isi.edu/geo

@@ -30,8 +30,10 @@ class GraphBackend(BaseOutputSM):
             self.uri2classes[c.label].append(self.classes[c.node_id])
 
     @classmethod
-    def from_drepr(cls, drepr_file: str, resources: Union[str, Dict[str, str]]) -> "GraphBackend":
-        ds_model = DRepr.parse_from_file(drepr_file)
+    def from_drepr(cls, ds_model: Union[DRepr, str], resources: Union[str, Dict[str, str]]) -> "GraphBackend":
+        if type(ds_model) is str:
+            ds_model = DRepr.parse_from_file(ds_model)
+
         class2nodes = execute(ds_model, resources, MemoryOutput(OutputFormat.GraphPy))
         return cls(class2nodes, ds_model)
 
@@ -47,6 +49,6 @@ class GraphBackend(BaseOutputSM):
     def cid(self, class_id: str) -> GraphClass:
         return self.classes[class_id]
 
-    def _get_sm(self) -> SemanticModel:
+    def get_sm(self) -> SemanticModel:
         return self.sm
 

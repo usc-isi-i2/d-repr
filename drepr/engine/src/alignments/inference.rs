@@ -4,6 +4,7 @@ use petgraph::prelude::*;
 use crate::lang::{AlignedDim, Alignment, Cardinality, Description, RangeAlignment};
 
 use super::dfs::CustomedDfs;
+use fnv::FnvHashSet;
 
 pub struct AlignmentInference<'a> {
   desc: &'a Description,
@@ -161,28 +162,33 @@ impl<'a> AlignmentInference<'a> {
         let mut new_incoming_edges = vec![];
         
         let mut dfs = CustomedDfs::new(&mg, u0);
-        if dfs.next(&mg).is_some() {
+        let mut revisit = FnvHashSet::default();
+
+        if dfs.next(&mg, &revisit).is_some() {
           // call next first to skip the u0
           loop {
             // recording the length of the current stack
             // so that we know if we need to stop from exploring further from the next node
             // we can pop all of its children
             let stack_len = dfs.stack.len();
-            let (u1, u2) = match dfs.next(&mg) {
+            let (u1, u2) = match dfs.next(&mg, &revisit) {
               None => break,
               Some((u1, u2)) => (u1, u2)
             };
-            
-            if !mg.contains_edge(u0, u2) {
+
+            if mg.contains_edge(u0, u1) && !mg.contains_edge(u0, u2) {
               // try to infer alignment function between u0 and u2
               match self.infer_func(u0, u1, u2) {
                 None => {
-                  // don't haven't find any, hence we have to stop from exploring u2
+                  // haven't found any, hence we have to stop from exploring u2
                   // plus 1 because we take into account the u2 node, which was popped
                   for _ in 0..(dfs.stack.len() + 1 - stack_len) {
                     // remove all children of u2
                     dfs.stack.pop();
                   }
+                  // mark this u2 as re-visited because it may be discovered from other nodes
+                  // we should not have infinite recursive loop here
+                  revisit.insert(u2);
                   continue;
                 }
                 Some(afuncs) => {
@@ -198,7 +204,7 @@ impl<'a> AlignmentInference<'a> {
             }
           }
         }
-        
+
         n_new_edges += new_incoming_edges.len() + new_outgoing_edges.len();
         
         for ui in new_outgoing_edges {
@@ -219,7 +225,7 @@ impl<'a> AlignmentInference<'a> {
   /// Infer an alignment function of xid and zid given alignments between (xid, yid) and (yid, zid)
   ///
   /// If there is only one way to join values of xid and zid, then the chain join will be the correct one
-  fn infer_func(&self, xid: usize, yid: usize, zid: usize) -> Option<Vec<Alignment>> {
+  pub fn infer_func(&self, xid: usize, yid: usize, zid: usize) -> Option<Vec<Alignment>> {
     let f = &self.aligns[xid][yid];
     let g = &self.aligns[yid][zid];
     

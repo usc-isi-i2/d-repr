@@ -26,6 +26,7 @@ pub fn test_executors() {
         resources: resources.clone(),
         description: description.clone(),
         output: PhysicalOutput::File { fpath: exc_output.clone(), format: output.1 },
+        edges_optional: vec![true; description.semantic_model.edges.len()]
       }).exec();
       
       let pred_output = fs::read_to_string(exc_output).unwrap();

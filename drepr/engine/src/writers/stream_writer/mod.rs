@@ -4,10 +4,12 @@ pub use self::stream_class_writer::StreamClassWriter;
 pub use self::stream_writer::{StreamWriter};
 pub use self::turtle::TTLStreamWriter;
 pub use self::graph_json::GraphJSONWriter;
+#[cfg(not(feature = "disable-python"))]
 pub use self::graph_py::GraphPyWriter;
 
 pub mod turtle;
 pub mod graph_json;
+#[cfg(not(feature = "disable-python"))]
 pub mod graph_py;
 pub mod stream_writer;
 pub mod stream_class_writer;
@@ -58,6 +60,7 @@ pub enum OutputFormat {
   TTL,
   #[serde(rename = "graph_json")]
   GraphJSON,
+  #[cfg(not(feature = "disable-python"))]
   #[serde(rename = "graph_py")]
   GraphPy
 }

@@ -7,7 +7,9 @@ use crate::executors::classes_map::generic_algo::generic_class_map;
 use crate::executors::preprocessing::exec_preprocessing;
 use crate::lang::{Description, Resource};
 use crate::writers::stream_writer::{OutputFormat};
-use crate::writers::stream_writer::{GraphJSONWriter, TTLStreamWriter, GraphPyWriter};
+use crate::writers::stream_writer::{GraphJSONWriter, TTLStreamWriter};
+#[cfg(not(feature = "disable-python"))]
+use crate::writers::stream_writer::GraphPyWriter;
 use crate::writers::stream_writer::stream_writer::{StreamWriterResult, WriteResult};
 use crate::execution_plans::classes_map_plan::class_map_plan::ClassMapExecStrategy;
 #[cfg(feature = "enable-exec-macro-cls-map")]
@@ -85,6 +87,7 @@ pub fn classes_map(resource_files: &[PhysicalResource], desc: &Description, plan
             &format!("{}.edge", fpath),
             &desc.semantic_model))
         }
+        #[cfg(not(feature = "disable-python"))]
         PhysicalOutput::File { fpath: _, format: OutputFormat::GraphPy } => {
           unimplemented!()
         }
@@ -94,6 +97,7 @@ pub fn classes_map(resource_files: &[PhysicalResource], desc: &Description, plan
         PhysicalOutput::Memory { format: OutputFormat::GraphJSON } => {
           Box::new(GraphJSONWriter::write2str(&desc.semantic_model))
         }
+        #[cfg(not(feature = "disable-python"))]
         PhysicalOutput::Memory { format: OutputFormat::GraphPy } => {
           Box::new(GraphPyWriter::write2mem(&desc.semantic_model))
         }

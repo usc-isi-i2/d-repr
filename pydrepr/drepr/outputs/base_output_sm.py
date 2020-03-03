@@ -38,11 +38,11 @@ class BaseOutputSM(ABC):
         pass
 
     @abstractmethod
-    def _get_sm(self) -> SemanticModel:
+    def get_sm(self) -> SemanticModel:
         pass
 
     def ns(self, uri: str) -> Namespace:
-        sm = self._get_sm()
+        sm = self.get_sm()
         if not hasattr(sm, '_inverted_prefixes'):
             sm._inverted_prefixes = {v: k for k, v in sm.prefixes.items()}
 
