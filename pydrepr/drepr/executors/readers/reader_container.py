@@ -24,3 +24,8 @@ class ReaderContainer:
 
     def get(self, reader_id: str):
         return self.readers[reader_id]
+
+    def delete(self, reader_id: str):
+        if reader_id in self.readers:
+            del self.readers[reader_id]
+

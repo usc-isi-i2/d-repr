@@ -1,11 +1,11 @@
 from collections import defaultdict
-from typing import Union, Dict, List, Iterable
+from typing import Union, Dict, List, Iterable, Callable
 
 from drepr.engine import execute, MemoryOutput, OutputFormat
 from drepr.models import DRepr, SemanticModel
 from drepr.outputs.base_lst_output_class import BaseLstOutputClass
 from drepr.outputs.base_output_class import BaseOutputClass
-from drepr.outputs.base_output_sm import BaseOutputSM
+from drepr.outputs.base_output_sm import BaseOutputSM, identity
 from drepr.outputs.base_record import BaseRecord
 from drepr.outputs.graph_backend.graph_class import GraphClass
 from drepr.outputs.graph_backend.lst_graph_class import LstGraphClass
@@ -15,13 +15,14 @@ from drepr.outputs.record_id import GraphRecordID
 
 class GraphBackend(BaseOutputSM):
 
-    def __init__(self, class2nodes: Dict[str, List[dict]], drepr: DRepr):
+    def __init__(self, class2nodes: Dict[str, List[dict]], drepr: DRepr, inject_class_id: Callable[[str], str]=None):
         self.drepr = drepr
         self.sm = drepr.sm
         self.classes: Dict[str, GraphClass] = {}
         self.uri2classes: Dict[str, List[GraphClass]] = defaultdict(list)
 
         for class_id, nodes in class2nodes.items():
+            class_id = inject_class_id(class_id)
             for u in nodes:
                 u['@id'] = GraphRecordID(u['@id'], class_id)
 
@@ -30,12 +31,12 @@ class GraphBackend(BaseOutputSM):
             self.uri2classes[c.label].append(self.classes[c.node_id])
 
     @classmethod
-    def from_drepr(cls, ds_model: Union[DRepr, str], resources: Union[str, Dict[str, str]]) -> "GraphBackend":
+    def from_drepr(cls, ds_model: Union[DRepr, str], resources: Union[str, Dict[str, str]], inject_class_id: Callable[[str], str]=None) -> "GraphBackend":
         if type(ds_model) is str:
             ds_model = DRepr.parse_from_file(ds_model)
 
         class2nodes = execute(ds_model, resources, MemoryOutput(OutputFormat.GraphPy))
-        return cls(class2nodes, ds_model)
+        return cls(class2nodes, ds_model, inject_class_id or identity)
 
     def iter_classes(self) -> Iterable[BaseOutputClass]:
         return iter(self.classes.values())

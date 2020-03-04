@@ -1,5 +1,6 @@
 from typing import List, Dict, Tuple, Callable, Any, Optional, Union, Iterable
 
+
 class O2ORange0Func:
     """
     A function that map index of the primary attribute's item to target attribute's item.

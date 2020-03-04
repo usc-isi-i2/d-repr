@@ -4,7 +4,7 @@ from pathlib import Path
 
 # ================================================================================
 # Note: update the version by changing variables before the `=...=` line
-DREPR_PYLIB_VESRION = "2.7"
+DREPR_PYLIB_VESRION = "2.8"
 DREPR_ENGINE_VERSION = "1.0.8"
 # this tag marks the release which contains the pre-built engine in it.
 DREPR_ENGINE_RELEASE_TAG = "2.7"

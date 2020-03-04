@@ -4,6 +4,7 @@ from typing import List, Union
 import numpy as np
 from netCDF4 import Dataset
 
+import drepr
 from drepr.executors.readers.ra_reader import NDArrayReader, Index
 from drepr.models import IndexExpr, RangeExpr
 
@@ -99,7 +100,7 @@ class NetCDF4Reader(NDArrayReader):
         # select data of variables
         assert steps[1].val == 'data'
         if not isinstance(variable['data'], np.ndarray):
-            # lazy load numpy array otherwise, it will be netcdf dataset (data is living in disk)
+            # TODO: we should lazy load numpy array
             variable['data'] = np.asarray(variable['data'])
 
         # slicing through numpy array is a piece of cake

@@ -5,7 +5,7 @@ import numpy as np
 
 from drepr.models import Alignment, defaultdict, RangeAlignment, ClassNode
 
-from drepr.outputs.array_backend.array_attr import Attribute, ArrayAttr
+from drepr.outputs.array_backend.array_attr import Attribute, ArrayAttr, ScalarAttr
 from drepr.outputs.array_backend.array_predicate import ArrayObjectPredicate, ArrayDataPredicate, ArrayPredicate
 from drepr.outputs.array_backend.subset_array_class import SubsetArrayClass
 from drepr.outputs.base_output_class import BaseOutputClass
@@ -92,6 +92,7 @@ class ArrayClass(BaseOutputClass):
             if isinstance(p, ArrayDataPredicate):
                 for i, e in enumerate(p.edges):
                     self.pred2attrs[p.uri].append(len(self.attrs))
+
                     if self.pk_attr.id == p.attr(i).id:
                         imfunc = IdentityFunc()
                     else:
@@ -134,8 +135,8 @@ class ArrayClass(BaseOutputClass):
         """
         return ArrayRecord(rid.index, self)
 
-    def p(self, predicate_uri: str) -> BaseOutputPredicate:
-        return self.predicates[predicate_uri]
+    def p(self, predicate_uri: str) -> Optional[BaseOutputPredicate]:
+        return self.predicates.get(predicate_uri, None)
 
     def filter(self, conditions: List[FCondition]) -> 'ArrayClass':
         if type(conditions) is list:
@@ -155,7 +156,7 @@ class ArrayClass(BaseOutputClass):
 
         raise NotImplementedError()
 
-    def group_by(self, predicate: Union[str, Union[ArrayPredicate]]) -> Iterable[Tuple[Any, 'ArrayClass']]:
+    def group_by(self, predicate: Union[str, ArrayPredicate]) -> Iterable[Tuple[Any, 'ArrayClass']]:
         """Group by predicate (can be string or predicate id)"""
         if isinstance(predicate, str):
             # perform group by the predicate uri
@@ -182,8 +183,22 @@ class ArrayClass(BaseOutputClass):
         # be always satisfied since it has been checked before writing data to array-backend
         # format
         assert len(alignments) == 1 and isinstance(alignments[0], RangeAlignment)
-        # TODO: fix me! bug if there is missing values
-        target2source = [s.source_idx - 1 for s in sorted(alignments[0].aligned_steps, key=lambda s: s.target_idx)]
+        # have to remove fixed dimension (dimension of just one element)
+        # e.g.: $.[:].lat.data[0][:][:] => 3 dims: (0, 4, 5) => remove to be (0, 1, 2)
+        # the shift will  be: (0, 3, 3)
+        # instead we can rely on the step2dim
+        # TODO: fix me! handle the attribute id is not ideal.
+        if alignments[0].source not in self.backend.attrs:
+            attr = self.backend.attrs[f'dnode:{alignments[0].source}']
+        else:
+            attr = self.backend.attrs[alignments[0].source]
+
+        if isinstance(attr, ScalarAttr):
+            assert len(alignments[0].aligned_steps) == 0
+            step2dim = []
+        else:
+            step2dim = attr.step2dim
+        target2source = [step2dim[s.source_idx] for s in sorted(alignments[0].aligned_steps, key=lambda s: s.target_idx)]
         return O2ORange0Func(target2source)
 
 

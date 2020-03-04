@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Tuple, Any, Union, Iterable, TYPE_CHECKING, Dict
+from typing import List, Tuple, Any, Union, Iterable, TYPE_CHECKING, Dict, Optional
 
 from drepr.models import ClassNode, SemanticModel, DRepr
 from drepr.outputs.record_id import RecordID, GraphRecordID
@@ -52,8 +52,8 @@ class GraphClass(BaseOutputClass):
     def get_record_by_id(self, rid: RecordID) -> BaseRecord:
         return self.nodes[rid]
 
-    def p(self, predicate_uri: str) -> List[GraphPredicate]:
-        return self.predicates[predicate_uri]
+    def p(self, predicate_uri: str) -> Optional[GraphPredicate]:
+        return self.predicates.get(predicate_uri, None)
 
     def o(self, predicate_uri: str, target_uri: str) -> List['GraphClass']:
         return self.index_po[predicate_uri, target_uri]

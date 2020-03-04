@@ -1,6 +1,6 @@
 import enum
 from abc import ABC, abstractmethod
-from typing import Dict, Union, List, Iterable, Any, Optional
+from typing import Dict, Union, List, Iterable, Any, Optional, Callable
 
 from drepr import DRepr
 from drepr.models import SemanticModel
@@ -16,7 +16,13 @@ class BaseOutputSM(ABC):
 
     @classmethod
     @abstractmethod
-    def from_drepr(cls, ds_model: Union[DRepr, str], resources: Union[str, Dict[str, str]]) -> "BaseOutputSM":
+    def from_drepr(cls, ds_model: Union[DRepr, str], resources: Union[str, Dict[str, str]], inject_class_id: Callable[[str], str]=None) -> "BaseOutputSM":
+        """
+        :param ds_model:
+        :param resources:
+        :param inject_class_id: this optional function allows users to inject more information into the class_id
+        :return:
+        """
         pass
 
     @abstractmethod
@@ -65,3 +71,8 @@ class FConditionOp(enum.Enum):
     lt = "<"
     lte = "<="
     is_in = "is_in"
+
+
+def identity(x):
+    return x
+
