@@ -59,7 +59,14 @@ class ArrayBackend(BaseOutputSM):
             ds_model = DRepr.parse_from_file(ds_model)
 
         resource_file = next(iter(resources.values())) if isinstance(resources, dict) else resources
-        plan = complete_description(ds_model)
+        # cache so that we don't have to re-call this expensive function when we want to
+        # re-use the d-repr model
+        if hasattr(ds_model, "__complete_description__"):
+            plan = ds_model.__complete_description__
+        else:
+            plan = complete_description(ds_model)
+            ds_model.__complete_description__ = plan
+
         result, attrs = CFConventionNDArrayMap.execute(ds_model, resource_file)
         return cls(plan.sm, attrs, plan.alignments, inject_class_id or identity)
 

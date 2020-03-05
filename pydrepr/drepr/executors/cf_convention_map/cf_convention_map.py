@@ -104,16 +104,19 @@ class CFConventionNDArrayMap:
         new_attrs = {}
         for attr in ds_model.attrs:
             attrs[attr.id] = reader.select(attr.path.steps)
-            if isinstance(attrs[attr.id], np.ndarray):
+            is_array_attr = any(not isinstance(step, IndexExpr) for step in attr.path.steps)
+            if is_array_attr:
                 step2dim = []
-                _attr = ds_model.get_attr_by_id(attr.id)
-                path = _attr.path
-                if len(_attr.missing_values) == 0:
+                path = attr.path
+                if len(attr.missing_values) == 0:
                     nodata = None
-                elif len(_attr.missing_values) == 1:
+                elif len(attr.missing_values) == 1:
                     # we need to convert this into numpy because comparing between numpy number
                     # and python number leads to error
-                    nodata = NoData(np.array(_attr.missing_values, dtype=attrs[attr.id].dtype)[0])
+                    if isinstance(attrs[attr.id], np.ndarray):
+                        nodata = NoData(np.array(attr.missing_values, dtype=attrs[attr.id].dtype)[0])
+                    else:
+                        nodata = NoData(attr.missing_values[0])
                 else:
                     # need to convert other values back to just one value and use it!
                     raise NotImplementedError()
@@ -131,11 +134,7 @@ class CFConventionNDArrayMap:
 
                 new_attrs[f"dnode:{attr.id}"] = ArrayAttr(f"dnode:{attr.id}", attrs[attr.id], path, step2dim, nodata)
             else:
-                # TODO: this is wrong if the value are the list!
                 new_attrs[f"dnode:{attr.id}"] = ScalarAttr(f"dnode:{attr.id}", attrs[attr.id])
-            # assert all(isinstance(step, IndexExpr) for step in attr.path.steps)
-            # index = [step.val for step in steps]
-            # attrs[attr.id] = reader.get_value(index)
 
         # 4th: create tables from the semantic model
         sm = ds_model.sm
