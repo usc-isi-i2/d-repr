@@ -32,6 +32,9 @@ class GraphPredicate(BaseOutputPredicate):
             ])
             assert len(self.targets) == len(self.edges)
 
+    def ndarray_size(self) -> int:
+        return len(self.cls)
+
     def as_ndarray(self, indexed_predicates: List[BaseOutputPredicate]) -> PropDataNDArray:
         if len(self.edges) > 1 or any(len(p.edges) > 1 for p in indexed_predicates):
             raise Exception("Cannot convert values of this predicate to an ndarray indexed by other predicates "

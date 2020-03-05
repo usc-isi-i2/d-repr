@@ -18,6 +18,9 @@ class ArrayDataPredicate(BaseOutputPredicate):
         self.edges = edges
         self.uri = edges[0].label
 
+    def ndarray_size(self):
+        return self.attr(0).size
+
     def as_ndarray(self, index_predicates: List[Union['ArrayDataPredicate', 'ArrayObjectPredicate']]) -> PropDataNDArray:
         """
         Get predicate data (identified by `pred_id` as a high-dimensional array). The original data may already be in high-dimension
@@ -148,6 +151,9 @@ class ArrayObjectPredicate(BaseOutputPredicate):
             else backend.attrs[target.uri_attr_id]
             for target in self.targets
         ]
+
+    def ndarray_size(self) -> int:
+        return self.attr(0).size
 
     def as_ndarray(self, indexed_predicates: List['ArrayPredicate']) -> PropDataNDArray:
         raise NotImplementedError()

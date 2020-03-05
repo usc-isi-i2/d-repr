@@ -15,6 +15,11 @@ class BaseOutputPredicate(ABC):
     edges: List[Edge]
 
     @abstractmethod
+    def ndarray_size(self) -> int:
+        """Return the number of values of this predicate when it is obtained using the method `as_ndarray([])`"""
+        pass
+
+    @abstractmethod
     def as_ndarray(self, indexed_predicates: List['BaseOutputPredicate']) -> PropDataNDArray:
         """Get values of this predicate as nd-array, where each item in the array is a value of this predicate
         of one instance.
