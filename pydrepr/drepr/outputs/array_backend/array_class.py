@@ -127,7 +127,7 @@ class ArrayClass(BaseOutputClass):
                 for index in np.ndindex(*self.pk_attr.values_shp):
                     yield ArrayRecord(index, self)
         else:
-            yield ArrayRecord((0,), self)
+            yield ArrayRecord((), self)
 
     def get_record_by_id(self, rid: RecordID):
         """
