@@ -130,6 +130,13 @@ class ArrayDataPredicate(BaseOutputPredicate):
                 index_attr_positions[j].start = min(i, index_attr_positions[j].start)
                 index_attr_positions[j].end = max(i + 1, index_attr_positions[j].end)
         data = np.transpose(data, new_axies)
+        # un-occupied dimensions should be collapse to 1 dimension (they always at the last)
+        last_un_occupied_dim = 0
+        if len(index_attr_positions) > 0:
+            last_un_occupied_dim = max((p.end for p in index_attr_positions)) + 1
+        if last_un_occupied_dim < len(data.shape) - 1:
+            shp = list(data.shape[:last_un_occupied_dim]) + [-1]
+            data = data.reshape(shp)
         return PropDataNDArray(data, attr.nodata, index_attr_positions, [a.get_data() for a in index_attrs])
 
     def o(self) -> Optional['LstArrayClass']:
