@@ -1,3 +1,4 @@
+import copy
 import re
 
 from drepr.utils.validator import Validator, InputError
@@ -34,8 +35,10 @@ class SMParser:
     def parse(cls, sm: dict) -> SemanticModel:
         nodes = {}
         edges = {}
-
+        # shallow copy
+        sm = copy.copy(sm)
         prefixes = sm.pop('prefixes', {})
+
         trace0 = f"Parsing `prefixes` of the semantic model"
         Validator.must_be_dict(prefixes, trace0)
         for prefix, uri in prefixes.items():

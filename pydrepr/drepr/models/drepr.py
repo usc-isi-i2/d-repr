@@ -1,17 +1,17 @@
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 from dataclasses import dataclass, asdict
 from enum import Enum
 from io import StringIO
-from typing import List, Dict, Any, NamedTuple, Optional
+from typing import List, Dict, Any, Optional
 
 import ujson
 from ruamel.yaml import YAML
 
-from drepr.models.parse_v2 import ReprV2Parser
 from drepr.utils.validator import Validator, InputError
 from .align import Alignment, RangeAlignment, AlignmentType, ValueAlignment, AlignedStep
 from .attr import Attr
 from .parse_v1 import ReprV1Parser
+from .parse_v2 import ReprV2Parser
 from .preprocessing import Preprocessing, PMap, PFilter, RMap, PSplit
 from .resource import Resource, CSVProp
 from .sm import SemanticModel, DataNode, ClassNode, LiteralNode
@@ -162,15 +162,15 @@ class DRepr:
                 if self.sm.is_rel_iri(node.label):
                     prefix = node.label.split(":", 1)[0]
                     assert prefix in self.sm.prefixes, f"Unknown prefix `{prefix}` of the " \
-                                                                            f"ontology class {node.label}"
+                                                       f"ontology class {node.label}"
         for edge in self.sm.edges.values():
             if self.sm.is_rel_iri(edge.label):
                 prefix = edge.label.split(":", 1)[0]
                 assert prefix in self.sm.prefixes, f"Unknown prefix `{prefix}` of the " \
-                                                                        f"ontology predicate {edge.label}"
+                                                   f"ontology predicate {edge.label}"
 
     def to_lang_format(self, simplify: bool = True, use_json_path: bool = False) -> dict:
-        return ReprV1Parser.dump(self, simplify, use_json_path)
+        return ReprV2Parser.dump(self, simplify, use_json_path)
 
     def to_lang_yml(self, simplify: bool = True, use_json_path: bool = False) -> str:
         model = self.to_lang_format(simplify, use_json_path)
