@@ -74,7 +74,7 @@ class ArrayDataPredicate(BaseOutputPredicate):
         alignments: List[List[RangeAlignment]] = [self.backend.alignments[attr.id, iattr.id] for iattr in
                                                   index_attrs]
         for aligns, index_col, index_col_idx in zip(alignments, index_attrs, range(len(index_attrs))):
-            # source is always col_id
+            # source is always this predicate
             assert len(aligns) == 1
             align = aligns[0]
             col_aligned_steps = {step.source_idx for step in align.aligned_steps}
@@ -101,7 +101,7 @@ class ArrayDataPredicate(BaseOutputPredicate):
         # now is the swapping dimensions part, although numpy may just return different view,
         # we don't want to swap a lot because if we can swap freely, why numpy transpose cannot guarantee for returning
         # a view?
-        # detect when we cannot swap
+        # detect when we cannot swap, it must be continuous
         for icis in data_dims:
             if len(icis) > 0 and len(icis) != (icis[-1] - icis[0] + 1):
                 raise Exception("Cannot find a way to satisfied the query condition")
@@ -112,12 +112,17 @@ class ArrayDataPredicate(BaseOutputPredicate):
         axis = list(range(len(data_dims)))
         for i in range(len(data_dims)):
             min_j = i
-            for j in range(i, len(data_dims)):
-                # min(data_dims[*]) = data_dims[*][0]
-                if len(data_dims[j]) > 0 and data_dims[j][0] < data_dims[i][0]:
-                    min_j = j
+            if len(data_dims[i]) == 0:
+                # if this dimension is not occupied, we move it to the next one (like bubble sort)
+                if i + 1 < len(data_dims):
+                    min_j = i + 1
+            else:
+                for j in range(i, len(data_dims)):
+                    # min(data_dims[*]) = data_dims[*][0], only need to look at the top
+                    # as they are continuous, we can move one by one.
+                    if len(data_dims[j]) > 0 and data_dims[j][0] < data_dims[min_j][0]:
+                        min_j = j
             if min_j != i:
-                # we have to swap
                 data_dims[min_j], data_dims[i] = data_dims[i], data_dims[min_j]
                 axis[min_j], axis[i] = axis[i], axis[min_j]
             new_data_dims.append(data_dims[i])

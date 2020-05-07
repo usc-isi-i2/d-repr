@@ -13,15 +13,13 @@ def test_get_prop_as_ndarray(s01: List[BaseOutputSM], s02: List[BaseOutputSM], s
         [[-0.33390343, 0.07124988, 0.72986975, -0.24433717, 0.36373665],
          [0.11689817, -0.43058764, 1.78643916, 0.1838721, -0.65895388],
          [0.53011395, -0.10577698, 0.42899604, 1.09749187, -0.68841564],
-         [-1.26742952, -0.65940623, -0.91022476, -0.25552528, -0.18210168],
-         [0.48675445, 1.02092747, -0.96355687, -0.38728761, -0.53733528]],
+         [-1.26742952, -0.65940623, -0.91022476, -0.25552528, -0.18210168]],
 
         # ds02
         [[-0.33390343, 0.07124988, 0.72986975, -0.24433717, 0.36373665],
          [0.11689817, -0.43058764, 1.78643916, 0.1838721, -0.65895388],
          [0.53011395, -0.10577698, 0.42899604, 1.09749187, -0.68841564],
-         [-1.26742952, -0.65940623, -0.91022476, -0.25552528, -0.18210168],
-         [0.48675445, 1.02092747, -0.96355687, -0.38728761, -0.53733528]],
+         [-1.26742952, -0.65940623, -0.91022476, -0.25552528, -0.18210168]],
 
         # ds03
         [[-0.33390343, 0.07124988, 0.72986975, -0.24433717, 0.36373665],
@@ -53,7 +51,8 @@ def test_get_prop_as_ndarray(s01: List[BaseOutputSM], s02: List[BaseOutputSM], s
             assert data.data.size == len(records)
 
             if isinstance(sm, ArrayBackend):
-                assert np.allclose(data.data, np.asarray(array_values.pop(0)))
+                gold_data = np.asarray(array_values.pop(0))
+                assert np.allclose(data.data, gold_data)
                 assert len(data.data.shape) == 2
                 # loop to validate relationships between data and index_props
                 for i, j in np.ndindex(*data.data.shape):
@@ -61,6 +60,10 @@ def test_get_prop_as_ndarray(s01: List[BaseOutputSM], s02: List[BaseOutputSM], s
                     assert records[idx].s(rdf.value) == data.data[i, j]
                     assert records[idx].s(mint_geo.lat) == data.index_props[0][i]
                     assert records[idx].s(mint_geo.long) == data.index_props[1][j]
+
+                # adding test to change the order of index props
+                assert np.allclose(c.p(rdf.value).as_ndarray([c.p(mint_geo.lat)]).data, gold_data)
+                assert np.allclose(c.p(rdf.value).as_ndarray([c.p(mint_geo.long)]).data, gold_data.T)
             else:
                 assert np.allclose(data.data, np.asarray(graph_values.pop(0)))
                 assert len(data.data.shape) == 1
