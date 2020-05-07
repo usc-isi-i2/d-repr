@@ -10,6 +10,11 @@ from drepr.outputs.base_output_sm import BaseOutputSM
 from drepr.outputs.record_id import BlankRecordID, GraphRecordID
 
 
+def test_from_drepr(s01, s02, s03, s05):
+    """This function does a smoke test to ensure that we can output all datasets"""
+    pass
+
+
 def test_get_class_by_id(s01: List[BaseOutputSM], s02: List[BaseOutputSM]):
     # has single class and get them by id
     for sm in (item for lst in [s01, s02] for item in lst):

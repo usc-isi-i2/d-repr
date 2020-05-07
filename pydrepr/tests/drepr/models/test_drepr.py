@@ -294,7 +294,7 @@ def test_deserialize():
 
 def test_write_to_yml():
     ds_model = DRepr.parse(yaml.load(content))
-    assert ds_model.to_lang_yml(True) == """version: '1'
+    assert ds_model.to_lang_yml(True) == """version: '2'
 resources:
   default:
     type: csv
@@ -366,14 +366,19 @@ alignments:
   - source: 1
     target: 1
 semantic_model:
-  data_nodes:
-    area: qb:Observation:1--eg:refArea
-    gender: qb:Observation:1--eg:gender
-    period: qb:Observation:1--eg:refPeriod^^xsd:anyURI
-    obs: qb:Observation:1--smdx-measure:obsValue
-  relations: []
-  literal_nodes: []
-  subjects: {}
+  qb:Observation:1:
+    properties:
+    - - eg:refArea
+      - area
+    - - eg:gender
+      - gender
+    - - eg:refPeriod
+      - period
+      - xsd:anyURI
+    - - smdx-measure:obsValue
+      - obs
+    static_properties: []
+    links: []
   prefixes:
     qb: http://purl.org/linked-data/cube#
     smdx-measure: http://purl.org/linked-data/sdmx/2009/measure#

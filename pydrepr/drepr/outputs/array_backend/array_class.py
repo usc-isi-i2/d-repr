@@ -80,9 +80,12 @@ class ArrayClass(BaseOutputClass):
             # blank class
             self.uri_attr = PolymorphismAttribute(self.pk_attr, IdentityFunc(), True, True, self.id)
         else:
+            if self.pk_attr_id == self.uri_attr_id:
+                imfunc = IdentityFunc()
+            else:
+                imfunc = self._get_imfunc(self.backend.alignments[self.pk_attr.id, self.uri_attr_id])
             self.uri_attr = PolymorphismAttribute(self.backend.attrs[self.uri_attr_id],
-                                                  self._get_imfunc(
-                                                      self.backend.alignments[self.pk_attr.id, self.uri_attr_id]),
+                                                  imfunc,
                                                   True, False, self.id)
 
         # contains both values of data property and object property.

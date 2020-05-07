@@ -5,13 +5,13 @@ import pytest
 
 
 def get_examples_dir():
-    testdir = Path(os.path.dirname(os.path.abspath(__file__)))
+    testdir = Path(os.path.abspath(__file__)).parent
     return testdir.parent / "examples"
 
 
 @pytest.fixture()
 def resource_dir():
-    return Path(os.path.dirname(os.path.abspath(__file__))) / "resources"
+    return Path(os.path.abspath(__file__)).parent / "resources"
 
 
 @pytest.fixture(params=[

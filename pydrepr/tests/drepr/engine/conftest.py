@@ -15,11 +15,3 @@ def d_s04(resource_dir):
     o = get_drepr(resource_dir / "s04_shorten_gldas")
     o.__name__ = "d_s04"
     return o
-
-
-@pytest.fixture()
-def d_s05(resource_dir):
-    o = get_drepr(resource_dir / "s05_full_gldas")
-    o.__name__ = "d_s05"
-    return o
-

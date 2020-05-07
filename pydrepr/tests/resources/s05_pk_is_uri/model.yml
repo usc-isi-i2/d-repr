@@ -1,0 +1,34 @@
+# This model test the scenario that primary attribute is also URI attribute
+version: "2"
+resources: np-dict
+attributes:
+  variable_name: $.variable_name
+  variable: $.variable[:][:]
+  lat: $.lat[:]
+  long: $.long[:]
+  place_uri: $.place_uri
+  place_region: $.place_region
+alignments:
+  - type: dimension
+    value: variable <-> variable_name
+  - type: dimension
+    value: variable:1 <-> lat:1
+  - type: dimension
+    value: variable:2 <-> long:1
+  - type: dimension
+    value: variable <-> place_uri
+  - type: dimension
+    value: variable <-> place_region
+semantic_model:
+  eg:Variable:1:
+    properties:
+      - [rdf:value, variable]
+      - [eg:standardName, variable_name]
+    links:
+      - [eg:place, eg:Place:1]
+  eg:Place:1:
+    properties:
+      - [drepr:uri, place_uri]
+      - [rdfs:label, place_region]
+  prefixes:
+    eg: http://example.com/

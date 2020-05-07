@@ -28,3 +28,8 @@ def s02(resource_dir):
 @pytest.fixture()
 def s03(resource_dir):
     return get_backends(resource_dir / "s03_synthesis")
+
+
+@pytest.fixture()
+def s05(resource_dir):
+    return get_backends(resource_dir / "s05_crop_place")

@@ -42,7 +42,7 @@ class AlignParser:
         ```
     """
     ALIGNMENT_TYPES_VALUES = {x.value if x != AlignmentType.range else "dimension" for x in AlignmentType}
-    REG_DALIGN = re.compile(r"^(.+):(\d+) *<-> *(.+):(\d+)$")
+    REG_DALIGN = re.compile(r"^([^:]+)(?::(\d+))? *<-> *([^:]+)(?::(\d+))?$")
     DALIGN_KEYS = {"type", "source", "target", "aligned_dims"}
     DALIGN_ALIGNED_DIMS_KEYS = {"source", "target"}
     VALIGN_KEYS = {"type", "source", "target"}
@@ -78,7 +78,15 @@ class AlignParser:
                 raise InputError(
                     f"{parse_trace}\nERROR: invalid `value` property, its format is invalid")
 
-            return RangeAlignment(m.group(1), m.group(3),
+            source = m.group(1).strip()
+            target = m.group(3).strip()
+            if m.group(2) is None or m.group(4) is None:
+                if not (m.group(2) is None and m.group(4) is None):
+                    raise InputError(
+                        f"{parse_trace}\nERROR: invalid `value` property, its format is invalid")
+                return RangeAlignment(source, target, [])
+
+            return RangeAlignment(source, target,
                                   [AlignedStep(int(m.group(2)), int(m.group(4)))])
 
         Validator.must_be_subset(cls.DALIGN_KEYS, conf.keys(), "properties of alignment",
