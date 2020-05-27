@@ -79,7 +79,14 @@ class SMParser:
                 if m is None:
                     raise InputError(f"{trace1}\nERROR: value of the relation does not match with the format")
 
-                edges[len(edges)] = Edge(len(edges), source_id=m.group(1), target_id=m.group(3), label=m.group(2))
+                e = Edge(len(edges), source_id=m.group(1), target_id=m.group(3), label=m.group(2))
+                edges[len(edges)] = e
+                if e.source_id not in nodes:
+                    class_name = cls.REG_SM_CLASS.match(e.source_id).group(2)
+                    nodes[e.source_id] = ClassNode(node_id=e.source_id, label=class_name)
+                if e.target_id not in nodes:
+                    class_name = cls.REG_SM_CLASS.match(e.target_id).group(2)
+                    nodes[e.target_id] = ClassNode(node_id=e.target_id, label=class_name)
 
         if 'literal_nodes' in sm:
             trace0 = f"Parsing `literal_nodes` of the semantic model"
