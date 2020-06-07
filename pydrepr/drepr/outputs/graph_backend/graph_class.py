@@ -17,7 +17,6 @@ class GraphClass(BaseOutputClass):
 
     def __init__(self, backend: 'GraphBackend', u: ClassNode, nodes: List[dict]) -> None:
         super().__init__()
-        self.backend = backend
         self.cls = u
         self.nodes = {v['@id']: GraphRecord(v) for v in nodes}
         self.predicates: Dict[str, GraphPredicate] = defaultdict(list)

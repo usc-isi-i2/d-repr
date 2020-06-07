@@ -1,11 +1,13 @@
+import os
 from typing import List
 
+import numpy as np
+import pytest
+import ujson
+
 from drepr.outputs.array_backend.array_backend import ArrayBackend
-from drepr.outputs.array_backend.array_class import ArrayClass
-from drepr.outputs.array_backend.lst_array_class import LstArrayClass
 from drepr.outputs.base_lst_output_class import BaseLstOutputClass
 from drepr.outputs.base_output_class import BaseOutputClass
-
 from drepr.outputs.base_output_sm import BaseOutputSM
 from drepr.outputs.record_id import BlankRecordID, GraphRecordID
 
@@ -54,3 +56,56 @@ def test_get_record_by_id_blank(s01: List[BaseOutputSM]):
             'mint-geo:y_min': [20.1],
             'mint-geo:y_slope': [0.0]
         }
+
+@pytest.mark.skip
+def test_circular_reference(resource_dir):
+    """
+    This test is to make sure that D-REPR outputs don't contains circular reference and object should be freed as soon
+    as it goes out of scope. Otherwise, they can hit out of memory error on some rare cases
+    """
+    dsmodel = str(resource_dir / "s01_synthesis" / "model.yml")
+    import psutil
+    process = psutil.Process(os.getpid())
+    mem_hist = []
+
+    def get_mem_usage():
+        # get KB
+        mem_hist.append(process.memory_info().rss / 1024)
+        diff_mem = ""
+        if len(mem_hist) > 1:
+            diff_mem = f"Diff[-1]={mem_hist[-1] - mem_hist[-2]:.2f} Diff[0]={mem_hist[-1] - mem_hist[0]:.2f}"
+        return f"KB={mem_hist[-1]:.2f} {diff_mem}"
+
+    tempfile = resource_dir / "temp_resource_circular_reference.tmp.json"
+    if not tempfile.exists():
+        np.random.seed(1111)
+        with open(tempfile, "w") as f:
+            x, y = 1000, 1000
+            ujson.dump({
+                "lat": [20.1 + (i * 0.1) for i in range(x)],
+                "long": [44.1 + (i * 0.1) for i in range(y)],
+                "epsg": 4326,
+                "value": np.random.randn(x, y).tolist()
+            }, f)
+    tempfile = str(tempfile)
+    import weakref
+    class Parent():
+        def __init__(self):
+            self.data = np.random.randn(100, 100)
+            self.name = "fkdsl"
+            self.child = Child(self)
+
+    class Child():
+        def __init__(self, parent):
+            # self.parent = parent
+            self.parent = weakref.ref(parent)
+            # print(self.parent().name)
+
+    a = []
+    for i in range(41):
+        backend = ArrayBackend.from_drepr(dsmodel, tempfile)
+        # ai = np.random.randn(100, 100)
+        # ai = Parent()
+        # a.append(ai)
+        print(i, get_mem_usage())
+        # gc.collect(2)

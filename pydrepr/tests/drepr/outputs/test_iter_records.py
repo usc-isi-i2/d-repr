@@ -8,7 +8,7 @@ def test_iter_records_s01_2(s01: List[BaseOutputSM], s02: List[BaseOutputSM]):
     for sm in (item for lst in [s01, s02] for item in lst):
         cls = sm.c("mint:Variable")[0]
         records = list(cls.iter_records())
-        assert len(records) == 25
+        assert len(records) == 20
         assert len(records) == len({r.id for r in records})
         assert len({r.s("mint:raster") for r in records}) == 1
         r = records[6]

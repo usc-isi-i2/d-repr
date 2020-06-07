@@ -1,3 +1,4 @@
+import weakref
 from dataclasses import dataclass
 from typing import List, Dict, Iterable, Any, Tuple, TYPE_CHECKING, Union, Optional
 
@@ -21,7 +22,7 @@ from drepr.outputs.array_backend.index_map_func import O2ORange0Func, X2OFunc, I
 
 class ArrayClass(BaseOutputClass):
     def __init__(self, backend: 'ArrayBackend', node_id: str):
-        self.backend = backend
+        self.backend = weakref.ref(backend)
         # the original semantic model
         self.sm = backend.sm
         # @inherit: id of the node in the semantic model
@@ -43,7 +44,7 @@ class ArrayClass(BaseOutputClass):
         # a mapping from predicate uris to the index of the wrapped attributes
         self.pred2attrs: Dict[str, List[int]] = defaultdict(list)
 
-    def _init_schema(self):
+    def _init_schema(self, backend: 'ArrayBackend'):
         uri2edges = defaultdict(list)
         uri2type = {}
         for e in self.sm.iter_outgoing_edges(self.id):
@@ -69,12 +70,12 @@ class ArrayClass(BaseOutputClass):
 
         for uri, edges in uri2edges.items():
             if uri2type[uri] == "object":
-                self.predicates[uri] = ArrayObjectPredicate(self.backend, edges)
+                self.predicates[uri] = ArrayObjectPredicate(backend, edges)
             else:
-                self.predicates[uri] = ArrayDataPredicate(self.backend, edges)
+                self.predicates[uri] = ArrayDataPredicate(backend, edges)
 
-    def _init_data(self):
-        self.pk_attr = self.backend.attrs[self.pk_attr_id]
+    def _init_data(self, backend: 'ArrayBackend'):
+        self.pk_attr = backend.attrs[self.pk_attr_id]
 
         if self.uri_attr_id is None:
             # blank class
@@ -83,8 +84,8 @@ class ArrayClass(BaseOutputClass):
             if self.pk_attr_id == self.uri_attr_id:
                 imfunc = IdentityFunc()
             else:
-                imfunc = self._get_imfunc(self.backend.alignments[self.pk_attr.id, self.uri_attr_id])
-            self.uri_attr = PolymorphismAttribute(self.backend.attrs[self.uri_attr_id],
+                imfunc = self._get_imfunc(backend.alignments[self.pk_attr.id, self.uri_attr_id])
+            self.uri_attr = PolymorphismAttribute(backend.attrs[self.uri_attr_id],
                                                   imfunc,
                                                   True, False, self.id)
 
@@ -99,15 +100,15 @@ class ArrayClass(BaseOutputClass):
                     if self.pk_attr.id == p.attr(i).id:
                         imfunc = IdentityFunc()
                     else:
-                        imfunc = self._get_imfunc(self.backend.alignments[self.pk_attr.id, p.attr(i).id])
+                        imfunc = self._get_imfunc(backend.alignments[self.pk_attr.id, p.attr(i).id])
                     self.attrs.append(PolymorphismAttribute(
                         p.attr(i), imfunc, True
                     ))
             else:
-                p._init(self.backend)
+                p._init(backend)
                 for i, e in enumerate(p.edges):
                     self.pred2attrs[p.uri].append(len(self.attrs))
-                    imfunc = self._get_imfunc(self.backend.alignments[self.pk_attr.id, p.attr(i).id])
+                    imfunc = self._get_imfunc(backend.alignments[self.pk_attr.id, p.attr(i).id])
                     self.attrs.append(PolymorphismAttribute(
                         p.attr(i), imfunc,
                         imfunc.is_x2o, p.targets[i].is_blank(), p.targets[i].id,
@@ -191,10 +192,10 @@ class ArrayClass(BaseOutputClass):
         # the shift will  be: (0, 3, 3)
         # instead we can rely on the step2dim
         # TODO: fix me! handle the attribute id is not ideal.
-        if alignments[0].source not in self.backend.attrs:
-            attr = self.backend.attrs[f'dnode:{alignments[0].source}']
+        if alignments[0].source not in self.backend().attrs:
+            attr = self.backend().attrs[f'dnode:{alignments[0].source}']
         else:
-            attr = self.backend.attrs[alignments[0].source]
+            attr = self.backend().attrs[alignments[0].source]
 
         if isinstance(attr, ScalarAttr):
             assert len(alignments[0].aligned_steps) == 0

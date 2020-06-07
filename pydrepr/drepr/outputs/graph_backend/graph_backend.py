@@ -9,7 +9,6 @@ from drepr.outputs.base_output_sm import BaseOutputSM, identity
 from drepr.outputs.base_record import BaseRecord
 from drepr.outputs.graph_backend.graph_class import GraphClass
 from drepr.outputs.graph_backend.lst_graph_class import LstGraphClass
-from drepr.outputs.namespace import Namespace
 from drepr.outputs.record_id import GraphRecordID
 
 

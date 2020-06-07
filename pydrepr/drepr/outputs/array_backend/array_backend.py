@@ -5,7 +5,6 @@ from drepr.executors.cf_convention_map.cf_convention_map import CFConventionNDAr
 from drepr.models import Alignment, DRepr, SemanticModel, defaultdict
 from drepr.outputs.array_backend.array_attr import Attribute
 from drepr.outputs.array_backend.array_class import ArrayClass
-from drepr.outputs.array_backend.indexed_sm import IndexedSM
 from drepr.outputs.array_backend.lst_array_class import LstArrayClass
 from drepr.outputs.record_id import ArrayRecordID
 from drepr.outputs.base_output_sm import BaseOutputSM, identity
@@ -47,15 +46,15 @@ class ArrayBackend(BaseOutputSM):
             self.classes[c.node_id] = ArrayClass(self, inject_class_id(c.node_id))
 
         for c in self.classes.values():
-            c._init_schema()
+            c._init_schema(self)
 
         for c in self.classes.values():
-            c._init_data()
+            c._init_data(self)
             self.uri2classes[c.uri].append(c)
 
     @classmethod
     def from_drepr(cls, ds_model: Union[DRepr, str], resources: Union[str, Dict[str, str]], inject_class_id: Callable[[str], str]=None) -> BaseOutputSM:
-        if type(ds_model) is str:
+        if isinstance(ds_model, str):
             ds_model = DRepr.parse_from_file(ds_model)
 
         resource_file = next(iter(resources.values())) if isinstance(resources, dict) else resources

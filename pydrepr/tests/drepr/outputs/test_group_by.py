@@ -14,7 +14,7 @@ def test_group_by_static_property(s01: List[BaseOutputSM], s02: List[BaseOutputS
 
         gold_groups = [
             (raster_id, {
-                "size": 25,
+                "size": 20,
                 "samples": {
                     6: {
                         "mint-geo:lat": [20.2],

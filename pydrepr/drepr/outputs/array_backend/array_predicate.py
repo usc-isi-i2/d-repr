@@ -1,3 +1,4 @@
+import weakref
 from typing import List, Optional, TYPE_CHECKING, Union
 
 import numpy as np
@@ -14,7 +15,7 @@ from drepr.outputs.base_output_predicate import BaseOutputPredicate
 
 class ArrayDataPredicate(BaseOutputPredicate):
     def __init__(self, backend: 'ArrayBackend', edges: List[Edge]):
-        self.backend = backend
+        self.backend = weakref.ref(backend)
         self.edges = edges
         self.uri = edges[0].label
 
@@ -71,7 +72,7 @@ class ArrayDataPredicate(BaseOutputPredicate):
         data = attr.get_data()
         data_dims = [[] for _ in range(len(data.shape))]
 
-        alignments: List[List[RangeAlignment]] = [self.backend.alignments[attr.id, iattr.id] for iattr in
+        alignments: List[List[RangeAlignment]] = [self.backend().alignments[attr.id, iattr.id] for iattr in
                                                   index_attrs]
         for aligns, index_col, index_col_idx in zip(alignments, index_attrs, range(len(index_attrs))):
             # source is always this predicate
@@ -148,7 +149,7 @@ class ArrayDataPredicate(BaseOutputPredicate):
         return None
 
     def attr(self, idx: int):
-        return self.backend.attrs[self.edges[idx].target_id]
+        return self.backend().attrs[self.edges[idx].target_id]
 
 
 class ArrayObjectPredicate(BaseOutputPredicate):
