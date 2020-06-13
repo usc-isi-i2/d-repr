@@ -90,7 +90,7 @@ class ReprV2Parser:
                 sm[class_ids[edge.source_id]]['properties'].append(prop)
 
             if isinstance(node, LiteralNode):
-                edge = [e for e in drepr.sm.edges if e.target_id == node.node_id][0]
+                edge = [e for e in drepr.sm.edges.values() if e.target_id == node.node_id][0]
                 if node.data_type is not None:
                     prop = (edge.label, node.value, node.data_type.value)
                 else:

@@ -292,7 +292,7 @@ def test_deserialize():
     assert ds_model == DRepr.deserialize(ds_model.serialize())
 
 
-def test_write_to_yml():
+def test_write_to_yml(d_s01):
     ds_model = DRepr.parse(yaml.load(content))
     assert ds_model.to_lang_yml(True) == """version: '2'
 resources:
@@ -390,3 +390,6 @@ semantic_model:
 """
     ds_model2 = DRepr.parse(yaml.load(ds_model.to_lang_yml(True)))
     assert ds_model2 == ds_model
+
+    for ds_model in [d_s01]:
+        assert ds_model == DRepr.parse(yaml.load(ds_model.to_lang_yml(True)))
