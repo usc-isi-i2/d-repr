@@ -5,7 +5,7 @@ verify_ssl = true
 
 [dev-packages]
 pytest = "*"
-pip = "==18.0"
+pip = ">=20.2.4"
 pytest-dotenv = "*"
 yapf = "*"
 
