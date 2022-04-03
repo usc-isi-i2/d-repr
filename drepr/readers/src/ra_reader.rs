@@ -12,13 +12,14 @@ pub trait RAReader: Debug {
   fn len(&self) -> usize;
   fn remove(&mut self, index: &Index);
   fn ground_path(&self, path: &mut PathExpr, start_idx: usize);
-  
-  #[inline]
   fn iter_index<'a>(&'a self, path: &PathExpr) -> Box<dyn IndexIterator + 'a>;
 }
 
 #[inline]
-pub(super) fn default_iter_index<'a, R: RAReader>(reader: &'a R, path: &PathExpr) -> Box<dyn IndexIterator + 'a> {
+pub(super) fn default_iter_index<'a, R: RAReader>(
+  reader: &'a R,
+  path: &PathExpr,
+) -> Box<dyn IndexIterator + 'a> {
   let mut index: Vec<Index> = vec![];
   let mut unfrozen_dims: Vec<usize> = vec![];
   let mut unknown_upperbounds: Vec<bool> = vec![];
@@ -67,8 +68,8 @@ pub(super) fn default_iter_index<'a, R: RAReader>(reader: &'a R, path: &PathExpr
         neg_upperbounds.push(0);
         steps.push(0);
         unknown_upperbounds.push(false);
-      },
-      _ => unimplemented!()
+      }
+      _ => unimplemented!(),
     }
   }
 

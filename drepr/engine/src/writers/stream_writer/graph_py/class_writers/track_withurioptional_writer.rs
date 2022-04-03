@@ -104,13 +104,13 @@ impl<'a> StreamClassWriter for TrackWithURIOptionalWriter<'a> {
   fn write_data_property(&mut self, _subject: &str, predicate_id: usize, value: &Value) {
     let v = self.curr_node.get_item(self.py, &self.predicates[predicate_id]).unwrap();
     let lst = v.cast_as::<PyList>(self.py).unwrap();
-    lst.append_item(self.py, value.to_py_object(self.py));
+    lst.append(self.py, value.to_py_object(self.py));
   }
 
   fn write_object_property(&mut self, _target_cls: usize, _subject: &str, predicate_id: usize, object: &str, _is_subject_blank: bool, _is_object_blank: bool, _is_new_subj: bool) {
     let v = self.curr_node.get_item(self.py, &self.predicates[predicate_id]).unwrap();
     let lst = v.cast_as::<PyList>(self.py).unwrap();
-    lst.append_item(self.py, object.to_py_object(self.py).into_object());
+    lst.append(self.py, object.to_py_object(self.py).into_object());
   }
 
   fn buffer_object_property(&mut self, target_cls: usize, predicate_id: usize, object: String, _is_object_blank: bool) {

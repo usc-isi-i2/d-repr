@@ -58,6 +58,7 @@ impl<'a, R: RAReader> UnknownSizeRefIter<'a, R> {
 }
 
 impl<'a, R: RAReader> StreamingIndexIterator for UnknownSizeRefIter<'a, R> {
+  #[inline]
   fn value(&self) -> &[Index] {
     return self.index;
   }

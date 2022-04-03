@@ -1,182 +1,182 @@
+use crate::index::Index;
+use crate::iterators::*;
+use crate::path_expr::{PathExpr, StepExpr};
+use crate::prelude::RAReader;
+use crate::ra_reader::default_iter_index;
+use crate::value::Value;
 use hashbrown::HashMap;
 use netcdf;
-
-use crate::iterators::StreamingIndexIterator;
-use crate::models::{Location, Slice};
-use crate::readers::ra_reader::{reader_iter_data, RAReader};
-
-use super::{Index, Value};
+use netcdf::types::BasicType;
 
 #[derive(Debug)]
 pub struct NetCDFRAReader {
-    pub dataset: HashMap<String, Value>,
+  pub dataset: HashMap<String, Value>,
 }
 
 impl NetCDFRAReader {
-    pub fn from_file(fpath: &str) -> NetCDFRAReader {
-        let file = netcdf::open(fpath).unwrap();
-        let mut dataset: HashMap<String, Value> = HashMap::with_capacity(file.root.variables.len());
+  pub fn from_file(fpath: &str) -> NetCDFRAReader {
+    let file = netcdf::open(fpath).unwrap();
+    let mut dataset: HashMap<String, Value> = HashMap::with_capacity(file.variables().count());
 
-        for (var_id, var) in file.root.variables.iter() {
-            let value = if var.dimensions.len() == 0 {
-                // primitive value
-                if NetCDFRAReader::is_char(var.vartype) {
-                    // this is known error: NetCDF: Attempt to convert between text & numbers
-                    Value::Str("[ERROR] NetCDF: Attempt to convert between text & numbers (this is a known error)".to_string())
-                } else if NetCDFRAReader::is_i64(var.vartype) {
-                    Value::I64(
-                        var.get_int64(true).expect(
-                            "Should be able to read an integer from a primitive variable in NetCDF",
-                        )[0],
-                    )
-                } else if NetCDFRAReader::is_f64(var.vartype) {
-                    Value::F64(
-                        var.get_double(true).expect(
-                            "Should be able to read a double from a primitive variable in NetCDF",
-                        )[0],
-                    )
-                } else {
-                    panic!("Doesn't know how to handle data type: {}", var.vartype);
-                }
-            } else if var.dimensions.len() == 1 {
-                if NetCDFRAReader::is_i64(var.vartype) {
-                    Value::Array(var.get_int64(true).expect("Should be able to read an integer from a primitive variable in NetCDF")
-                        .into_iter()
-                        .map(|v| Value::I64(v))
-                        .collect::<Vec<_>>())
-                } else if NetCDFRAReader::is_f64(var.vartype) {
-                    Value::Array(var.get_double(true).expect("Should be able to read a double from a primitive variable in NetCDF")
-                        .into_iter()
-                        .map(|v| Value::F64(v))
-                        .collect::<Vec<_>>())
-                } else {
-                    panic!("Doesn't know how to handle data type: {}", var.vartype);
-                }
-            } else if var.dimensions.len() == 2 {
-                if NetCDFRAReader::is_i64(var.vartype) {
-                    let mut iter = var
-                        .get_int64(true)
-                        .expect(
-                            "Should be able to read an integer from a primitive variable in NetCDF",
-                        )
-                        .into_iter();
-
-                    let mut values = Vec::with_capacity(var.dimensions[0].len as usize);
-                    for _ in 0..var.dimensions[0].len {
-                        let mut row = Vec::with_capacity(var.dimensions[1].len as usize);
-                        for _ in 0..var.dimensions[1].len {
-                            row.push(Value::I64(iter.next().unwrap()));
-                        }
-                        values.push(Value::Array(row));
-                    }
-
-                    Value::Array(values)
-                } else if NetCDFRAReader::is_f64(var.vartype) {
-                    let mut iter = var
-                        .get_double(true)
-                        .expect(
-                            "Should be able to read a double from a primitive variable in NetCDF",
-                        )
-                        .into_iter();
-
-                    let mut values = Vec::with_capacity(var.dimensions[0].len as usize);
-                    for _ in 0..var.dimensions[0].len {
-                        let mut row = Vec::with_capacity(var.dimensions[1].len as usize);
-                        for _ in 0..var.dimensions[1].len {
-                            row.push(Value::F64(iter.next().unwrap()));
-                        }
-                        values.push(Value::Array(row));
-                    }
-
-                    Value::Array(values)
-                } else {
-                    panic!("Doesn't know how to handle data type: {}", var.vartype);
-                }
-            } else if var.dimensions.len() == 3 {
-                if NetCDFRAReader::is_i64(var.vartype) {
-                    let mut iter = var
-                        .get_int64(true)
-                        .expect(
-                            "Should be able to read an integer from a primitive variable in NetCDF",
-                        )
-                        .into_iter();
-
-                    let mut d0 = Vec::with_capacity(var.dimensions[0].len as usize);
-                    for _ in 0..var.dimensions[0].len {
-                        let mut d1 = Vec::with_capacity(var.dimensions[1].len as usize);
-                        for _ in 0..var.dimensions[1].len {
-                            let mut d2 = Vec::with_capacity(var.dimensions[2].len as usize);
-                            for _ in 0..var.dimensions[2].len {
-                                d2.push(Value::I64(iter.next().unwrap()));
-                            }
-                            d1.push(Value::Array(d2));
-                        }
-                        d0.push(Value::Array(d1));
-                    }
-
-                    Value::Array(d0)
-                } else if NetCDFRAReader::is_f64(var.vartype) {
-                    let mut iter = var
-                        .get_double(true)
-                        .expect(
-                            "Should be able to read a double from a primitive variable in NetCDF",
-                        )
-                        .into_iter();
-
-                    let mut d0 = Vec::with_capacity(var.dimensions[0].len as usize);
-                    for _ in 0..var.dimensions[0].len {
-                        let mut d1 = Vec::with_capacity(var.dimensions[1].len as usize);
-                        for _ in 0..var.dimensions[1].len {
-                            let mut d2 = Vec::with_capacity(var.dimensions[2].len as usize);
-                            for _ in 0..var.dimensions[2].len {
-                                d2.push(Value::F64(iter.next().unwrap()));
-                            }
-                            d1.push(Value::Array(d2));
-                        }
-                        d0.push(Value::Array(d1));
-                    }
-
-                    Value::Array(d0)
-                } else {
-                    panic!("Doesn't know how to handle data type: {}", var.vartype);
-                }
-            } else {
-                panic!(
-                    "Not implemented for {} dimension variable",
-                    var.dimensions.len()
-                );
-            };
-
-            dataset.insert(var_id.clone(), value);
+    for var in file.variables() {
+      let var_id = var.name();
+      let vartype = var.vartype();
+      let vardims = var.dimensions();
+      let value = if vardims.len() == 0 {
+        // primitive value
+        if vartype.as_basic().map_or(false, BasicType::is_char) {
+          // this is known error: NetCDF: Attempt to convert between text & numbers
+          Value::Str(
+            "[ERROR] NetCDF: Attempt to convert between text & numbers (this is a known error)"
+              .to_string(),
+          )
+        } else if vartype.is_i64() {
+          Value::I64(
+            var
+              // .get_int64(true)
+              .values(Option::None, Option::None)
+              .expect("Should be able to read an integer from a primitive variable in NetCDF")[0],
+          )
+        } else if vartype.is_f64() {
+          Value::F64(
+            var
+              .values(Option::None, Option::None)
+              .expect("Should be able to read a double from a primitive variable in NetCDF")[0],
+          )
+        } else {
+          panic!("Doesn't know how to handle data type: {:?}", vartype);
         }
+      } else if vardims.len() == 1 {
+        if vartype.is_i64() {
+          Value::Array(
+            var
+              .values(Option::None, Option::None)
+              .expect("Should be able to read an integer from a primitive variable in NetCDF")
+              .into_iter()
+              .map(|v| Value::I64(v))
+              .collect::<Vec<_>>(),
+          )
+        } else if vartype.is_f64() {
+          Value::Array(
+            var
+              .values(Option::None, Option::None)
+              .expect("Should be able to read a double from a primitive variable in NetCDF")
+              .into_iter()
+              .map(|v| Value::F64(v))
+              .collect::<Vec<_>>(),
+          )
+        } else {
+          panic!("Doesn't know how to handle data type: {:?}", vartype);
+        }
+      } else if vardims.len() == 2 {
+        if vartype.is_i64() {
+          let mut iter = var
+            .values(Option::None, Option::None)
+            .expect("Should be able to read an integer from a primitive variable in NetCDF")
+            .into_iter();
 
-        NetCDFRAReader { dataset }
+          let mut values = Vec::with_capacity(vardims[0].len() as usize);
+          for _ in 0..vardims[0].len() {
+            let mut row = Vec::with_capacity(vardims[1].len() as usize);
+            for _ in 0..vardims[1].len() {
+              row.push(Value::I64(iter.next().unwrap()));
+            }
+            values.push(Value::Array(row));
+          }
+
+          Value::Array(values)
+        } else if vartype.is_f64() {
+          let mut iter = var
+            .values(Option::None, Option::None)
+            .expect("Should be able to read a double from a primitive variable in NetCDF")
+            .into_iter();
+
+          let mut values = Vec::with_capacity(vardims[0].len() as usize);
+          for _ in 0..vardims[0].len() {
+            let mut row = Vec::with_capacity(vardims[1].len() as usize);
+            for _ in 0..vardims[1].len() {
+              row.push(Value::F64(iter.next().unwrap()));
+            }
+            values.push(Value::Array(row));
+          }
+
+          Value::Array(values)
+        } else {
+          panic!("Doesn't know how to handle data type: {:?}", vartype);
+        }
+      } else if vardims.len() == 3 {
+        if vartype.is_i64() {
+          let mut iter = var
+            .values(Option::None, Option::None)
+            .expect("Should be able to read an integer from a primitive variable in NetCDF")
+            .into_iter();
+
+          let mut d0 = Vec::with_capacity(vardims[0].len() as usize);
+          for _ in 0..vardims[0].len() {
+            let mut d1 = Vec::with_capacity(vardims[1].len() as usize);
+            for _ in 0..vardims[1].len() {
+              let mut d2 = Vec::with_capacity(vardims[2].len() as usize);
+              for _ in 0..vardims[2].len() {
+                d2.push(Value::I64(iter.next().unwrap()));
+              }
+              d1.push(Value::Array(d2));
+            }
+            d0.push(Value::Array(d1));
+          }
+
+          Value::Array(d0)
+        } else if vartype.is_f64() {
+          let mut iter = var
+            .values(Option::None, Option::None)
+            .expect("Should be able to read a double from a primitive variable in NetCDF")
+            .into_iter();
+
+          let mut d0 = Vec::with_capacity(vardims[0].len() as usize);
+          for _ in 0..vardims[0].len() {
+            let mut d1 = Vec::with_capacity(vardims[1].len() as usize);
+            for _ in 0..vardims[1].len() {
+              let mut d2 = Vec::with_capacity(vardims[2].len() as usize);
+              for _ in 0..vardims[2].len() {
+                d2.push(Value::F64(iter.next().unwrap()));
+              }
+              d1.push(Value::Array(d2));
+            }
+            d0.push(Value::Array(d1));
+          }
+
+          Value::Array(d0)
+        } else {
+          panic!("Doesn't know how to handle data type: {:?}", vartype);
+        }
+      } else {
+        panic!("Not implemented for {} dimension variable", vardims.len());
+      };
+
+      dataset.insert(var.name(), value);
     }
 
-    #[inline]
-    pub fn is_i64(var_type: i32) -> bool {
-        // https://github.com/mhiley/rust-netcdf/blob/master/netcdf-sys/src/netcdf_const.rs
-        return (var_type != 2 && 4 >= var_type && var_type >= 1)
-            || (11 >= var_type && var_type >= 7);
-    }
+    NetCDFRAReader { dataset }
+  }
 
-    #[inline]
-    pub fn is_f64(var_type: i32) -> bool {
-        // https://github.com/mhiley/rust-netcdf/blob/master/netcdf-sys/src/netcdf_const.rs
-        return var_type == 5 || var_type == 6; // float or double
-    }
+  #[inline]
+  pub fn is_i64(var_type: i32) -> bool {
+    // https://github.com/mhiley/rust-netcdf/blob/master/netcdf-sys/src/netcdf_const.rs
+    return (var_type != 2 && 4 >= var_type && var_type >= 1) || (11 >= var_type && var_type >= 7);
+  }
 
-    #[inline]
-    pub fn is_char(var_type: i32) -> bool {
-        return var_type == 2;
-    }
+  #[inline]
+  pub fn is_f64(var_type: i32) -> bool {
+    // https://github.com/mhiley/rust-netcdf/blob/master/netcdf-sys/src/netcdf_const.rs
+    return var_type == 5 || var_type == 6; // float or double
+  }
+
+  #[inline]
+  pub fn is_char(var_type: i32) -> bool {
+    return var_type == 2;
+  }
 }
 
 impl RAReader for NetCDFRAReader {
-  fn into_value(self) -> Value {
-    Value::Object(self.dataset)
-  }
-
   fn get_value(&self, index: &[Index], start_idx: usize) -> &Value {
     if start_idx == index.len() - 1 {
       &self.dataset[index[start_idx].as_str()]
@@ -189,13 +189,19 @@ impl RAReader for NetCDFRAReader {
     if start_idx == index.len() - 1 {
       self.dataset.get_mut(index[start_idx].as_str()).unwrap()
     } else {
-      self.dataset.get_mut(index[start_idx].as_str()).unwrap().get_mut_value(index, start_idx + 1)
+      self
+        .dataset
+        .get_mut(index[start_idx].as_str())
+        .unwrap()
+        .get_mut_value(index, start_idx + 1)
     }
   }
 
   fn set_value(&mut self, index: &[Index], start_idx: usize, val: Value) {
     if index.len() - 1 == start_idx {
-      self.dataset.insert(index[start_idx].as_str().to_string(), val);
+      self
+        .dataset
+        .insert(index[start_idx].as_str().to_string(), val);
       return;
     }
 
@@ -214,16 +220,16 @@ impl RAReader for NetCDFRAReader {
     self.dataset.remove(index.as_str());
   }
 
-  fn ground_location(&self, loc: &mut Location, start_idx: usize) {
+  fn ground_path(&self, path: &mut PathExpr, start_idx: usize) {
     // we can only ground the first range slice
-    let mut ptr = &self.dataset[loc.slices[start_idx].as_index().idx.as_str()];
-    for s in &mut loc.slices[start_idx + 1..] {
+    let mut ptr = &self.dataset[path.steps[start_idx].as_index().val.as_str()];
+    for s in &mut path.steps[start_idx + 1..] {
       match s {
-        Slice::Range(r) => {
+        StepExpr::Range(r) => {
           match r.end {
             None => {
               r.end = Some(ptr.len() as i64);
-            },
+            }
             Some(e) => {
               if e < 0 {
                 r.end = Some(ptr.len() as i64 + e);
@@ -232,16 +238,15 @@ impl RAReader for NetCDFRAReader {
           }
           break;
         }
-        Slice::Index(i) => {
-          ptr = ptr.get_child_value(&i.idx);
+        StepExpr::Index(i) => {
+          ptr = ptr.get_child_value(&i.val);
         }
+        _ => unimplemented!(),
       }
     }
   }
 
-  fn can_change_value_type(&mut self) {}
-
-  fn iter_data<'a>(&'a self, loc: &Location) -> Box<dyn StreamingIndexIterator + 'a> {
-    reader_iter_data(self, loc)
+  fn iter_index<'a>(&'a self, path: &PathExpr) -> Box<dyn IndexIterator + 'a> {
+    default_iter_index(self, path)
   }
 }

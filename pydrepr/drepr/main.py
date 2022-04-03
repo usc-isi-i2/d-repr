@@ -11,29 +11,34 @@ from ruamel.yaml import YAML
 from drepr.engine import execute, FileOutput, OutputFormat, MemoryOutput
 from drepr.models import DRepr
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-r",
         "--repr",
         required=True,
         help="either a string containing representation of a dataset (JSON format) "
-             "or a path to a file containing representation (support 2 formats: JSON & YML)")
+        "or a path to a file containing representation (support 2 formats: JSON & YML)",
+    )
 
-    parser.add_argument("-d",
-                        "--resource",
-                        required=True,
-                        nargs="+",
-                        help="file paths of resources in this format: <resource_id>=<file_path>;")
-    parser.add_argument("-v",
-                        "--verbose",
-                        default=0,
-                        help="increase output verbosity",
-                        action="count")
+    parser.add_argument(
+        "-d",
+        "--resource",
+        required=True,
+        nargs="+",
+        help="file paths of resources in this format: <resource_id>=<file_path>;",
+    )
+    parser.add_argument(
+        "-v", "--verbose", default=0, help="increase output verbosity", action="count"
+    )
     parser.add_argument("-o", "--output", help="the file we will write output to")
-    parser.add_argument("-f", "--format",
-                        choices=[e.value for e in OutputFormat],
-                        default=OutputFormat.TTL, help="format of the data (default is ttl)")
+    parser.add_argument(
+        "-f",
+        "--format",
+        choices=[e.value for e in OutputFormat],
+        default=OutputFormat.TTL,
+        help="format of the data (default is ttl)",
+    )
     args = parser.parse_args()
 
     # read repr
@@ -81,6 +86,7 @@ if __name__ == '__main__':
     else:
         output = MemoryOutput(OutputFormat(args.format))
 
+    print(ds_model.resources)
     start = time.time()
     result = execute(ds_model, resources, output, args.verbose > 1)
     end = time.time()
@@ -90,4 +96,4 @@ if __name__ == '__main__':
 
     if args.output is None:
         print(">>> Dumping RDF triples to console...\n")
-        print(result['value'])
+        print(result["value"])

@@ -128,6 +128,7 @@ impl<'a> $class<'a> {
 
 impl<'a> IndexIterator for $class<'a>
 {
+  #[inline]
   fn value(&self) -> &[Index] {
     &self.index
   }
@@ -200,7 +201,6 @@ impl<'a> IndexIterator for $class<'a>
 
 generate_unknown_range_iter!(UnknownRangeIter);
 generate_unknown_range_iter!(UnknownRangeRefIter, mut);
-
 
 pub fn create_tree_ptrs_and_update_unknown_upperbound<'a>(
   ra_reader: &'a dyn RAReader,

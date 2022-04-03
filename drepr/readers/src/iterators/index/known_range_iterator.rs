@@ -72,10 +72,12 @@ impl$( <$a> )? $class$( <$a> )? {
 }
 
 impl$( <$a> )? IndexIterator for $class$( <$a> )? {
+  #[inline]
   fn value(&self) -> &[Index] {
     &self.index
   }
 
+  #[inline]
   fn mut_value(&mut self) -> &mut [Index] {
     &mut self.index
   }
@@ -117,4 +119,3 @@ impl$( <$a> )? IndexIterator for $class$( <$a> )? {
 
 generate_range_iter!(KnownRangeIter);
 generate_range_iter!(KnownRangeRefIter<'a>);
-

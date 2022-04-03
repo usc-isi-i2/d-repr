@@ -1,8 +1,8 @@
-version: '1'
+version: "1"
 resources: xml
 preprocessing:
   - type: pmap
-    input: $.response.row.row.*
+    path: $.response.row.row.*
     code: |
       # remove irrelevant keys
       value.pop('@_id')

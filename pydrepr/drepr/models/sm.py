@@ -12,20 +12,21 @@ class DataType(Enum):
     xsd_dateTime = "xsd:dateTime"
     xsd_int = "xsd:int"
     xsd_string = "xsd:string"
+    geo_wktLiteral = "geo:wktLiteral"
 
 
 @dataclass
 class ClassNode:
     node_id: str
-    label: str
+    label: str  # relative iri
 
-    def get_abs_iri(self, sm: 'SemanticModel'):
+    def get_abs_iri(self, sm: "SemanticModel"):
         """Get the absolute IRI of this node"""
         if sm.is_rel_iri(self.label):
             return sm.get_abs_iri(self.label)
         return self.label
 
-    def get_rel_iri(self, sm: 'SemanticModel'):
+    def get_rel_iri(self, sm: "SemanticModel"):
         if sm.is_rel_iri(self.label):
             return self.label
         return sm.get_rel_iri(self.label)
@@ -50,17 +51,17 @@ class Edge:
     edge_id: int
     source_id: str
     target_id: str
-    label: str
+    label: str  # rel uri
     is_subject: bool = False
     is_required: bool = False
 
-    def get_abs_iri(self, sm: 'SemanticModel'):
+    def get_abs_iri(self, sm: "SemanticModel"):
         """Get the absolute IRI of the predicate"""
         if sm.is_rel_iri(self.label):
             return sm.get_abs_iri(self.label)
         return self.label
 
-    def get_rel_iri(self, sm: 'SemanticModel'):
+    def get_rel_iri(self, sm: "SemanticModel"):
         if sm.is_rel_iri(self.label):
             return self.label
         return sm.get_rel_iri(self.label)
@@ -76,7 +77,7 @@ class SemanticModel:
     prefixes: Dict[str, str]
 
     @staticmethod
-    def get_default(attrs: List[Attr]) -> 'SemanticModel':
+    def get_default(attrs: List[Attr]) -> "SemanticModel":
         """
         Automatically generate a semantic model from a list of attributes.
 
@@ -102,26 +103,34 @@ class SemanticModel:
     @staticmethod
     def get_default_prefixes() -> Dict[str, str]:
         return {
-            'drepr': "https://purl.org/drepr/1.0/",
-            'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-            'rdfs': "http://www.w3.org/2000/01/rdf-schema#",
-            'owl': "http://www.w3.org/2002/07/owl#"
+            "drepr": "https://purl.org/drepr/1.0/",
+            "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+            "owl": "http://www.w3.org/2002/07/owl#",
         }
 
     @staticmethod
     def deserialize(raw: dict) -> "SemanticModel":
         nodes = {}
-        for nid, n in raw['nodes'].items():
-            if n['type'] == 'class_node':
-                nodes[nid] = ClassNode(n['node_id'], n['label'])
-            elif n['type'] == 'data_node':
-                nodes[nid] = DataNode(n['node_id'], n['attr_id'], DataType(n['data_type']) if n['data_type'] is not None else None)
-            elif n['type'] == 'literal_node':
-                nodes[nid] = LiteralNode(n['node_id'], n['value'], DataType(n['data_type']) if n['data_type'] is not None else None)
+        for nid, n in raw["nodes"].items():
+            if n["type"] == "class_node":
+                nodes[nid] = ClassNode(n["node_id"], n["label"])
+            elif n["type"] == "data_node":
+                nodes[nid] = DataNode(
+                    n["node_id"],
+                    n["attr_id"],
+                    DataType(n["data_type"]) if n["data_type"] is not None else None,
+                )
+            elif n["type"] == "literal_node":
+                nodes[nid] = LiteralNode(
+                    n["node_id"],
+                    n["value"],
+                    DataType(n["data_type"]) if n["data_type"] is not None else None,
+                )
             else:
                 raise NotImplementedError()
-        edges = {eid: Edge(**e) for eid, e in raw['edges'].items()}
-        return SemanticModel(nodes, edges, raw['prefixes'])
+        edges = {eid: Edge(**e) for eid, e in raw["edges"].items()}
+        return SemanticModel(nodes, edges, raw["prefixes"])
 
     def remove_node(self, node_id: str):
         self.nodes.pop(node_id)
@@ -176,19 +185,23 @@ class SemanticModel:
                 yield self.nodes[e.target_id]
 
     def get_rel_iri(self, abs_iri: str) -> str:
-        """Convert an absolute IRI to a relative IRI. """
+        """Convert an absolute IRI to a relative IRI."""
         assert not self.is_rel_iri(abs_iri)
         for prefix, uri in self.prefixes.items():
             if abs_iri.startswith(uri):
                 return f"{prefix}:{abs_iri.replace(uri, '')}"
-        raise ValueError("Create create relative IRI because there is no suitable prefix")
+        raise ValueError(
+            "Cannot create relative IRI because there is no suitable prefix"
+        )
 
     def get_abs_iri(self, rel_iri: str) -> str:
         """Convert a relative IRI to an absolute IRI."""
         assert self.is_rel_iri(rel_iri)
         prefix, val = rel_iri.split(":", 1)
         if prefix not in self.prefixes:
-            raise ValueError(f"Cannot create absolute IRI because the prefix {prefix} does not exist")
+            raise ValueError(
+                f"Cannot create absolute IRI because the prefix {prefix} does not exist"
+            )
         return f"{self.prefixes[prefix]}{val}"
 
     def is_rel_iri(self, iri: str) -> bool:
