@@ -1,0 +1,374 @@
+openapi: 3.0.*
+info:
+  title: Representation API
+  version: 0.0.1
+servers:
+  - url: https://mira.isi.edu
+paths:
+  /login:
+    post:
+      tags: [authentication]
+      summary: login and return an authorization key
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+            example:
+              email: demo@isi.edu
+              password: m1nt@123
+      responses:
+        200:
+          description: login success
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["success"]
+                  auth_token:
+                    type: string
+        401:
+          description: invalid username or password
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["fail"]
+                  message:
+                    type: string
+  /has_authority:
+    head:
+      summary: check if an authorization key is valid
+      tags: [authentication]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        401:
+          description: Unauthorized request
+        200:
+          description: Authorized request
+  /datasets:
+    get:
+      summary: get names of user's datasets
+      tags: [dataset]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  datasets:
+                    type: array
+                    items:
+                      type: string
+              example:
+                datasets: ["draft"]
+        401:
+          description: Unauthorized request
+    post:
+      summary: create new dataset
+      tags: [dataset]
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+            example:
+              name: draft
+      responses:
+        401:
+          description: Unauthorized request
+        200:
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["success"]
+        409:
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: fail
+                message: duplicated dataset name
+  /datasets/{dataset_name}:
+    head:
+      summary: check if a dataset exists
+      tags: [dataset]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/path/dataset_name"
+      responses:
+        401:
+          description: Unauthorized request
+        404:
+          description: Dataset doesn't exist
+        200:
+          description: Dataset exists
+    get:
+      summary: get dataset information
+      tags: [dataset]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/path/dataset_name"
+      responses:
+        401:
+          description: Unauthorized request
+        200:
+          description: dataset content
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Resource"
+                  preprocessing:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Preprocessing"
+                  mappings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Mapping"
+                  variables:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Variable"
+                  semantic_model:
+                    $ref: "#/components/schemas/SemanticModel"
+                  ontologies:
+                    type: array
+                    items:
+                      type: string
+  /datasets/{dataset_name}/resources:
+    post:
+      summary: create resource
+      tags: [resource]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/path/dataset_name"
+      requestBody:
+        required: true
+        content:
+          "multipart/form-data":
+            schema:
+              type: object
+              properties:
+                resource_file:
+                  type: string
+                  format: binary
+                resource_id:
+                  type: string
+                  resource_type:
+                    $ref: "#/components/schemas/Resource/properties/type"
+                  extra:
+                    type: object
+      responses:
+        401:
+          description: Unauthorized request
+        200:
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["success"]
+                  resource:
+                    $ref: "#/components/schemas/Resource"
+  /datasets/{dataset_name}/resources/{resource_id}:
+    delete:
+      summary: delete a resource
+      tags: [resource]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/path/dataset_name"
+        - $ref: "#/components/parameters/path/resource_id"
+      responses:
+        401:
+          description: Unauthorized request
+    get:
+      summary: get resource information
+      tags: [resource]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/path/dataset_name"
+        - $ref: "#/components/parameters/path/resource_id"
+      responses:
+        401:
+          description: Unauthorized request
+  /datasets/{dataset_name}/variables:
+    post:
+      summary: create variable
+      tags: [variable]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/path/dataset_name"
+      responses:
+        401:
+          description: Unauthorized request
+  /datasets/{dataset_name}/variables/{variable_id}:
+    delete:
+      summary: delete variable
+      tags: [variable]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/path/dataset_name"
+      responses:
+        401:
+          description: Unauthorized request
+  /datasets/{dataset_name}/mappings:
+    post:
+      summary: create new mapping
+      tags: [mapping]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/path/dataset_name"
+      responses:
+        401:
+          description: Unauthorized request
+  /datasets/{dataset_name}/semantic_model:
+    post:
+      summary: create new semantic model
+      tags: [semantic model]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/path/dataset_name"
+      responses:
+        401:
+          description: Unauthorized request
+  /datasets/{dataset_name}/download:
+    get:
+      summary: download dataset presentation
+      tags: [dataset]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/path/dataset_name"
+      responses:
+        401:
+          description: Unauthorized request
+  /datasets/{dataset_name}/data:
+    get:
+      summary: download data of a dataset
+      tags: [dataset]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: "#/components/parameters/path/dataset_name"
+      responses:
+        401:
+          description: Unauthorized request
+  /ontologies:
+    get:
+      summary: retrieve all available ontologies
+      tags: [ontology]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        401:
+          description: Unauthorized request
+    post:
+      summary: upload new ontology
+      tags: [ontology]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        401:
+          description: Unauthorized request
+  /ontologies/search:
+    get:
+      summary: search for ontology predicates or classes
+      tags: [ontology]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        401:
+          description: Unauthorized request
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+  parameters:
+    path:
+      dataset_name:
+        in: path
+        name: dataset_name
+        schema:
+          type: string
+        required: true
+        description: dataset name
+      resource_id:
+        in: path
+        name: resource_id
+        schema:
+          type: string
+        required: true
+        description: resource id
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["fail"]
+        message:
+          type: string
+    Preprocessing:
+      type: object
+    Resource:
+      type: object
+      properties:
+        id:
+          type: string
+          description: id of resource
+        type:
+          type: string
+          enum: ["csv", "netcdf4", "json"]
+          description: type of resource
+    Mapping:
+      type: object
+    Variable:
+      type: object
+    SemanticModel:
+      type: object

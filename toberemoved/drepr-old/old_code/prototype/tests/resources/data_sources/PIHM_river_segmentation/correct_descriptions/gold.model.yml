@@ -1,0 +1,68 @@
+version: "1"
+resources:
+  default:
+    type: csv
+    delimiter: "\t"
+preprocessing:
+  - type: map
+    input_var: num_shape
+    function: >
+      return int(value.strip().replace("Shape ", ""))
+  - type: map
+    input_var: num_material
+    function: >
+      return int(value.strip().replace("Material ", ""))
+  - type: map
+    input_var: num_ic
+    function: >
+      return int(value.strip().replace("IC ", ""))
+layout:
+  num_riv:
+    location: 0:0
+    type: int
+  num_shape:
+    location: ${num_riv+1}:0
+  num_material:
+    location: ${num_riv+num_shape+2}:0
+  num_ic:
+    location: ${num_riv+num_shape+num_material+3}:0
+  riv_index:
+    location: 1..${num_riv}:0
+  from_node:
+    location: 1..${num_riv}:1
+  to_node:
+    location: 1..${num_riv}:2
+  shape_idx:
+    location: ${num_riv+2}..${num_riv+1+num_shape}:0
+  shape_depth:
+    location: ${num_riv+2}..${num_riv+1+num_shape}:1
+  shape_interp_ord:
+    location: ${num_riv+2}..${num_riv+1+num_shape}:2
+  mat_idx:
+    location: ${num_riv+num_shape+3}..${num_riv+num_shape+num_material+3}:0
+  KsatH:
+    location: ${num_riv+num_shape+3}..${num_riv+num_shape+num_material+3}:3
+mappings:
+  - type: dimension_mapping
+    value: riv_index:0 <-> from_node:0
+  - type: dimension_mapping
+    value: riv_index:0 <-> to_node:0
+  - type: dimension_mapping
+    value: shape_idx:0 <-> shape_depth:0
+  - type: dimension_mapping
+    value: shape_idx:0 <-> shape_interp_ord:0
+  - type: dimension_mapping
+    value: mat_idx:0 <-> KsatH:0
+semantic_model:
+  semantic_types:
+    riv_index: schema:RiverSeg:1--schema:index^^xsd:int
+    from_node: schema:RiverSeg:1--schema:fromNode^^xsd:int
+    to_node: schema:RiverSeg:1--schema:toNode^^xsd:int
+    shape_idx: schema:Shape:1--schema:index^^xsd:int
+    shape_depth: schema:Shape:1--schema:depth^^xsd:decimal
+    shape_interp_ord: schema:Shape:1--schema:interpOrd^^xsd:int
+    mat_idx: schema:Unknown:1--schema:index^^xsd:int
+    KsatH: schema:Unknown:1--schema:sizeHydraulicConductivity^^xsd:decimal
+  semantic_relations: []
+  ontology_prefixes:
+    schema: https://schema.org/

@@ -1,0 +1,42 @@
+[
+  {
+    "company": "CompanyA",
+    "records": [
+      {
+        "name": "John",
+        "phone": "2136271828",
+        "department": {
+          "name": "Audit Department",
+          "code": "AD21"
+        }
+      }, {
+        "name": "Peter",
+        "phone": "7188288274",
+        "department": {
+          "name": "Security Department",
+          "code": "SD23"
+        }
+      }
+    ]
+  },
+  {
+    "company": "CompanyB",
+    "records": [
+      {
+        "name": "Bob",
+        "phone": "3217462738",
+        "department": {
+          "name": "IT Department",
+          "code": "ITD1920"
+        }
+      }, {
+        "name": "Lizsl",
+        "phone": "8478372617",
+        "department": {
+          "name": "Legal Department",
+          "code": "LD821"
+        }
+      }
+    ]
+  }
+]

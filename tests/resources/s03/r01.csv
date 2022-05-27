@@ -1,0 +1,4 @@
+Port	Port Name	Port RegionId	Indicator	Indicator Name	Indicator unit	Scale	Units	2005	2006	2007	2008	2009
+AO	Angola	AO	12376316	Cargo Traffic (M.Tonnes)	million tonnes	units	Million tonnes	6915000.00	7100000.00	7171110.00	7242821.00	6535300.00
+BI	Burundi	BI	12376316	Cargo Traffic (M.Tonnes)	million tonnes	units	Million tonnes	204929.00	182810.00	136077.00	137437.00	140000.00
+BI	Burundi	BI	12376616	Container Traffic (TEUs)	TEUs	units	TEUs			811.00	819.00	827.00

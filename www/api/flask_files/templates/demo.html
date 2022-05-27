@@ -1,0 +1,181 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+        #drepr {
+            height: 300px;
+            border-radius: .25rem;
+        }
+        #drepr > .vs-dark {
+            border-radius: .25rem;
+        }
+        #drepr > .vs-dark > div {
+            border-radius: .25rem;
+        }
+        .demo-result {
+            max-height: 440px;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12 text-center">
+            <h1>DREPR demo</h1>
+            <p><a href="">docs</a> and <a href="/examples">examples</a></p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-xl-6">
+            <div class="row">
+                <div class="col-sm-12">
+                    <form action="/demo" method="POST" class="mt-2" id="demo-form" enctype='multipart/form-data'>
+                        <div class="form-group">
+                            <label for="resources">Resources</label>
+                            <div id="resources">
+                                <div class="custom-file">
+                                    <input name="resources[]" type="file" class="custom-file-input" id="file-0">
+                                    <label class="custom-file-label" for="file-0">Choose file</label>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary mt-2" id="add-resource">Add Resource</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="drepr">Representation</label>
+                            <div class="border" id="drepr"></div>
+                            <small class="text-danger" id="drepr-message"></small>
+                        </div>
+                        <button type="submit" class="btn btn-primary mb-2">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-6">
+            <div class="row d-none" id="success-result">
+                <div class="col-sm-12">
+                    <div class="alert alert-success" role="alert">
+                        <h5 class="alert-heading">Result</h5>
+                        <hr/>
+                        <pre class="demo-result"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="row d-none" id="error-result">
+                <div class="col-sm-12">
+                    <div class="alert alert-danger" role="alert">
+                        <h5 class="alert-heading">Error</h5>
+                        <hr/>
+                        <pre class="demo-result"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/jquery-3.3.1.min.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='js/jquery.form.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bs-custom-file-input.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/autosize.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/js-yaml.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/monaco-editor/loader.js') }}"></script>
+<script>
+    require.config({paths: {vs: "{{ url_for('static', filename='js/monaco-editor') }}"}});
+    require(['vs/editor/editor.main'], function () {
+        window.editor = monaco.editor.create(document.getElementById('drepr'), {
+            value: "",
+            language: 'yaml',
+            fontSize: 14,
+            minimap: {
+                enabled: false
+            },
+            theme: 'vs-dark',
+            scrollBeyondLastLine: false,
+        });
+    });
+
+    $(document).ready(function () {
+        bsCustomFileInput.init();
+    });
+
+    $("#add-resource").click(function () {
+        var nFiles = $(".custom-file").length;
+
+        $("#resources").append('<div class="custom-file mt-2">' +
+            '<input name="resources[]" type="file" class="custom-file-input" id="file-' + nFiles + '">' +
+            '<label class="custom-file-label" for="file-' + nFiles + '">Choose file</label>' +
+            '</div>');
+        bsCustomFileInput.init();
+    });
+
+    autosize($("#drepr"));
+
+    $("#demo-form").submit(function (event) {
+        event.preventDefault();
+
+        $(this).ajaxSubmit({
+            beforeSubmit: function (arr, $form, options) {
+                /*
+                for (var field of arr) {
+                    if (field.name === "drepr") {
+                        try {
+                            var doc = jsyaml.safeLoad(field.value);
+                            if (typeof doc === 'string') {
+                                $("#drepr-message").text("Invalid YAML");
+                                $("#drepr").addClass("is-invalid");
+                                return false;
+                            }
+
+                            field.value = JSON.stringify(doc);
+                            $("#drepr-message").text("");
+                            $("#drepr").removeClass("is-invalid");
+                        } catch (e) {
+                            $("#drepr").addClass("is-invalid");
+                            $("#drepr-message").text("Invalid YAML");
+                        }
+                    }
+                } */
+                try {
+                    var doc = jsyaml.safeLoad(window.editor.getValue());
+                    if (typeof doc === 'string') {
+                        $("#drepr-message").text("Invalid YAML");
+                        $("#drepr").addClass("is-invalid");
+                        return false;
+                    }
+
+                    arr.push({
+                        name: 'drepr',
+                        value: JSON.stringify(doc)
+                    });
+
+                    $("#drepr-message").text("");
+                    $("#drepr").removeClass("is-invalid");
+                } catch (e) {
+                    $("#drepr").addClass("is-invalid");
+                    $("#drepr-message").text("Invalid YAML");
+                    return false;
+                }
+            },
+            error: function (xhr) {
+                $("#success-result").addClass("d-none");
+                $("#error-result").removeClass("d-none");
+                $("#error-result .demo-result").text(xhr.responseText);
+            },
+            success: function (data) {
+                $("#success-result").removeClass("d-none");
+                $("#error-result").addClass("d-none");
+                $("#success-result .demo-result").text(data);
+            }
+        });
+
+        return false;
+    });
+</script>
+</body>
+</html>

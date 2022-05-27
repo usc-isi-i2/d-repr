@@ -1,0 +1,37 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix eg: <http://example.org/> .
+@prefix drepr: <https://purl.org/drepr/1.0/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+
+_:Department1_1 a eg:Department;
+	eg:name "it";
+	eg:id "d1";
+	.
+_:Department1_2 a eg:Department;
+	eg:name "hr";
+	eg:id "d2";
+	.
+_:Employee0_1 a eg:Employee;
+	eg:id "h1";
+	eg:name "john";
+	eg:age "27";
+	eg:workFor _:Department1_1;
+	.
+_:Employee0_2 a eg:Employee;
+	eg:id "h2";
+	eg:name "peter";
+	eg:age "28";
+	eg:workFor _:Department1_1;
+	.
+_:Employee0_3 a eg:Employee;
+	eg:id "h3";
+	eg:name "mary";
+	eg:age "22";
+	eg:workFor _:Department1_2;
+	.

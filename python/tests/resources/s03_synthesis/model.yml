@@ -1,0 +1,48 @@
+version: '2'
+resources: np-dict
+attributes:
+  lat: $.lat[:]
+  long: $.long[:]
+  rainfall: $.rainfall[:][:]
+  snowfall: $.snowfall[:][:]
+alignments:
+  - type: dimension
+    value: lat:1 <-> rainfall:1
+  - type: dimension
+    value: long:1 <-> rainfall:2
+  - type: dimension
+    value: lat:1 <-> snowfall:1
+  - type: dimension
+    value: long:1 <-> snowfall:2
+semantic_model:
+  mint:Variable:1:
+    properties:
+      - [rdf:value, rainfall]
+      - [mint-geo:lat, lat]
+      - [mint-geo:long, long]
+    static_properties:
+      - [mint:standardVariable, 'rainfall_rate']
+    links:
+      - [mint:raster, mint-geo:Raster:1]
+  mint:Variable:2:
+    properties:
+      - [rdf:value, snowfall]
+      - [mint-geo:lat, lat]
+      - [mint-geo:long, long]
+    static_properties:
+      - [mint:standardVariable, 'snowfall_rate']
+    links:
+      - [mint:raster, mint-geo:Raster:1]
+  mint-geo:Raster:1:
+    static_properties:
+      - [mint-geo:epsg, 4326]
+      - [mint-geo:x_slope, 0]
+      - [mint-geo:y_slope, 0]
+      - [mint-geo:x_min, 44.1]
+      - [mint-geo:y_min, 20.1]
+      - [mint-geo:dx, 0.1]
+      - [mint-geo:dy, 0.1]
+  prefixes:
+    mint: https://mint.isi.edu/
+    # do we need this? our latitude/longitude don't have CRS
+    mint-geo: https://mint.isi.edu/geo

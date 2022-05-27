@@ -1,0 +1,11 @@
+{
+    "attributes":{
+        "area":0,
+        "gender":1,
+        "period":2,
+        "obs":3
+    },
+    "resources":{
+        "default":0
+    }
+}

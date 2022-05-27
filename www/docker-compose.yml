@@ -1,0 +1,66 @@
+version: "3"
+services:
+  postgres:
+    container_name: drepr-postgres
+    image: postgres:11-alpine
+    volumes:
+      - drepr_postgres:/var/lib/postgresql/data
+    ports:
+      - "0.0.0.0:5432:5432"
+    environment:
+      - TZ=America/Los_Angeles
+      - POSTGRES_USER=drepr
+      - POSTGRES_PASSWORD=uelDIfxpT5u6
+      - POSTGRES_DB=drepr
+  msg_queue:
+    container_name: drepr-msg-queue
+    image: rabbitmq:3-management
+    ports:
+      - "0.0.0.0:5672:5672"
+      - "0.0.0.0:15672:15672"
+  webapp_uwsgi:
+    container_name: drepr-webapp-uwsgi
+    image: isi/drepr-webapp
+    build:
+      context: ..
+      dockerfile: webapp/Dockerfile
+    links:
+      - postgres
+      - msg_queue
+    ports:
+      - "0.0.0.0:9000:5000"
+    volumes:
+      - drepr_shared_sockets:/shared_sockets
+    environment:
+      - TZ=America/Los_Angeles
+      - FLASK_ENV=${FLASK_ENV}
+    command: >
+      bash -c "
+      chown -R nginx:nginx /shared_sockets
+      && python -m pyready.postgres -r 100 -u drepr -p uelDIfxpT5u6 postgres 5432 drepr
+      && dotenv run python -m api.cmd provision_webapp -u tester -p tester123
+      && chown -R nginx:nginx ${HOME_DIR}
+      && dotenv run uwsgi webapp.ini
+      "
+  webapp_nginx:
+    container_name: drepr-webapp-nginx
+    image: nginx
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/conf.d/nginx.template:ro
+      - drepr_shared_sockets:/shared_sockets
+      - "/etc/letsencrypt/live/${HOST_NAME}/fullchain.pem:/etc/nginx/fullchain.pem"
+      - "/etc/letsencrypt/live/${HOST_NAME}/privkey.pem:/etc/nginx/privkey.pem"
+    environment:
+      - "HOST_NAME=${HOST_NAME}"
+    depends_on:
+      - webapp_uwsgi
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+    command: >
+      /bin/bash -c "
+        envsubst '$$HOST_NAME' < /etc/nginx/conf.d/nginx.template > /etc/nginx/conf.d/default.conf &&
+        exec nginx -g 'daemon off;'"
+volumes:
+  drepr_shared_sockets:
+  drepr_postgres:

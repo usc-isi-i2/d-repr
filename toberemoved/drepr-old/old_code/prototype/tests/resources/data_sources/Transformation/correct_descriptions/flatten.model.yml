@@ -1,0 +1,27 @@
+resources:
+  ipc_trend_analysis_unity: csv
+preprocessing:
+  - type: map
+    location: ipc_trend_analysis_unity@1..:0
+    function: |
+      return value.strip()
+  - type: split
+    location: ipc_trend_analysis_unity@1..
+    function: |
+      prev_value = get_previous_value()
+      if prev_value is None:
+        return False
+
+      curr_year = int(value[0][value[0].rfind(" "):].strip())
+      prev_year = int(prev_value[0][prev_value[0].rfind(" "):].strip())
+
+      if prev_year != curr_year:
+        return True
+  - type: flatten
+    location: ipc_trend_analysis_unity@1..
+layout: {}
+mappings: []
+semantic_model:
+  semantic_types: {}
+  semantic_relations: []
+  ontology_prefixes: {}

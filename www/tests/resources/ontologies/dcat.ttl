@@ -1,0 +1,45 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfa: <http://www.w3.org/ns/rdfa#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcat: <http://isi.edu/ontologies/dcat> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+dcat:Variable a rdfs:Class ;
+    rdfs:label "Variable" .
+
+dcat:standard_name a rdf:Property ;
+    rdfs:label "standard_name" ;
+    rdfs:comment "A SVO standard name of the variable" ;
+    rdfs:domain dcat:Variable .
+
+dcat:record_at a rdf:Property ;
+    rdfs:label "record_at" ;
+    rdfs:comment "A specific time that values of the variable are recorded at" ;
+    rdfs:domain dcat:Variable ;
+    rdfs:range xsd:dateTime .
+
+dcat:record_begin a rdf:Property ;
+    rdfs:label "record_at" ;
+    rdfs:comment "A specific time that someone begins recording values of the variable" ;
+    rdfs:domain dcat:Variable ;
+    rdfs:range xsd:dateTime .
+
+dcat:record_end a rdf:Property ;
+    rdfs:label "record_at" ;
+    rdfs:comment "A specific time that someone stops recording values of the variable" ;
+    rdfs:domain dcat:Variable ;
+    rdfs:range xsd:dateTime .
+
+dcat:coordinate a rdf:Property ;
+    rdfs:label "coordinate" ;
+    rdfs:comment "A coordinate system" ;
+    rdfs:domain dcat:Variable .
+
+dcat:lat a rdf:Property ;
+    rdfs:label "latitude" ;
+    rdfs:domain dcat:Variable .
+
+dcat:long a rdf:Property ;
+    rdfs:label "longitude" ;
+    rdfs:domain dcat:Variable .

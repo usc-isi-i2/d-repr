@@ -1,0 +1,17 @@
+{
+    "attributes":{
+        "latitude":0,
+        "longitude":1,
+        "projection":2,
+        "dx":3,
+        "dy":4,
+        "x_0":5,
+        "y_0":6,
+        "time":7,
+        "Rainf_f_tavg":8,
+        "Albedo_inst":9
+    },
+    "resources":{
+        "default":0
+    }
+}

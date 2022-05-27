@@ -1,0 +1,13 @@
+version: "1"
+resources:
+  kaya_rice_import: csv
+preprocessing: []
+attributes:
+  month: [0, 1..]
+  year: [1.., 0]
+  import_unit: [1.., 1..]
+alignments: []
+semantic_model:
+  data_nodes: {}
+  relations: []
+  prefixes: {}

@@ -1,0 +1,38 @@
+language: rust
+rust:
+- stable
+env:
+  global:
+  - RUST_VERSION=stable
+  - MINICONDA_VERSION=4.7.10
+  - CACHE_MINICONDA_DIR=$([ $TRAVIS_OS_NAME = 'windows' ] && echo "/c/tools/miniconda3" || echo "${TRAVIS_HOME}/miniconda3-${MINICONDA_VERSION}")
+  - secure: gWMlhPvOcKTq6YAQWzMIFlzbvNvL1ioDOJa+vBo+vntccEViHe67vb9tzcu8lQHLKmmcfsehYRL4oK2TVf+qpmstW5cuqDafLuxiwm9B1VHKQ5VO5j/KQO+1YX/dR0Eds1mDE/XPHcsjE5atR8pX5PV4sEA2tix/NQJ4qLqawBxLo9+r+n6Pg+NUyFc2URgT62yZdaqlKZ/JazQbNgf4QbqkvNK8KH+872QUsRbPQXHEkQ9mfoJWBUkJ9blDVF9y4JK6N0DssmyrGS2c0pAZn/kNZU4/hYLB5WPr+kj3evOdgQvDiW7UzgnkUAjCapZ7HnJmfshL0X5ggOJ8vgDTP82rz3gkWxKARakRrpamlYbHuWAEfe6PeYLv8SlY0DRvyAH+KcWFinMpIAHwsVD+69nz/dCscRuyIg5zCzQN5dNJN6ON73EGPnl4btRkkiMD+HMm48FiQRnbv9wY2UNMqREDkJ0UtjBAq0qBNqv7wGvU/2ANwJpsfJWXh2xdtCKByAeVDNUQNze/W3OLkZ0XJ5G7Ufv5jhUMXZcHAm9BdYU8sg8685CyUp0V5txuFye0I6lPNezMCBVkblzlGedcAmVEnCmgQR+LK6NIHW0TB/wlzUD5O1lywNEJmrjx3H9UKS6kzAi5sMUhlmKSyZTb1KBRRXwIcZ0tRglYz4p4Bq0=
+os:
+- linux
+- osx
+- windows
+cache:
+  cargo: true
+  pip: true
+  directories:
+  - "$CACHE_MINICONDA_DIR"
+  - "${TRAVIS_BUILD_DIR}/drepr/target"
+install:
+- source .travis/install-dependencies-x86_64.sh
+script:
+- source .travis/build-engine.sh
+- export ENGINE_RELEASE_TAG=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --engine_release_tag)
+- export ENGINE_FILE_GLOB=$(python ${TRAVIS_BUILD_DIR}/pydrepr/devel info --pre_built_engine_rel_glob)
+- ".travis/publish-pypi.sh"
+deploy:
+  provider: releases
+  api_key:
+    secure: LM70ew9t8KLJrazZIFn8tmXXDIajETQ2eKo+K8yC6U+pNvdoKVM6jryMbVQ9snRbXM3TX/BnNo56PWCHX5u/Q6PjkogiTu4SJ9aMQaAGDxTDwWBmHnugEBaAMa70DD8ok6tWLG7H6sYK+wfe4BhvpALKIzNOVtJQt/GM++kM9rGJmNJO0lC4/airQJO9utEN8uzAlBUxLxvC2DNwmwcAOINyU1VLMm+ua/kAf/WUDYomOFayX8SOeyc6tNgK67f4FWsfShgU4MiOI+QUz1aS4TIGOUnTCybKlFmaw/aZ9izAnHjlH2O9agEvPGhRXsCSMUqiGbeGYeZ6by9js+oQNh9Xysye+gtKqKIuDWtttsitVzJEZ5ooyD0zHFHTalUADC3xZ6u/mnIRDsI0cklSDpatrUetNj2yW0JKEtxukXi9bLMZcjYCR/QsnERDKtZfeKRdkZ7Gu1c79NNzyqqhl6IWX+x+2rVPB9i5lx8QTsybsEEam1oHOO+xvu5LBWU0YDVEyVjUtnMtMhN61LPHdMQtw8RZAj/UAVP6udEkVRILkGCXxZD/dyksqsWAT/hU7arDJ2UktvM+c+QKBZ9M5jUK+hRwN/S+cciGwFL5Gz0l4V2lOd0TLVjFiufWh//76FCRwdqMB1S5A6LfxnV2zrZ6Y4zrMglE9LzUC7ku8Pw=
+  skip_cleanup: true
+  file_glob: true
+  file:
+    - "${ENGINE_FILE_GLOB}"
+  on:
+    condition: $ENGINE_RELEASE_TAG = "$TRAVIS_TAG"
+    tags: true
+

@@ -1,0 +1,19 @@
+version: "1"
+resources: csv
+preprocessing: []
+attributes:
+  name: $[1:].0
+  phone: $[1:].1
+  birthday: $[1:].2
+alignments:
+  - type: dimension
+    value: name:0 <-> phone:0
+  - type: dimension
+    value: name:0 <-> birthday:0
+semantic_model:
+  data_nodes:
+    name: eg:Record:1--eg:name
+    phone: eg:Record:1--eg:phone
+    birthday: eg:Record:1--eg:birthday
+  prefixes:
+    eg: https://example.org/

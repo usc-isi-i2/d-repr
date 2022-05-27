@@ -1,0 +1,31 @@
+name: drepr-geospatial
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7
+  - pip
+  - gdal
+  - scipy
+  - pydap
+  - numpy
+  - dask
+  - pip:
+      - ujson
+      - netCDF4
+      - arpeggio
+      - rdflib
+      - flask
+      - requests
+      - tqdm
+      - marshmallow
+      - xarray
+      - networkx
+      - python-dateutil
+      - click
+      - fiona
+      - python-slugify
+      - python-dotenv
+      - matplotlib
+      - drepr
+      - ipykernel

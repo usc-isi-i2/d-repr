@@ -1,0 +1,14 @@
+version: '3'
+services:
+  drepr_test:
+    image: "isi/mint-drepr:${IMG_TAG}"
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    volumes:
+      - ../../data_representation:/tmp_data_representation
+    command: >
+      bash -c "
+        cp -a /tmp_data_representation/. /drepr && find . -name '*.pyc' -delete &&
+        pipenv run pytest --cov=drepr --cov-report=xml --cov-append --junit-xml=/tmp_data_representation/drepr.junit.xml &&
+        cp coverage.xml /tmp_data_representation/coverage.xml"

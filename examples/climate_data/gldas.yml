@@ -1,0 +1,726 @@
+version: "2"
+resources: netcdf4
+preprocessing:
+  - type: pmap
+    path: $.@.MAP_PROJECTION
+    code: |
+      if value == "EQUIDISTANT CYLINDRICAL":
+        # https://epsg.io/32663 this is different to https://epsg.io/4326
+        return 32663
+      raise NotImplementedError()
+  - type: pmap
+    path: $.@.SOUTH_WEST_CORNER_LAT
+    code: |
+      dy = context.get_value(["@", "DY"])
+      y_0 = value - dy/2
+      return y_0
+  - type: pmap
+    path: $.@.SOUTH_WEST_CORNER_LON
+    code: |
+      dx = context.get_value(["@", "DX"])
+      x_0 = value - dx/2
+      return x_0
+attributes:
+  latitude: $.lat.data[:]
+  longitude: $.lon.data[:]
+  projection: $.@.MAP_PROJECTION
+  dx: $.@.DX
+  dy: $.@.DY
+  x_0: $.@.SOUTH_WEST_CORNER_LON
+  y_0: $.@.SOUTH_WEST_CORNER_LAT
+  time: $.time.data[0]
+  # list of variables
+  Rainf_f_tavg:
+    path: $.Rainf_f_tavg.data[0][:][:]
+    missing_values: [-9999]
+  Albedo_inst:
+    path: $.Albedo_inst.data[0][:][:]
+    missing_values: [-9999]
+  AvgSurfT_inst:
+    path: $.AvgSurfT_inst.data[0][:][:]
+    missing_values: [-9999]
+  CanopInt_inst:
+    path: $.CanopInt_inst.data[0][:][:]
+    missing_values: [-9999]
+  ECanop_tavg:
+    path: $.ECanop_tavg.data[0][:][:]
+    missing_values: [-9999]
+  ESoil_tavg:
+    path: $.ESoil_tavg.data[0][:][:]
+    missing_values: [-9999]
+  Evap_tavg:
+    path: $.Evap_tavg.data[0][:][:]
+    missing_values: [-9999]
+  LWdown_f_tavg:
+    path: $.LWdown_f_tavg.data[0][:][:]
+    missing_values: [-9999]
+  Lwnet_tavg:
+    path: $.Lwnet_tavg.data[0][:][:]
+    missing_values: [-9999]
+  PotEvap_tavg:
+    path: $.PotEvap_tavg.data[0][:][:]
+    missing_values: [-9999]
+  Psurf_f_inst:
+    path: $.Psurf_f_inst.data[0][:][:]
+    missing_values: [-9999]
+  Qair_f_inst:
+    path: $.Qair_f_inst.data[0][:][:]
+    missing_values: [-9999]
+  Qg_tavg:
+    path: $.Qg_tavg.data[0][:][:]
+    missing_values: [-9999]
+  Qh_tavg:
+    path: $.Qh_tavg.data[0][:][:]
+    missing_values: [-9999]
+  Qle_tavg:
+    path: $.Qle_tavg.data[0][:][:]
+    missing_values: [-9999]
+  Qs_acc:
+    path: $.Qs_acc.data[0][:][:]
+    missing_values: [-9999]
+  Qsb_acc:
+    path: $.Qsb_acc.data[0][:][:]
+    missing_values: [-9999]
+  Qsm_acc:
+    path: $.Qsm_acc.data[0][:][:]
+    missing_values: [-9999]
+  Rainf_tavg:
+    path: $.Rainf_tavg.data[0][:][:]
+    missing_values: [-9999]
+  RootMoist_inst:
+    path: $.RootMoist_inst.data[0][:][:]
+    missing_values: [-9999]
+  SnowDepth_inst:
+    path: $.SnowDepth_inst.data[0][:][:]
+    missing_values: [-9999]
+  Snowf_tavg:
+    path: $.Snowf_tavg.data[0][:][:]
+    missing_values: [-9999]
+  SoilMoi0_10cm_inst:
+    path: $.SoilMoi0_10cm_inst.data[0][:][:]
+    missing_values: [-9999]
+  SoilMoi100_200cm_inst:
+    path: $.SoilMoi100_200cm_inst.data[0][:][:]
+    missing_values: [-9999]
+  SoilMoi10_40cm_inst:
+    path: $.SoilMoi10_40cm_inst.data[0][:][:]
+    missing_values: [-9999]
+  SoilMoi40_100cm_inst:
+    path: $.SoilMoi40_100cm_inst.data[0][:][:]
+    missing_values: [-9999]
+  SoilTMP0_10cm_inst:
+    path: $.SoilTMP0_10cm_inst.data[0][:][:]
+    missing_values: [-9999]
+  SoilTMP100_200cm_inst:
+    path: $.SoilTMP100_200cm_inst.data[0][:][:]
+    missing_values: [-9999]
+  SoilTMP10_40cm_inst:
+    path: $.SoilTMP10_40cm_inst.data[0][:][:]
+    missing_values: [-9999]
+  SoilTMP40_100cm_inst:
+    path: $.SoilTMP40_100cm_inst.data[0][:][:]
+    missing_values: [-9999]
+  SWdown_f_tavg:
+    path: $.SWdown_f_tavg.data[0][:][:]
+    missing_values: [-9999]
+  SWE_inst:
+    path: $.SWE_inst.data[0][:][:]
+    missing_values: [-9999]
+  Swnet_tavg:
+    path: $.Swnet_tavg.data[0][:][:]
+    missing_values: [-9999]
+  Tair_f_inst:
+    path: $.Tair_f_inst.data[0][:][:]
+    missing_values: [-9999]
+  Tveg_tavg:
+    path: $.Tveg_tavg.data[0][:][:]
+    missing_values: [-9999]
+  Wind_f_inst:
+    path: $.Wind_f_inst.data[0][:][:]
+    missing_values: [-9999]
+alignments:
+  - type: dimension
+    value: Rainf_f_tavg:3 <-> latitude:2
+  - type: dimension
+    value: Rainf_f_tavg:4 <-> longitude:2
+  - type: dimension
+    source: Rainf_f_tavg
+    target: time
+    aligned_dims: []
+  - type: dimension
+    source: Rainf_f_tavg
+    target: projection
+    aligned_dims: []
+  - type: dimension
+    source: projection
+    target: x_0
+    aligned_dims: []
+  - type: dimension
+    source: projection
+    target: y_0
+    aligned_dims: []
+  - type: dimension
+    source: projection
+    target: dx
+    aligned_dims: []
+  - type: dimension
+    source: projection
+    target: dy
+    aligned_dims: []
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Albedo_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: AvgSurfT_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: CanopInt_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: ECanop_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: ESoil_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Evap_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: LWdown_f_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Lwnet_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: PotEvap_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Psurf_f_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Qair_f_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Qg_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Qh_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Qle_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Qs_acc
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Qsb_acc
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Qsm_acc
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Rainf_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: RootMoist_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: SnowDepth_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Snowf_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: SoilMoi0_10cm_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: SoilMoi100_200cm_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: SoilMoi10_40cm_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: SoilMoi40_100cm_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: SoilTMP0_10cm_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: SoilTMP100_200cm_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: SoilTMP10_40cm_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: SoilTMP40_100cm_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: SWdown_f_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: SWE_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Swnet_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Tair_f_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Tveg_tavg
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Wind_f_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+semantic_model:
+  mint:Variable:1:
+    properties:
+      - [rdf:value, Rainf_f_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, atmosphere_water__precipitation_mass_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:2:
+    properties:
+      - [rdf:value, Albedo_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface__albedo]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:3:
+    properties:
+      - [rdf:value, AvgSurfT_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface_skin__average_of_temperature]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:4:
+    properties:
+      - [rdf:value, CanopInt_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface_vegetation_canopy_water__mass-per-area_density,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:5:
+    properties:
+      - [rdf:value, ECanop_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_vegetation_canopy_water__evaporation_energy_flux,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:6:
+    properties:
+      - [rdf:value, ESoil_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface_soil~bare_water__direct_evaporation_energy_flux,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:7:
+    properties:
+      - [rdf:value, Evap_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface_vegetation_water__evapotranspiration_mass_flux,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:8:
+    properties:
+      - [rdf:value, LWdown_f_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface_radiation~longwave~downward__energy_flux,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:9:
+    properties:
+      - [rdf:value, Lwnet_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface_radiation~net~longwave__energy_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:10:
+    properties:
+      - [rdf:value, PotEvap_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface_water__potential_evaporation_energy_flux,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:11:
+    properties:
+      - [rdf:value, Psurf_f_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface_air__pressure]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:12:
+    properties:
+      - [rdf:value, Qair_f_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, atmosphere_air_water~vapor__specific_saturation]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:13:
+    properties:
+      - [rdf:value, Qg_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, soil__downward_heat_energy_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:14:
+    properties:
+      - [rdf:value, Qh_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface_air__net_sensible_heat_energy_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:15:
+    properties:
+      - [rdf:value, Qle_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface_air__net_latent_heat_energy_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:16:
+    properties:
+      - [rdf:value, Qs_acc]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface_storm_water__time_integral_of_runoff_mass_flux,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:17:
+    properties:
+      - [rdf:value, Qsb_acc]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface_groundwater__time_integral_of_baseflow_runoff_mass_flux,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:18:
+    properties:
+      - [rdf:value, Qsm_acc]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface_snow__time_integral_of_melt_mass_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:19:
+    properties:
+      - [rdf:value, Rainf_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, atmosphere_water__rainfall_mass_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:20:
+    properties:
+      - [rdf:value, RootMoist_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, soil_root-zone_water__mass-per-area_density]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:21:
+    properties:
+      - [rdf:value, SnowDepth_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface_snowpack__depth]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:22:
+    properties:
+      - [rdf:value, Snowf_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, atmosphere_water__snowfall_mass_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:23:
+    properties:
+      - [rdf:value, SoilMoi0_10cm_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface~0-to-10cm-below_soil_water__mass-per-area_density,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:24:
+    properties:
+      - [rdf:value, SoilMoi100_200cm_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface~100-to-200cm-below_soil_water__mass-per-area_density,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:25:
+    properties:
+      - [rdf:value, SoilMoi10_40cm_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface~10-to-40cm-below_soil_water__mass-per-area_density,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:26:
+    properties:
+      - [rdf:value, SoilMoi40_100cm_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface~40-to-100cm-below_soil_water__mass-per-area_density,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:27:
+    properties:
+      - [rdf:value, SoilTMP0_10cm_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface~0-to-10cm-below_soil__temperature]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:28:
+    properties:
+      - [rdf:value, SoilTMP100_200cm_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface~100-to-200cm-below_soil__temperature]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:29:
+    properties:
+      - [rdf:value, SoilTMP10_40cm_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface~10-to-40cm-below_soil__temperature]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:30:
+    properties:
+      - [rdf:value, SoilTMP40_100cm_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface~40-to-100cm-below_soil__temperature]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:31:
+    properties:
+      - [rdf:value, SWdown_f_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface_radiation~shortwave~downward__energy_flux,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:32:
+    properties:
+      - [rdf:value, SWE_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [
+          mint:standardName,
+          land_surface_snow__time_integral_of_accumulation_mass_flux,
+        ]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:33:
+    properties:
+      - [rdf:value, Swnet_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface_radiation~net~shortwave__energy_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:34:
+    properties:
+      - [rdf:value, Tair_f_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface_air__temperature]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:35:
+    properties:
+      - [rdf:value, Tveg_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_vegetation_water__transpiration_energy_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:36:
+    properties:
+      - [rdf:value, Wind_f_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface_wind__speed]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint-geo:Raster:1:
+    properties:
+      - [mint-geo:epsg, projection]
+      - [mint-geo:x_0, x_0]
+      - [mint-geo:y_0, y_0]
+      - [mint-geo:dx, dx]
+      - [mint-geo:dy, dy]
+    static_properties:
+      - [mint-geo:x_slope, 0]
+      - [mint-geo:y_slope, 0]
+  prefixes:
+    mint: https://mint.isi.edu/
+    # do we need this? our latitude/longitude don't have CRS
+    mint-geo: https://mint.isi.edu/geo

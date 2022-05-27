@@ -1,7 +1,0 @@
-gldas
-gpm
-*.tif
-*.nc
-*.tif*
-*.nc4
-data/*

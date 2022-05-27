@@ -1,0 +1,33 @@
+version: "1"
+resources: xml
+preprocessing:
+  - type: pmap
+    path: $.response.row.row.*
+    code: |
+      # remove irrelevant keys
+      value.pop('@_id')
+      value.pop('@_uuid')
+      value.pop('@_position')
+      value.pop('@_address')
+      return { "csa2010": value.pop('csa2010'), "props": value }
+attributes:
+  csa2010: $.response.row.row.*.csa2010
+  props: $.response.row.row.*.props.*~
+  values: $.response.row.row.*.props.*
+alignments:
+  - type: dimension
+    source: props
+    target: values
+    aligned_dims:
+      - { source: 3, target: 3 }
+      - { source: 5, target: 5 }
+  - type: dimension
+    value: props:3 <-> csa2010:3
+semantic_model:
+  data_nodes:
+    csa2010: eg:Record:1--eg:location
+    props: eg:Record:1--eg:indicator
+    values: eg:Record:1--eg:value^^xsd:decimal
+  relations: []
+  prefixes:
+    eg: http://example.org/

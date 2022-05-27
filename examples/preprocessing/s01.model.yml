@@ -1,0 +1,13 @@
+version: '1'
+resources: json
+preprocessing:
+  - type: rmap-dict2items
+    input: [..]
+attributes:
+  properties: [.., .., 0]
+alignments: []
+semantic_model:
+  data_nodes:
+    properties: rdf:Resource:1--rdfs:label
+  relations: []
+  prefixes: {}

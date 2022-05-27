@@ -1,0 +1,10 @@
+export * from "./Resource";
+export * from "./Variable";
+export * from "./SemanticModel";
+export * from "./DRepr";
+export * from "./Ontology";
+export * from "./SemanticModel";
+export * from "./ClassId";
+export * from "./Alignment";
+import * as data from "./data";
+export { data };

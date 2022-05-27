@@ -1,0 +1,10 @@
+{
+    "attributes":{
+        "name":0,
+        "phone":1,
+        "birthday":2
+    },
+    "resources":{
+        "default":0
+    }
+}
