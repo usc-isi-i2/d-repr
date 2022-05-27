@@ -1,0 +1,85 @@
+version: "2"
+resources: netcdf4
+preprocessing: []
+attributes:
+  latitude: $.lat.data[:]
+  longitude: $.lon.data[:]
+  projection: $.@.MAP_PROJECTION
+  dx: $.@.DX
+  dy: $.@.DY
+  x_0: $.@.SOUTH_WEST_CORNER_LON
+  y_0: $.@.SOUTH_WEST_CORNER_LAT
+  time: $.time.data[0]
+  Rainf_f_tavg:
+    path: $.Rainf_f_tavg.data[0][:][:]
+    missing_values: [-9999]
+  Albedo_inst:
+    path: $.Albedo_inst.data[0][:][:]
+    missing_values: [-9999]
+alignments:
+  - type: dimension
+    value: Rainf_f_tavg:3 <-> latitude:2
+  - type: dimension
+    value: Rainf_f_tavg:4 <-> longitude:2
+  - type: dimension
+    source: Rainf_f_tavg
+    target: time
+    aligned_dims: []
+  - type: dimension
+    source: Rainf_f_tavg
+    target: projection
+    aligned_dims: []
+  - type: dimension
+    source: projection
+    target: x_0
+    aligned_dims: []
+  - type: dimension
+    source: projection
+    target: y_0
+    aligned_dims: []
+  - type: dimension
+    source: projection
+    target: dx
+    aligned_dims: []
+  - type: dimension
+    source: projection
+    target: dy
+    aligned_dims: []
+  - type: dimension
+    source: Rainf_f_tavg
+    target: Albedo_inst
+    aligned_dims: [{ "source": 3, "target": 3 }, { "source": 4, "target": 4 }]
+semantic_model:
+  mint:Variable:1:
+    properties:
+      - [rdf:value, Rainf_f_tavg]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, atmosphere_water__precipitation_mass_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint:Variable:2:
+    properties:
+      - [rdf:value, Albedo_inst]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+      - [mint:time, time]
+    static_properties:
+      - [mint:standardName, land_surface__albedo]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint-geo:Raster:1:
+    properties:
+      - [mint-geo:epsg, projection]
+      - [mint-geo:x_0, x_0]
+      - [mint-geo:y_0, y_0]
+      - [mint-geo:dx, dx]
+      - [mint-geo:dy, dy]
+    static_properties:
+      - [mint-geo:x_slope, 0]
+      - [mint-geo:y_slope, 0]
+  prefixes:
+    mint: https://mint.isi.edu/
+    mint-geo: https://mint.isi.edu/geo

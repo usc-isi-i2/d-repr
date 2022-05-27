@@ -1,0 +1,40 @@
+version: "1"
+components: csv
+transformation: {}
+layout:
+  area:
+    location: 1..:3
+    semantic_type: schema:Country1--rdfs:label
+  element:
+    location: 1..:5
+    semantic_type: schema:Indicator1--rdfs:label
+  item:
+    location: 1..:7
+    semantic_type: schema:Produce1--rdfs:label
+  year:
+    location: 1..:8
+    semantic_type: schema:TimeRange1--schema:inYear
+  unit:
+    location: 1..:10
+    semantic_type: schema:Indicator1--schema:hasUnit
+  value:
+    location: 1..:11
+    semantic_type: schema:Indicator1--rdf:value
+relationships:
+  mappings:
+    - type: index_bijection_mapping
+      one2one: element:0 <-> item:0
+    - type: index_bijection_mapping
+      one2one: element:0 <-> year:0
+    - type: index_bijection_mapping
+      one2one: country:0 <-> element:0
+    - type: index_bijection_mapping
+      one2one: element:0 <-> value:0
+    - type: index_bijection_mapping
+      one2one: element:0 <-> unit:0
+  semantic_relations:
+    - schema:Indicator1--schema:within--schema:TimeRange1
+    - schema:Indicator1--schema:country--schema:Country1
+    - schema:Indicator1--schema:of--schema:Produce1
+ontology_prefixes:
+  schema: http://schema.org/

@@ -1,0 +1,55 @@
+{
+  "resources":  {
+    "s01": [
+      {"id": "a", "lbl":  "s01-a"},
+      {"id": "b", "lbl":  "s01-b"}
+    ],
+    "s02": [
+      {"id": "a", "lbl":  "s02-a-1"},
+      {"id": "a", "lbl":  "s02-a-2"},
+      {"id": "b", "lbl":  "s02-b"}
+    ],
+    "s03": [
+      {"id": "a", "lbl":  "s03-a"},
+      {"id": "b", "lbl":  "s03-b"}
+    ],
+    "s04": [
+      {"id": "a", "lbl":  "s04-a-1"},
+      {"id": "a", "lbl":  "s04-a-2"},
+      {"id": "b", "lbl":  "s04-b-1"},
+      {"id": "b", "lbl":  "s04-b-2"}
+    ],
+    "s05": [
+      {"id": "a", "lbl":  "s05-a"},
+      {"id": "b", "lbl":  "s05-b"}
+    ]
+  },
+  "attrs": {
+    "id": {
+      "id": 0, "resource_id": 0, "unique": false, "sorted": "none", "vtype": "unspecified", "missing_values": [],
+      "path": { "steps":  [
+        {"type":  "range", "start": 0,"end": null, "step": 1},
+        {"type":  "index", "val": {"t": "str", "c": "id"}}
+      ] }
+    },
+    "lbl": {
+      "id": 0, "resource_id": 0, "unique": false, "sorted": "none", "vtype": "unspecified", "missing_values": [],
+      "path": { "steps":  [
+        {"type":  "range", "start": 0,"end": null, "step": 1},
+        {"type":  "index", "val": {"t": "str", "c": "lbl"}}
+      ] }
+    }
+  },
+  "scenarios": [
+    {
+      "source": {"reader": "s01", "attr": "id"},
+      "alignments": [
+        {"reader": "s02", "attr": "id", "type": "mul-val"},
+        {"reader": "s03", "attr": "id", "type": "mul-val"}
+      ],
+      "results": [
+        "0:id", "1:id"
+      ]
+    }
+  ]
+}

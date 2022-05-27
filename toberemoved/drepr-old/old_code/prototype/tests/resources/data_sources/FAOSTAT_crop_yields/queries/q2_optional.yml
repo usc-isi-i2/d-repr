@@ -1,0 +1,17 @@
+query:
+  main_node: schema:Indicator:1
+  edges:
+    - schema:Indicator:1--rdfs:label
+    - schema:Indicator:1--schema:hasUnit
+    - '[schema:Indicator:1--rdf:value]'
+results:
+  - range: [10, 12]
+    value:
+      - "@type": schema:Indicator
+        "schema:hasUnit": ha
+        "rdf:value": 1340
+        "rdfs:label": "Area harvested"
+      - "@type": schema:Indicator
+        "schema:hasUnit": ha
+        "rdf:value": 1036
+        "rdfs:label": "Area harvested"

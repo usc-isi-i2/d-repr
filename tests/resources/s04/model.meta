@@ -1,0 +1,16 @@
+{
+    "attributes":{
+        "human_id":0,
+        "human_name":1,
+        "human_age":2,
+        "depart_id":3,
+        "depart_name":4,
+        "eid":5,
+        "did":6
+    },
+    "resources":{
+        "human":0,
+        "department":1,
+        "workwith":2
+    }
+}

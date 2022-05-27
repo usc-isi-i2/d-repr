@@ -1,0 +1,59 @@
+version: "1"
+resources:
+  human:
+    type: csv
+  department:
+    type: csv
+  workwith:
+    type: csv
+preprocessing: []
+attributes:
+  human_id:
+    resource_id: human
+    path: [1.., 0]
+    unique: true
+  human_name:
+    resource_id: human
+    path: [1.., 1]
+  human_age:
+    resource_id: human
+    path: [1.., 2]
+  depart_id:
+    resource_id: department
+    path: [1.., 0]
+    unique: true
+  depart_name:
+    resource_id: department
+    path: [1.., 1]
+  eid:
+    resource_id: workwith
+    path: [1.., 0]
+  did:
+    resource_id: workwith
+    path: [1.., 1]
+alignments:
+  - type: dimension
+    value: human_id:0 <-> human_name:0
+  - type: dimension
+    value: human_id:0 <-> human_age:0
+  - type: dimension
+    value: depart_id:0 <-> depart_name:0
+  - type: value
+    source: human_id
+    target: eid
+  - type: value
+    source: depart_id
+    target: did
+  - type: dimension
+    value: eid:0 <-> did:0
+semantic_model:
+  data_nodes:
+    human_id: eg:Employee:1--eg:id
+    human_name: eg:Employee:1--eg:name
+    human_age: eg:Employee:1--eg:age
+    depart_name: eg:Department:1--eg:name
+    depart_id: eg:Department:1--eg:id
+  relations:
+    - eg:Employee:1--eg:workFor--eg:Department:1
+  prefixes:
+    eg: http://example.org/

@@ -1,0 +1,132 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix drepr: <https://purl.org/drepr/1.0/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix schema: <http://schema.org/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+
+_:PostalAddress1_1 a schema:PostalAddress;
+	schema:postalCode "zipcode_0";
+	schema:addressLocality "city_0";
+	schema:streetAddress "street_0";
+	schema:addressRegion "state_0";
+	.
+_:PostalAddress1_2 a schema:PostalAddress;
+	schema:postalCode "zipcode_1";
+	schema:addressLocality "city_1";
+	schema:streetAddress "street_1";
+	schema:addressRegion "state_1";
+	.
+_:PostalAddress1_3 a schema:PostalAddress;
+	schema:postalCode "zipcode_2";
+	schema:addressLocality "city_2";
+	schema:streetAddress "street_2";
+	schema:addressRegion "state_2";
+	.
+_:PostalAddress1_4 a schema:PostalAddress;
+	schema:postalCode "zipcode_3";
+	schema:addressLocality "city_3";
+	schema:streetAddress "street_3";
+	schema:addressRegion "state_3";
+	.
+_:PostalAddress1_5 a schema:PostalAddress;
+	schema:postalCode "zipcode_4";
+	schema:addressLocality "city_4";
+	schema:streetAddress "street_4";
+	schema:addressRegion "state_4";
+	.
+_:PostalAddress1_6 a schema:PostalAddress;
+	schema:postalCode "zipcode_5";
+	schema:addressLocality "city_5";
+	schema:streetAddress "street_5";
+	schema:addressRegion "state_5";
+	.
+_:PostalAddress1_7 a schema:PostalAddress;
+	schema:postalCode "zipcode_6";
+	schema:addressLocality "city_6";
+	schema:streetAddress "street_6";
+	schema:addressRegion "state_6";
+	.
+_:PostalAddress1_8 a schema:PostalAddress;
+	schema:postalCode "zipcode_7";
+	schema:addressLocality "city_7";
+	schema:streetAddress "street_7";
+	schema:addressRegion "state_7";
+	.
+_:PostalAddress1_9 a schema:PostalAddress;
+	schema:postalCode "zipcode_8";
+	schema:addressLocality "city_8";
+	schema:streetAddress "street_8";
+	schema:addressRegion "state_8";
+	.
+_:PostalAddress1_10 a schema:PostalAddress;
+	schema:postalCode "zipcode_9";
+	schema:addressLocality "city_9";
+	schema:streetAddress "street_9";
+	schema:addressRegion "state_9";
+	.
+_:PostalAddress1_11 a schema:PostalAddress;
+	schema:postalCode "zipcode_10";
+	schema:addressLocality "city_10";
+	schema:streetAddress "street_10";
+	schema:addressRegion "state_10";
+	.
+<http://example.org/people/0> a schema:Person;
+	schema:telephone "phone_0";
+	schema:name "name_0";
+	schema:address _:PostalAddress1_1;
+	.
+<http://example.org/people/1> a schema:Person;
+	schema:telephone "phone_1";
+	schema:name "name_1";
+	schema:address _:PostalAddress1_2;
+	.
+<http://example.org/people/2> a schema:Person;
+	schema:telephone "phone_2";
+	schema:name "name_2";
+	schema:address _:PostalAddress1_3;
+	.
+<http://example.org/people/3> a schema:Person;
+	schema:telephone "phone_3";
+	schema:name "name_3";
+	schema:address _:PostalAddress1_4;
+	.
+<http://example.org/people/4> a schema:Person;
+	schema:telephone "phone_4";
+	schema:name "name_4";
+	schema:address _:PostalAddress1_5;
+	.
+<http://example.org/people/5> a schema:Person;
+	schema:telephone "phone_5";
+	schema:name "name_5";
+	schema:address _:PostalAddress1_6;
+	.
+<http://example.org/people/6> a schema:Person;
+	schema:telephone "phone_6";
+	schema:name "name_6";
+	schema:address _:PostalAddress1_7;
+	.
+<http://example.org/people/7> a schema:Person;
+	schema:telephone "phone_7";
+	schema:name "name_7";
+	schema:address _:PostalAddress1_8;
+	.
+<http://example.org/people/8> a schema:Person;
+	schema:telephone "phone_8";
+	schema:name "name_8";
+	schema:address _:PostalAddress1_9;
+	.
+<http://example.org/people/9> a schema:Person;
+	schema:telephone "phone_9";
+	schema:name "name_9";
+	schema:address _:PostalAddress1_10;
+	.
+<http://example.org/people/10> a schema:Person;
+	schema:telephone "phone_10";
+	schema:name "name_10";
+	schema:address _:PostalAddress1_11;
+	.

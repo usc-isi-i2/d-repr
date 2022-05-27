@@ -1,0 +1,46 @@
+{
+  "alignments": [
+    {
+      "pair": [9, 8],
+      "aligns": [
+        {"type": "range", "source": 9, "target": 8, "aligned_dims": [
+          {"source": 3, "target": 3}, {"source": 4, "target": 4}
+        ]}
+      ]
+    },
+    {
+      "pair": [9, 0],
+      "aligns": [
+        {"type": "range", "source": 9, "target": 0, "aligned_dims": [
+          {"source": 3, "target": 2}
+        ]}
+      ]
+    },
+    {
+      "pair": [8, 1],
+      "aligns": [
+        {"type": "range", "source": 8, "target": 1, "aligned_dims": [
+          {"source": 4, "target": 2}
+        ]}
+      ]
+    },
+    {
+      "pair": [9, 1],
+      "aligns": [
+        {"type": "range", "source": 9, "target": 1, "aligned_dims": [
+          {"source": 4, "target": 2}
+        ]}
+      ]
+    }
+  ],
+  "infer_funcs": [
+    {
+      "triple": [9, 8, 1],
+      "aligns": [
+        {"type": "range", "source": 9, "target": 1, "aligned_dims": [
+          {"source": 4, "target": 2}
+        ]}
+      ]
+    }
+  ]
+}

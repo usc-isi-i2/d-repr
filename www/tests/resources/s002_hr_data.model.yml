@@ -1,0 +1,9 @@
+version: "1"
+resources: {}
+preprocessing: []
+attributes: {}
+alignments: []
+semantic_model:
+  data_nodes: {}
+  relations: []
+  prefixes: {}

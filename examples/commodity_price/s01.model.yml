@@ -1,0 +1,31 @@
+version: "1"
+resources: csv
+preprocessing:
+  - type: pmap
+    path: [1.., 4]
+    code: |
+      return value.replace("M", "-") + "-01"
+attributes:
+  indicator_name: [1.., 1]
+  unit: [1.., 2]
+  date: [1.., 4]
+  value: [1.., 5]
+alignments:
+  - type: dimension
+    value: unit:0 <-> indicator_name:0
+  - type: dimension
+    value: date:0 <-> indicator_name:0
+  - type: dimension
+    value: value:0 <-> indicator_name:0
+semantic_model:
+  data_nodes:
+    unit: qb:Observation:0--eg:unit
+    date: qb:Observation:0--eg:recorded_at^^xsd:dateTime
+    value: qb:Observation:0--rdf:value
+    indicator_name: qb:Observation:0--rdfs:label
+  prefixes:
+    qb: http://purl.org/linked-data/cube#
+    smdx-measure: http://purl.org/linked-data/sdmx/2009/measure#
+    eg: http://example.org/
+    rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+    rdfs: http://www.w3.org/2000/01/rdf-schema#

@@ -1,0 +1,14 @@
+version: '3'
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:11-alpine
+    volumes:
+    - ../volumes/postgresql/data:/var/lib/postgresql/data
+    ports:
+    - "0.0.0.0:5432:5432"
+    environment:
+    - TZ=America/Los_Angeles
+    - POSTGRES_USER=drepr
+    - POSTGRES_PASSWORD=uelDIfxpT5u6
+    - POSTGRES_DB=drepr

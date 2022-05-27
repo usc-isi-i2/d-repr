@@ -1,0 +1,123 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcat: <http://isi.edu/ontologies/dcat> .
+@prefix qb: <http://purl.org/linked-data/cube#> .
+@prefix sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#> .
+@prefix sdmx-dimension: <http://purl.org/linked-data/sdmx/2009/dimension#> .
+@prefix sdmx-attribute: <http://purl.org/linked-data/sdmx/2009/attribute#> .
+@prefix drepr: <https://purl.org/drepr/1.0/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+
+<http://example.org/12376316> a dcat:Variable;
+	rdfs:label "Cargo Traffic (M.Tonnes)";
+	.
+<http://example.org/12376616> a dcat:Variable;
+	rdfs:label "Container Traffic (TEUs)";
+	.
+<http://example.org/AO> a dcat:RefArea;
+	rdfs:label "Angola";
+	.
+<http://example.org/BI> a dcat:RefArea;
+	rdfs:label "Burundi";
+	.
+_:Observation1_1_8 a qb:Observation;
+	dcat:measure_1_value "6915000.00";
+	sdmx-dimension:refPeriod "2005"^^xsd:gYear;
+	sdmx-attribute:unitMeasure "Million tonnes";
+	sdmx-attribute:unitMult "units";
+	dcat:measure_1_name <http://example.org/12376316>;
+	sdmx-dimension:refArea <http://example.org/AO>;
+	.
+_:Observation1_1_9 a qb:Observation;
+	dcat:measure_1_value "7100000.00";
+	sdmx-dimension:refPeriod "2006"^^xsd:gYear;
+	sdmx-attribute:unitMeasure "Million tonnes";
+	sdmx-attribute:unitMult "units";
+	dcat:measure_1_name <http://example.org/12376316>;
+	sdmx-dimension:refArea <http://example.org/AO>;
+	.
+_:Observation1_1_10 a qb:Observation;
+	dcat:measure_1_value "7171110.00";
+	sdmx-dimension:refPeriod "2007"^^xsd:gYear;
+	sdmx-attribute:unitMeasure "Million tonnes";
+	sdmx-attribute:unitMult "units";
+	dcat:measure_1_name <http://example.org/12376316>;
+	sdmx-dimension:refArea <http://example.org/AO>;
+	.
+_:Observation1_1_11 a qb:Observation;
+	dcat:measure_1_value "7242821.00";
+	sdmx-dimension:refPeriod "2008"^^xsd:gYear;
+	sdmx-attribute:unitMeasure "Million tonnes";
+	sdmx-attribute:unitMult "units";
+	dcat:measure_1_name <http://example.org/12376316>;
+	sdmx-dimension:refArea <http://example.org/AO>;
+	.
+_:Observation1_2_8 a qb:Observation;
+	dcat:measure_1_value "204929.00";
+	sdmx-dimension:refPeriod "2005"^^xsd:gYear;
+	sdmx-attribute:unitMeasure "Million tonnes";
+	sdmx-attribute:unitMult "units";
+	dcat:measure_1_name <http://example.org/12376316>;
+	sdmx-dimension:refArea <http://example.org/BI>;
+	.
+_:Observation1_2_9 a qb:Observation;
+	dcat:measure_1_value "182810.00";
+	sdmx-dimension:refPeriod "2006"^^xsd:gYear;
+	sdmx-attribute:unitMeasure "Million tonnes";
+	sdmx-attribute:unitMult "units";
+	dcat:measure_1_name <http://example.org/12376316>;
+	sdmx-dimension:refArea <http://example.org/BI>;
+	.
+_:Observation1_2_10 a qb:Observation;
+	dcat:measure_1_value "136077.00";
+	sdmx-dimension:refPeriod "2007"^^xsd:gYear;
+	sdmx-attribute:unitMeasure "Million tonnes";
+	sdmx-attribute:unitMult "units";
+	dcat:measure_1_name <http://example.org/12376316>;
+	sdmx-dimension:refArea <http://example.org/BI>;
+	.
+_:Observation1_2_11 a qb:Observation;
+	dcat:measure_1_value "137437.00";
+	sdmx-dimension:refPeriod "2008"^^xsd:gYear;
+	sdmx-attribute:unitMeasure "Million tonnes";
+	sdmx-attribute:unitMult "units";
+	dcat:measure_1_name <http://example.org/12376316>;
+	sdmx-dimension:refArea <http://example.org/BI>;
+	.
+_:Observation1_3_8 a qb:Observation;
+	dcat:measure_1_value "";
+	sdmx-dimension:refPeriod "2005"^^xsd:gYear;
+	sdmx-attribute:unitMeasure "TEUs";
+	sdmx-attribute:unitMult "units";
+	dcat:measure_1_name <http://example.org/12376616>;
+	sdmx-dimension:refArea <http://example.org/BI>;
+	.
+_:Observation1_3_9 a qb:Observation;
+	dcat:measure_1_value "";
+	sdmx-dimension:refPeriod "2006"^^xsd:gYear;
+	sdmx-attribute:unitMeasure "TEUs";
+	sdmx-attribute:unitMult "units";
+	dcat:measure_1_name <http://example.org/12376616>;
+	sdmx-dimension:refArea <http://example.org/BI>;
+	.
+_:Observation1_3_10 a qb:Observation;
+	dcat:measure_1_value "811.00";
+	sdmx-dimension:refPeriod "2007"^^xsd:gYear;
+	sdmx-attribute:unitMeasure "TEUs";
+	sdmx-attribute:unitMult "units";
+	dcat:measure_1_name <http://example.org/12376616>;
+	sdmx-dimension:refArea <http://example.org/BI>;
+	.
+_:Observation1_3_11 a qb:Observation;
+	dcat:measure_1_value "819.00";
+	sdmx-dimension:refPeriod "2008"^^xsd:gYear;
+	sdmx-attribute:unitMeasure "TEUs";
+	sdmx-attribute:unitMult "units";
+	dcat:measure_1_name <http://example.org/12376616>;
+	sdmx-dimension:refArea <http://example.org/BI>;
+	.

@@ -1,0 +1,60 @@
+version: "1"
+resources: spreadsheet
+preprocessing:
+  - type: pmap
+    path: [ObservationData, 1..160, 3]
+    code: |
+      return f"http://example.org/{int(value)}"
+  - type: pmap
+    path: [ObservationData, 1..160, 0]
+    code: |
+      return f"http://example.org/{value}"
+attributes:
+  port: [ObservationData, 1..160, 0]
+  port_name: [ObservationData, 1..160, 1]
+  region_id: [ObservationData, 1..160, 2]
+  indicator_code: [ObservationData, 1..160, 3]
+  indicator_name: [ObservationData, 1..160, 4]
+  indicator_unit: [ObservationData, 1..160, 5]
+  scale: [ObservationData, 1..160, 6]
+  unit: [ObservationData, 1..160, 7]
+  year: [ObservationData, 0, 8..12]
+  value: [ObservationData, 1..160, 8..12]
+alignments:
+  - type: dimension
+    value: port:1 <-> value:1
+  - type: dimension
+    value: port_name:1 <-> value:1
+  - type: dimension
+    value: region_id:1 <-> value:1
+  - type: dimension
+    value: indicator_code:1 <-> value:1
+  - type: dimension
+    value: indicator_name:1 <-> value:1
+  - type: dimension
+    value: indicator_unit:1 <-> value:1
+  - type: dimension
+    value: scale:1 <-> value:1
+  - type: dimension
+    value: unit:1 <-> value:1
+  - type: dimension
+    value: year:2 <-> value:2
+semantic_model:
+  data_nodes:
+    indicator_name: dcat:Variable:1--rdfs:label
+    indicator_code: dcat:Variable:1--drepr:uri
+    value: qb:Observation:1--dcat:measure_1_value
+    year: qb:Observation:1--sdmx-dimension:refPeriod^^xsd:gYear
+    unit: qb:Observation:1--sdmx-attribute:unitMeasure
+    scale: qb:Observation:1--sdmx-attribute:unitMult
+    port: dcat:RefArea:1--drepr:uri
+    port_name: dcat:RefArea:1--rdfs:label
+  relations:
+    - qb:Observation:1--dcat:measure_1_name--dcat:Variable:1
+    - qb:Observation:1--sdmx-dimension:refArea--dcat:RefArea:1
+  prefixes:
+    dcat: http://isi.edu/ontologies/dcat
+    qb: http://purl.org/linked-data/cube#
+    sdmx-measure: http://purl.org/linked-data/sdmx/2009/measure#
+    sdmx-dimension: http://purl.org/linked-data/sdmx/2009/dimension#
+    sdmx-attribute: http://purl.org/linked-data/sdmx/2009/attribute#

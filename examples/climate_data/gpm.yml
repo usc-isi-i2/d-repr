@@ -1,0 +1,36 @@
+version: "2"
+resources: netcdf4
+attributes:
+  precipitation:
+    path: $.precipitation.data[0][:][:]
+    missing_values: [-9999.9]
+  latitude: $.lat.data[:]
+  longitude: $.lon.data[:]
+alignments:
+  - type: dimension
+    value: precipitation:4 <-> latitude:2
+  - type: dimension
+    value: precipitation:3 <-> longitude:2
+semantic_model:
+  mint:Variable:1:
+    properties:
+      - [rdf:value, precipitation]
+      - [mint-geo:lat, latitude]
+      - [mint-geo:long, longitude]
+    static_properties:
+      - [mint:standardName, atmosphere_water__precipitation_mass_flux]
+    links:
+      - [mint-geo:raster, mint-geo:Raster:1]
+  mint-geo:Raster:1:
+    static_properties:
+      - [mint-geo:epsg, 4326]
+      - [mint-geo:x_slope, 0]
+      - [mint-geo:y_slope, 0]
+      - [mint-geo:x_0, -180]
+      - [mint-geo:y_0, -90]
+      - [mint-geo:dx, 0.1]
+      - [mint-geo:dy, 0.1]
+  prefixes:
+    mint: https://mint.isi.edu/
+    # do we need this? our latitude/longitude don't have CRS
+    mint-geo: https://mint.isi.edu/geo

@@ -1,0 +1,96 @@
+use super::IndexIterator;
+use crate::index::Index;
+
+/// NOTE: This is the original version that I tested and used to created the macro version
+///
+/// An iterator that loops through each range step in the path expression and yield the index of
+/// each item in the loop.
+///
+/// A range step at position `i` in the path is defined by `lowerbounds[i]` (start),
+/// `upperbounds[i]` (end) and `steps[i]` (step). The length of vectors `lowerbounds`, `upperbounds`,
+/// `steps` are all equal, and represent the path from the root of the resource tree. In other words,
+/// the index that this iterator yields may be the index of a subtree or of a leaf node.
+///
+/// Position of range steps are keep tracked at the vector `unfrozen_dims` in reverse order (optimize for performance).
+/// So that we can loop through each position of each range step and update the index correctly.
+///
+/// To optimize for the performance, the index that the iterator produces is stored in an external
+/// vector `index` outside of the iterator and the iterator modifies the index after each iteration.
+///
+/// # Examples
+#[derive(Debug)]
+pub struct KnownRangeIter<I: std::convert::AsRef<[Index]> + std::convert::AsMut<[Index]>> {
+  // |lowerbounds| = |upperbounds| = |step| <= |index|
+  // |unfrozen_dims| < |steps|
+  lowerbounds: Vec<usize>,
+  upperbounds: Vec<usize>,
+  steps: Vec<usize>,
+  // unfrozen_dims is in reverse order
+  unfrozen_dims: Vec<usize>,
+  index: I,
+  has_more: bool,
+}
+
+impl<I: std::convert::AsRef<[Index]> + std::convert::AsMut<[Index]>> KnownRangeIter<I> {
+  pub fn new(
+    index: I,
+    unfrozen_dims: Vec<usize>,
+    lowerbounds: Vec<usize>,
+    upperbounds: Vec<usize>,
+    steps: Vec<usize>,
+  ) -> KnownRangeIter<I> {
+    KnownRangeIter {
+      index,
+      unfrozen_dims,
+      lowerbounds,
+      upperbounds,
+      steps,
+      has_more: true,
+    }
+  }
+}
+
+impl<I: std::convert::AsRef<[Index]> + std::convert::AsMut<[Index]>> IndexIterator for KnownRangeIter<I> {
+  #[inline]
+  fn value(&self) -> &[Index] {
+    return self.index.as_ref();
+  }
+
+  #[inline]
+  fn mut_value(&mut self) -> &mut [Index] {
+    return self.index.as_mut();
+  }
+
+  #[inline]
+  fn advance(&mut self) -> bool {
+    if self.has_more {
+      for &dim_pivot in &self.unfrozen_dims {
+        match &mut self.index.as_mut()[dim_pivot] {
+          Index::Idx(idx) => {
+            *idx += self.steps[dim_pivot];
+            if *idx >= self.upperbounds[dim_pivot] {
+              *idx = self.lowerbounds[dim_pivot] as usize;
+            } else {
+              // successfully advance
+              return true;
+            }
+          }
+          _ => unreachable!(),
+        }
+      }
+
+      self.has_more = false;
+    }
+
+    return false;
+  }
+
+  fn freeze_last_step(&mut self) {
+    if self.unfrozen_dims[0] == self.steps.len() - 1 {
+      self.unfrozen_dims.drain(..1);
+    }
+    self.steps.pop();
+    self.upperbounds.pop();
+    self.lowerbounds.pop();
+  }
+}

@@ -1,0 +1,63 @@
+version: "1"
+resources:
+  default:
+    type: csv
+    delimiter: "\t"
+preprocessing:
+  - type: pmap
+    path: [1..4, 3]
+    code: |
+      return f"http://example.org/{int(value)}"
+  - type: pmap
+    path: [1..4, 0]
+    code: |
+      return f"http://example.org/{value}"
+attributes:
+  port: [1..4, 0]
+  port_name: [1..4, 1]
+  region_id: [1..4, 2]
+  indicator_code: [1..4, 3]
+  indicator_name: [1..4, 4]
+  indicator_unit: [1..4, 5]
+  scale: [1..4, 6]
+  unit: [1..4, 7]
+  year: [0, 8..12]
+  value: [1..4, 8..12]
+alignments:
+  - type: dimension
+    value: port:0 <-> value:0
+  - type: dimension
+    value: port_name:0 <-> value:0
+  - type: dimension
+    value: region_id:0 <-> value:0
+  - type: dimension
+    value: indicator_code:0 <-> value:0
+  - type: dimension
+    value: indicator_name:0 <-> value:0
+  - type: dimension
+    value: indicator_unit:0 <-> value:0
+  - type: dimension
+    value: scale:0 <-> value:0
+  - type: dimension
+    value: unit:0 <-> value:0
+  - type: dimension
+    value: year:1 <-> value:1
+semantic_model:
+  data_nodes:
+    indicator_code: dcat:Variable:1--drepr:uri
+    indicator_name: dcat:Variable:1--rdfs:label
+    value: qb:Observation:1--dcat:measure_1_value
+    year: qb:Observation:1--sdmx-dimension:refPeriod^^xsd:gYear
+    unit: qb:Observation:1--sdmx-attribute:unitMeasure
+    scale: qb:Observation:1--sdmx-attribute:unitMult
+    port: dcat:RefArea:1--drepr:uri
+    port_name: dcat:RefArea:1--rdfs:label
+  relations:
+    - qb:Observation:1--dcat:measure_1_name--dcat:Variable:1
+    - qb:Observation:1--sdmx-dimension:refArea--dcat:RefArea:1
+  prefixes:
+    dcat: http://isi.edu/ontologies/dcat
+    qb: http://purl.org/linked-data/cube#
+    sdmx-measure: http://purl.org/linked-data/sdmx/2009/measure#
+    sdmx-dimension: http://purl.org/linked-data/sdmx/2009/dimension#
+    sdmx-attribute: http://purl.org/linked-data/sdmx/2009/attribute#

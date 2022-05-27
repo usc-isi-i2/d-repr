@@ -1,0 +1,41 @@
+version: '1'
+resources:
+  default:
+    type: csv
+preprocessing:
+  - type: pmap
+    path: $[2:][1:]
+    code: |
+      return float(value)
+  - type: pmap
+    path: $.0[1:]
+    code: |
+      if value == "":
+        return context.get_left_value(index)
+      return "http://reference.data.gov.uk/id/gregorian-interval/" + value.split("-")[0] + "-01-01T00:00:00/P3Y"
+attributes:
+  area: $[2:][0]
+  gender: $[1][1:]
+  period: $[0][1:]
+  obs: $[2:][1:]
+alignments:
+  - type: dimension
+    source: obs
+    target: area
+    aligned_dims:
+      - { source: 0, target: 0 }
+  - type: dimension
+    value: obs:1 <-> gender:1
+  - type: dimension
+    value: obs:1 <-> period:1
+semantic_model:
+  data_nodes:
+    area: qb:Observation:1--eg:refArea
+    gender: qb:Observation:1--eg:gender
+    period: qb:Observation:1--eg:refPeriod^^xsd:anyURI
+    obs: qb:Observation:1--smdx-measure:obsValue
+  relations: []
+  prefixes:
+    qb: http://purl.org/linked-data/cube#
+    smdx-measure: http://purl.org/linked-data/sdmx/2009/measure#
+    eg: http://example.org/

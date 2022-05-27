@@ -1,0 +1,157 @@
+#!/usr/bin/python
+"""
+Execute command
+"""
+
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+from urllib.request import urlretrieve
+from pathlib import Path
+
+
+def get_pylib_ext():
+    return {"linux": "so", "darwin": "so", "win32": "pyd"}[sys.platform]
+
+
+def get_rust_target_triple():
+    """Get platform identifier"""
+    return ""
+
+
+def exc(
+    py_wdir: str,
+    ru_wdir: str,
+    engine_version: str,
+    target_triple: str,
+    args: argparse.Namespace,
+):
+    py_wdir = os.path.abspath(py_wdir)
+    ru_wdir = os.path.abspath(ru_wdir)
+
+    lib_name = {
+        "linux": "libengine.so",
+        "darwin": "libengine.dylib",
+        "win32": "engine.dll",
+    }[sys.platform]
+    pylib_ext = get_pylib_ext()
+
+    cargo_build_mode = ""
+    if args.build_mode != "debug":
+        cargo_build_mode = f"--{args.build_mode}"
+
+    if args.cmd == "pylib-build":
+        subprocess.check_call(
+            f"cargo build {cargo_build_mode} --lib --target={target_triple} --features cpython/extension-module",
+            cwd=os.path.join(ru_wdir, "engine"),
+            shell=True,
+        )
+
+        # copy for development
+        shutil.copyfile(
+            Path(ru_wdir) / f"target/{target_triple}/{args.build_mode}/{lib_name}",
+            Path(py_wdir) / f"drepr/drepr_engine.{pylib_ext}",
+        )
+        return
+
+    if args.cmd == "pylib-release":
+        shutil.copyfile(
+            Path(ru_wdir) / f"target/{target_triple}/{args.build_mode}/{lib_name}",
+            Path(ru_wdir)
+            / f"target/drepr_engine.{target_triple}.{engine_version}.{pylib_ext}",
+        )
+        return
+
+    raise Exception("Invalid cmd")
+
+
+if __name__ == "__main__":
+    py_wdir = os.path.dirname(os.path.abspath(__file__))
+    ru_wdir = os.path.join(py_wdir, "..", "drepr")
+    target_triple = {
+        "linux": "x86_64-unknown-linux-gnu",
+        "darwin": "x86_64-apple-darwin",
+        "win32": "x86_64-pc-windows-msvc",
+    }[sys.platform]
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "cmd",
+        choices=[
+            "pylib-build",
+            "pylib-release",
+            "pylib-download",
+            "info",
+            "pypi-release",
+        ],
+        help="command to run",
+    )
+    parser.add_argument(
+        "--build_mode",
+        "-m",
+        choices=["debug", "release"],
+        default="debug",
+        help="build mode",
+    )
+    parser.add_argument(
+        "--pre_built_engine_location",
+        action="store_true",
+        default=False,
+        help="Get location of the pre-built engine file (only work with `info` command)",
+    )
+    parser.add_argument(
+        "--pre_built_engine_glob",
+        action="store_true",
+        default=False,
+        help="Get a glob rule that matches all pre-built engine files (only work with `info` command)",
+    )
+    parser.add_argument(
+        "--pre_built_engine_rel_glob",
+        action="store_true",
+        default=False,
+        help="Get a glob rule that matches all pre-built engine files (only work with `info` command). Relative to the root (repository) directory",
+    )
+    parser.add_argument(
+        "--engine_release_tag",
+        action="store_true",
+        default=False,
+        help="get release tag in github that contains the pre-built engine in it. (only work with `info` command)",
+    )
+
+    args = parser.parse_args()
+
+    # execute script to read the version
+    exec(open(Path(py_wdir) / "drepr" / "version.py", "r").read())
+
+    if args.cmd == "info":
+        if args.pre_built_engine_location:
+            engine_file = os.path.join(
+                ru_wdir,
+                "target",
+                f"drepr_engine.{target_triple}.{__engine_version__}.{get_pylib_ext()}",
+            )
+            print(os.path.abspath(engine_file))
+        elif args.pre_built_engine_glob:
+            engine_file = os.path.join(ru_wdir, "target", f"drepr_engine.*")
+            print(os.path.abspath(engine_file))
+        elif args.pre_built_engine_rel_glob:
+            print("./drepr/target/drepr_engine.*")
+        elif args.engine_release_tag:
+            print(__engine_release_tag__)
+    elif args.cmd == "pypi-release":
+        if os.path.exists(os.path.join(py_wdir, "dist")):
+            shutil.rmtree(os.path.join(py_wdir, "dist"))
+        subprocess.check_call(
+            f"python setup.py sdist && twine upload --skip-existing dist/*",
+            cwd=py_wdir,
+            shell=True,
+        )
+    elif args.cmd == "pylib-download":
+        urlretrieve(
+            f"https://github.com/usc-isi-i2/d-repr/releases/download/{__engine_release_tag__}/drepr_engine.{target_triple}.{__engine_version__}.{get_pylib_ext()}",
+            os.path.join(py_wdir, "drepr", f"drepr_engine.{get_pylib_ext()}"),
+        )
+    else:
+        exc(py_wdir, ru_wdir, __engine_version__, target_triple, args)

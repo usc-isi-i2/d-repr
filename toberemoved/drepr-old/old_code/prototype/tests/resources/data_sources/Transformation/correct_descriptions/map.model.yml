@@ -1,0 +1,13 @@
+resources:
+  ipc_trend_analysis_unity: csv
+preprocessing:
+  - type: map
+    location: ipc_trend_analysis_unity@1..:2
+    function: >
+      return int(value) + 999
+layout: {}
+mappings: []
+semantic_model:
+  semantic_types: {}
+  semantic_relations: []
+  ontology_prefixes: {}

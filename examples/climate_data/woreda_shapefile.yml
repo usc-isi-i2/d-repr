@@ -1,0 +1,44 @@
+version: '2'
+resources: 'shapefile'
+preprocessing:
+  - type: pmap
+    path: $[:].properties
+    output: district_uri
+    code: |
+      value['uri'] = f"https://hub.arcgis.com/datasets/ethiopia::woredas-level-3/{value['REGIONNAME']}/{value['ZONENAME']}/{value['WOREDANAME']}"
+      value['uri'] = value['uri'].replace(' ', '-')
+      return value
+attributes:
+  polygon: $[:].geometry.coordinates
+  region_name: $[:].properties.REGIONNAME
+  zone_name: $[:].properties.ZONENAME
+  district_no: $[:].properties.WOREDANO_
+  district_name: $[:].properties.WOREDANAME
+  uri: $[:].properties.uri
+alignments:
+  - type: dimension
+    value: polygon:0 <-> region_name:0
+  - type: dimension
+    value: polygon:0 <-> zone_name:0
+  - type: dimension
+    value: polygon:0 <-> district_no:0  
+  - type: dimension
+    value: polygon:0 <-> district_name:0
+  - type: dimension
+    value: polygon:0 <-> uri:0
+semantic_model:
+  mint:Place:1:
+    properties:
+    #   - [drepr:uri, uri]
+      - [mint:region, region_name]
+      - [mint:zone, zone_name]
+      - [mint:district, district_name]
+    links:
+      - [mint-geo:bounding, mint-geo:Polygon:1]
+  mint-geo:Polygon:1:
+    properties:
+      - [rdf:value, polygon]
+  prefixes:
+    mint: https://mint.isi.edu/
+    mint-geo: https://mint.isi.edu/geo
+        

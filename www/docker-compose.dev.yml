@@ -1,0 +1,20 @@
+version: "3"
+services:
+  postgres:
+    container_name: drepr-postgres
+    image: postgres:11-alpine
+    volumes:
+      - ../volumes/postgresql/data:/var/lib/postgresql/data
+    ports:
+      - "0.0.0.0:5432:5432"
+    environment:
+      - TZ=America/Los_Angeles
+      - POSTGRES_USER=drepr
+      - POSTGRES_PASSWORD=uelDIfxpT5u6
+      - POSTGRES_DB=drepr
+  msg_queue:
+    container_name: drepr-msg-queue
+    image: rabbitmq:3-management
+    ports:
+      - "0.0.0.0:5672:5672"
+      - "0.0.0.0:15672:15672"
