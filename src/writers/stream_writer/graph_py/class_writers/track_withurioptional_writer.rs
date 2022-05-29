@@ -1,10 +1,11 @@
-use cpython::{PyClone, PyDict, PyList, Python, PythonObject, ToPyObject};
 use hashbrown::HashMap;
 
 use readers::value::Value;
 
 use crate::writers::stream_writer::graph_py::temp_object_props::TempObjectProps;
 use crate::writers::stream_writer::StreamClassWriter;
+use pyo3::prelude::*;
+use pyo3::types::{PyDict, PyList};
 
 pub struct TrackWithURIOptionalWriter<'a> {
   pub py: Python<'a>,
@@ -16,15 +17,15 @@ pub struct TrackWithURIOptionalWriter<'a> {
   pub ont_class: &'a str,
 
   /// All inserted nodes
-  pub all_nodes: *const HashMap<String, HashMap<String, PyDict>>,
+  pub all_nodes: *const HashMap<String, HashMap<String, Py<PyDict>>>,
   /// A mapping of node id to its data
-  pub nodes: &'a mut HashMap<String, PyDict>,
+  pub nodes: &'a mut HashMap<String, Py<PyDict>>,
   /// A mapping of class id to list of nodes
   /// This share same record pointers with the `nodes` property
-  pub class_nodes: &'a mut Vec<PyDict>,
+  pub class_nodes: &'a mut Vec<Py<PyDict>>,
 
   /// current node that we are writing information into
-  pub curr_node: PyDict,
+  pub curr_node: Py<PyDict>,
 
   /// buffer for storing links to object that has not been generated
   pub buffer_oprops: &'a mut [Vec<TempObjectProps>],
@@ -48,19 +49,21 @@ impl<'a> StreamClassWriter for TrackWithURIOptionalWriter<'a> {
     let is_new = !self.nodes.contains_key(subject);
     if is_new {
       let node = PyDict::new(self.py);
-      node.set_item(self.py, "@id", subject).unwrap();
+      node.set_item("@id", subject).unwrap();
       for p in self.class_predicates {
-        node.set_item(self.py, p, PyList::new(self.py, &[])).unwrap();
+        node.set_item(p, PyList::empty(self.py)).unwrap();
       }
 
-      self.class_nodes.push(node.clone_ref(self.py));
-      self.nodes.insert(subject.to_string(), node);
-      self.curr_node = self.nodes.get(subject).unwrap().clone_ref(self.py);
+      self.class_nodes.push(node.into());
+      self.nodes.insert(subject.to_string(), node.into());
+      self.curr_node = node.into();
     } else {
       self.curr_node = self.nodes.get(subject).unwrap().clone_ref(self.py);
+
+      let curr_node = self.curr_node.as_ref(self.py);
       for p in self.class_predicates {
-        if self.curr_node.contains(self.py, p).unwrap() {
-          self.curr_node.set_item(self.py, p, PyList::new(self.py, &[])).unwrap();
+        if curr_node.contains(p).unwrap() {
+          curr_node.set_item(p, PyList::empty(self.py)).unwrap();
         }
       }
     }
@@ -68,53 +71,77 @@ impl<'a> StreamClassWriter for TrackWithURIOptionalWriter<'a> {
     is_new
   }
 
-  fn end_record(&mut self) {
-  }
+  fn end_record(&mut self) {}
 
   fn begin_partial_buffering_record(&mut self, subject: &str, _is_blank: bool) -> bool {
     let is_new = !self.nodes.contains_key(subject);
     if is_new {
       let node = PyDict::new(self.py);
-      node.set_item(self.py, "@id", subject).unwrap();
+      node.set_item("@id", subject).unwrap();
       for p in self.class_predicates {
-        node.set_item(self.py, p, PyList::new(self.py, &[])).unwrap();
+        node.set_item(p, PyList::empty(self.py)).unwrap();
       }
 
-      self.class_nodes.push(node.clone_ref(self.py));
-      self.nodes.insert(subject.to_string(), node);
-      self.curr_node = self.nodes.get(subject).unwrap().clone_ref(self.py);
+      self.class_nodes.push(node.into());
+      self.nodes.insert(subject.to_string(), node.into());
+      self.curr_node = node.into();
       self.buffer_oprops[self.class_id].push(TempObjectProps {
         id: subject.to_string(),
-        props: vec![]
+        props: vec![],
       });
     } else {
       self.curr_node = self.nodes.get(subject).unwrap().clone_ref(self.py);
+      let curr_node = self.curr_node.as_ref(self.py);
       for p in self.class_predicates {
-        if self.curr_node.contains(self.py, p).unwrap() {
-          self.curr_node.set_item(self.py, p, PyList::new(self.py, &[])).unwrap();
+        if curr_node.contains(p).unwrap() {
+          curr_node.set_item(p, PyList::empty(self.py)).unwrap();
         }
       }
     }
     is_new
   }
 
-  fn end_partial_buffering_record(&mut self) {
-  }
+  fn end_partial_buffering_record(&mut self) {}
 
   fn write_data_property(&mut self, _subject: &str, predicate_id: usize, value: &Value) {
-    let v = self.curr_node.get_item(self.py, &self.predicates[predicate_id]).unwrap();
-    let lst = v.cast_as::<PyList>(self.py).unwrap();
-    lst.append(self.py, value.to_py_object(self.py));
+    let v = self
+      .curr_node
+      .as_ref(self.py)
+      .get_item(&self.predicates[predicate_id])
+      .unwrap();
+    let lst = v.downcast::<PyList>().unwrap();
+    lst.append(value);
   }
 
-  fn write_object_property(&mut self, _target_cls: usize, _subject: &str, predicate_id: usize, object: &str, _is_subject_blank: bool, _is_object_blank: bool, _is_new_subj: bool) {
-    let v = self.curr_node.get_item(self.py, &self.predicates[predicate_id]).unwrap();
-    let lst = v.cast_as::<PyList>(self.py).unwrap();
-    lst.append(self.py, object.to_py_object(self.py).into_object());
+  fn write_object_property(
+    &mut self,
+    _target_cls: usize,
+    _subject: &str,
+    predicate_id: usize,
+    object: &str,
+    _is_subject_blank: bool,
+    _is_object_blank: bool,
+    _is_new_subj: bool,
+  ) {
+    let v = self
+      .curr_node
+      .as_ref(self.py)
+      .get_item(&self.predicates[predicate_id])
+      .unwrap();
+    let lst = v.downcast::<PyList>().unwrap();
+    lst.append(object).unwrap();
   }
 
-  fn buffer_object_property(&mut self, target_cls: usize, predicate_id: usize, object: String, _is_object_blank: bool) {
-    self.buffer_oprops[self.class_id].last_mut().unwrap()
+  fn buffer_object_property(
+    &mut self,
+    target_cls: usize,
+    predicate_id: usize,
+    object: String,
+    _is_object_blank: bool,
+  ) {
+    self.buffer_oprops[self.class_id]
+      .last_mut()
+      .unwrap()
       .props
       .push((target_cls, predicate_id, object));
   }

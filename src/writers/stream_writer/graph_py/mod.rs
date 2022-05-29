@@ -1,17 +1,18 @@
-use crate::writers::stream_writer::{StreamWriter, StreamClassWriter, WriteMode};
-use cpython::{GILGuard, PyDict, ToPyObject, PythonObject, Python};
-use hashbrown::HashMap;
-use crate::writers::stream_writer::graph_py::temp_object_props::TempObjectProps;
+use crate::lang::{GraphNode, SemanticModel};
 use crate::writers::stream_writer::graph_py::class_writers::track_withurioptional_writer::TrackWithURIOptionalWriter;
-use crate::lang::{SemanticModel, GraphNode};
-use crate::writers::stream_writer::stream_writer::{ExtractWriterResult, WriteResult, StreamWriterResult};
-
+use crate::writers::stream_writer::graph_py::temp_object_props::TempObjectProps;
+use crate::writers::stream_writer::stream_writer::{
+  ExtractWriterResult, StreamWriterResult, WriteResult,
+};
+use crate::writers::stream_writer::{StreamClassWriter, StreamWriter, WriteMode};
+use hashbrown::HashMap;
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
 pub mod class_writers;
 mod temp_object_props;
 
 pub struct GraphPyWriter {
-  /// Python GIL which allows access to the Python runtime. The lock will be released immediately
-  /// after this writer is dropped.
+  /// Python GIL so we can generate Python objects
   gil: GILGuard,
 
   /// A map that maps class id (`node_id`) to class label
@@ -24,10 +25,10 @@ pub struct GraphPyWriter {
   class_predicates: Vec<Vec<String>>,
 
   /// A mapping of class uri to a map of record id and its value
-  nodes: HashMap<String, HashMap<String, PyDict>>,
+  nodes: HashMap<String, HashMap<String, Py<PyDict>>>,
   /// A mapping of class id to list of records of the class
   /// This property and the `nodes` property share same record pointers.
-  class2nodes: Vec<Vec<PyDict>>,
+  class2nodes: Vec<Vec<Py<PyDict>>>,
 
   /// buffer for storing links to object that has not been generated
   buffer_oprops: Vec<Vec<TempObjectProps>>,
@@ -42,7 +43,7 @@ impl GraphPyWriter {
       class_predicates: vec![],
       nodes: Default::default(),
       class2nodes: vec![],
-      buffer_oprops: vec![]
+      buffer_oprops: vec![],
     };
 
     for node in &sm.nodes {
@@ -82,15 +83,19 @@ impl StreamWriter for GraphPyWriter {
     for (cid, records) in self.buffer_oprops.drain(..).enumerate() {
       let subnodes = self.nodes.get_mut(&self.classes[cid]).unwrap();
       for r in records {
-        let u = subnodes.get_mut(&r.id).unwrap();
+        let u = subnodes.get_mut(&r.id).unwrap().as_ref(py);
         for (_tid, pid, opid) in r.props {
-          u.set_item(py, &self.predicates[pid], opid.to_py_object(py).into_object()).unwrap();
+          u.set_item(&self.predicates[pid], opid.into_py(py)).unwrap();
         }
       }
     }
   }
 
-  fn begin_class<'a>(&'a mut self, class_id: usize, _write_mode: WriteMode) -> Box<dyn StreamClassWriter + 'a> {
+  fn begin_class<'a>(
+    &'a mut self,
+    class_id: usize,
+    _write_mode: WriteMode,
+  ) -> Box<dyn StreamClassWriter + 'a> {
     Box::new(TrackWithURIOptionalWriter {
       py: self.gil.python(),
       class_id,
@@ -98,16 +103,15 @@ impl StreamWriter for GraphPyWriter {
       all_nodes: &self.nodes as *const _,
       nodes: self.nodes.get_mut(&self.classes[class_id]).unwrap(),
       class_nodes: &mut self.class2nodes[class_id],
-      curr_node: PyDict::new(self.gil.python()),
+      curr_node: PyDict::new(self.gil.python()).into(),
       buffer_oprops: &mut self.buffer_oprops,
       classes: &self.classes,
       predicates: &self.predicates,
-      class_predicates: &self.class_predicates[class_id]
+      class_predicates: &self.class_predicates[class_id],
     })
   }
 
-  fn end_class(&mut self) {
-  }
+  fn end_class(&mut self) {}
 }
 
 impl ExtractWriterResult for GraphPyWriter {

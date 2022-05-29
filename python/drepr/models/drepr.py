@@ -4,7 +4,7 @@ from enum import Enum
 from io import StringIO
 from typing import List, Dict, Any, Optional
 
-import ujson
+import orjson
 from ruamel.yaml import YAML
 
 from drepr.utils.validator import Validator, InputError
@@ -53,8 +53,8 @@ class DRepr:
     @staticmethod
     def parse_from_file(fpath: str) -> "DRepr":
         if fpath.endswith(".json"):
-            with open(fpath, "r") as f:
-                return DRepr.parse(ujson.load(f))
+            with open(fpath, "rb") as f:
+                return DRepr.parse(orjson.loads(f.read()))
 
         if fpath.endswith(".yml") or fpath.endswith(".yaml"):
             with open(fpath, "r") as f:

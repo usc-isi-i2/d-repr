@@ -1,17 +1,15 @@
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
 name = "drepr"
-version = "1.0.8"   # ___PKG_VERSION___: DO NOT MODIFY the version here. Update it via version_manager.py!
+version = "1.1.0"
 authors = ["Binh Vu <binh@toan2.com>"]
 edition = "2018"
 
 [lib]
 name = "drepr"
-crate-type = ["rlib", "cdylib"]
+crate-type = ["cdylib", "rlib"]
 
-[features]
-disable-python = []
-enable-exec-macro-cls-map = []
+[package.metadata.maturin]
+python-source = "python"
 
 [dependencies]
 readers = { path = "./readers" }
@@ -28,6 +26,10 @@ clap = "3.1.18"
 itertools = "0.10.3"
 fancy-regex = "0.10.0"
 lazy_static = "1.4.0"
-cpython= "0.7.0"
-# Note: enable this feature generating error when running test or building binary package. See README.md for more information
-# features = ["extension-module"]
+
+pyo3 = "0.16.3"
+
+[features]
+extension-module = ["pyo3/extension-module"]
+enable-exec-macro-cls-map = []
+default = ["extension-module"]

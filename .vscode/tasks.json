@@ -1,0 +1,27 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cargo",
+			"subcommand": "check",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "Cargo check"
+		},
+		{
+			"label": "run test",
+			"type": "shell",
+			"command": "source .venv/bin/activate && maturin develop && python examples/exec_examples.py",
+			"problemMatcher": [
+				"$rustc"
+			],
+		}
+	],
+	"options": {
+		"env": {
+			"RUST_BACKTRACE": "1"
+		}
+	}
+}

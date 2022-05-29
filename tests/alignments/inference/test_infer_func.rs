@@ -1,9 +1,9 @@
-use engine::lang::{Description, Alignment};
-use engine::alignments::inference::AlignmentInference;
-use std::path::Path;
+use drepr::alignments::inference::AlignmentInference;
+use drepr::lang::{Alignment, Description};
+use serde::Deserialize;
 use std::fs;
 use std::fs::File;
-use serde::{Deserialize};
+use std::path::Path;
 
 /// Smoke test the inferences
 #[test]
@@ -34,34 +34,53 @@ struct Assertion {
 #[derive(Debug, Clone, Deserialize)]
 struct AlignmentAssertion {
   pair: (usize, usize),
-  aligns: Vec<Alignment>
+  aligns: Vec<Alignment>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct InferFnAssertion {
   triple: (usize, usize, usize),
-  aligns: Vec<Alignment>
+  aligns: Vec<Alignment>,
 }
 
 struct TestScenario {
   name: String,
   desc: Description,
-  assertion: Assertion
+  assertion: Assertion,
 }
 
 impl TestScenario {
   pub fn load() -> Vec<TestScenario> {
-    let test_resource_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/alignments/inference/resources");
+    let test_resource_dir =
+      Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/alignments/inference/resources");
     let mut scenarios = vec![];
 
     for e0 in fs::read_dir(&test_resource_dir).unwrap() {
       let dataset_dir = e0.unwrap().path();
       if dataset_dir.is_dir() {
         // get model
-        let desc_file = dataset_dir.as_path().join("model.json").to_str().unwrap().to_string();
-        let desc: Description = serde_json::from_reader(File::open(desc_file).unwrap()).expect("Invalid description file");
-        let assertion: Assertion = serde_json::from_reader(File::open(dataset_dir.as_path().join("assertion.json")).unwrap()).expect("Invalid assertion file");
-        scenarios.push(TestScenario { desc, name: dataset_dir.file_name().unwrap().to_str().unwrap().to_string(), assertion });
+        let desc_file = dataset_dir
+          .as_path()
+          .join("model.json")
+          .to_str()
+          .unwrap()
+          .to_string();
+        let desc: Description = serde_json::from_reader(File::open(desc_file).unwrap())
+          .expect("Invalid description file");
+        let assertion: Assertion = serde_json::from_reader(
+          File::open(dataset_dir.as_path().join("assertion.json")).unwrap(),
+        )
+        .expect("Invalid assertion file");
+        scenarios.push(TestScenario {
+          desc,
+          name: dataset_dir
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string(),
+          assertion,
+        });
       }
     }
 

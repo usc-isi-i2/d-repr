@@ -1,6 +1,6 @@
 from typing import List, Dict, Tuple, Callable, Any, Optional, Union
 
-import ujson
+import orjson
 import numpy as np
 from drepr.executors.readers.ra_reader import NDArrayReader, Index
 from drepr.models import IndexExpr, RangeExpr
@@ -15,8 +15,8 @@ class NPDictReader(NDArrayReader):
 
     @classmethod
     def from_file(cls, infile: str):
-        with open(infile, "r") as f:
-            data = ujson.load(f)
+        with open(infile, "rb") as f:
+            data = orjson.loads(f.read())
             for k, v in data.items():
                 if isinstance(v, list):
                     data[k] = np.asarray(v)

@@ -1,0 +1,18 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Rust: cargo check",
+			"group": "none",
+			"command": "cargo check --features netcdf",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		}
+	]
+}

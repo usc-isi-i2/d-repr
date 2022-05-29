@@ -1,7 +1,7 @@
 import copy
 from typing import Dict, Tuple
 
-import ujson
+import orjson
 from netCDF4 import Dataset
 
 from drepr.models import ResourceType, DRepr, LiteralNode, Preprocessing, PreprocessingType, PMap, DataNode, Attr, Path, \
@@ -64,7 +64,7 @@ def patch(repr: DRepr, resources: Dict[str, ResourceData]) -> Tuple[DRepr, Dict[
                             repr.aligns.append(RangeAlignment(new_attr_id, repr.sm.nodes[ie.target_id].attr_id, []))
 
         repr.resources.append(Resource(resource_id, ResourceType.JSON))
-        resources[resource_id] = ResourceDataString(ujson.dumps(resource_data))
+        resources[resource_id] = ResourceDataString(orjson.dumps(resource_data))
 
     return repr, resources
 
