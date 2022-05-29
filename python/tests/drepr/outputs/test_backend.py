@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 import pytest
-import ujson
+import orjson
 
 from drepr.outputs.array_backend.array_backend import ArrayBackend
 from drepr.outputs.base_lst_output_class import BaseLstOutputClass
@@ -79,14 +79,14 @@ def test_circular_reference(resource_dir):
     tempfile = resource_dir / "temp_resource_circular_reference.tmp.json"
     if not tempfile.exists():
         np.random.seed(1111)
-        with open(tempfile, "w") as f:
+        with open(tempfile, "wb") as f:
             x, y = 1000, 1000
-            ujson.dump({
+            f.write(orjson.dumps({
                 "lat": [20.1 + (i * 0.1) for i in range(x)],
                 "long": [44.1 + (i * 0.1) for i in range(y)],
                 "epsg": 4326,
                 "value": np.random.randn(x, y).tolist()
-            }, f)
+            }))
     tempfile = str(tempfile)
     import weakref
     class Parent():

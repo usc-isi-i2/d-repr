@@ -1,19 +1,18 @@
-use readers::prelude::{CSVRAReader, RAReader, JSONRAReader, SpreadsheetRAReader};
+use readers::prelude::{CSVRAReader, JSONRAReader, RAReader, SpreadsheetRAReader};
 
+use crate::execution_plans::classes_map_plan::class_map_plan::ClassMapExecStrategy;
 use crate::execution_plans::classes_map_plan::write_plan::WritePlan;
 use crate::execution_plans::ClassesMapExecutionPlan;
-use crate::executors::{PhysicalOutput, PhysicalResource};
 use crate::executors::classes_map::generic_algo::generic_class_map;
-use crate::executors::preprocessing::exec_preprocessing;
-use crate::lang::{Description, Resource};
-use crate::writers::stream_writer::{OutputFormat};
-use crate::writers::stream_writer::{GraphJSONWriter, TTLStreamWriter};
-#[cfg(not(feature = "disable-python"))]
-use crate::writers::stream_writer::GraphPyWriter;
-use crate::writers::stream_writer::stream_writer::{StreamWriterResult, WriteResult};
-use crate::execution_plans::classes_map_plan::class_map_plan::ClassMapExecStrategy;
 #[cfg(feature = "enable-exec-macro-cls-map")]
 use crate::executors::classes_map::specific_algo::specific_class_map::specific_class_map;
+use crate::executors::preprocessing::exec_preprocessing;
+use crate::executors::{PhysicalOutput, PhysicalResource};
+use crate::lang::{Description, Resource};
+use crate::writers::stream_writer::stream_writer::{StreamWriterResult, WriteResult};
+use crate::writers::stream_writer::GraphPyWriter;
+use crate::writers::stream_writer::OutputFormat;
+use crate::writers::stream_writer::{GraphJSONWriter, TTLStreamWriter};
 
 mod buffer_writer;
 mod generic_algo;
@@ -21,7 +20,12 @@ mod generic_algo;
 #[cfg(feature = "enable-exec-macro-cls-map")]
 pub mod specific_algo;
 
-pub fn classes_map(resource_files: &[PhysicalResource], desc: &Description, plan: &mut ClassesMapExecutionPlan, output: &PhysicalOutput) -> WriteResult {
+pub fn classes_map(
+  resource_files: &[PhysicalResource],
+  desc: &Description,
+  plan: &mut ClassesMapExecutionPlan,
+  output: &PhysicalOutput,
+) -> WriteResult {
   let mut readers: Vec<Box<dyn RAReader>> = Vec::with_capacity(resource_files.len());
   for (i, resource) in desc.resources.iter().enumerate() {
     match resource {
@@ -35,78 +39,69 @@ pub fn classes_map(resource_files: &[PhysicalResource], desc: &Description, plan
           }
         };
         readers.push(reader);
-      },
+      }
       Resource::Spreadsheet(_) => {
         let reader = match &resource_files[i] {
-          PhysicalResource::File(fpath) => {
-            Box::new(SpreadsheetRAReader::from_file(fpath))
-          },
+          PhysicalResource::File(fpath) => Box::new(SpreadsheetRAReader::from_file(fpath)),
           _ => {
             unimplemented!("Haven't implemented reading spreadsheet from string yet")
           }
         };
         readers.push(reader);
-      },
+      }
       Resource::JSON(_) => {
         let reader = match &resource_files[i] {
-          PhysicalResource::File(fpath) => {
-            Box::new(JSONRAReader::from_file(fpath))
-          }
-          PhysicalResource::String(content) => {
-            Box::new(JSONRAReader::from_str(content))
-          }
-        };
-        readers.push(reader);
-      },
-      Resource::NPDict(_) => {
-        let reader = match &resource_files[i] {
-          PhysicalResource::File(fpath) => {
-            Box::new(JSONRAReader::from_file(fpath))
-          }
-          PhysicalResource::String(content) => {
-            Box::new(JSONRAReader::from_str(content))
-          }
+          PhysicalResource::File(fpath) => Box::new(JSONRAReader::from_file(fpath)),
+          PhysicalResource::String(content) => Box::new(JSONRAReader::from_str(content)),
         };
         readers.push(reader);
       }
-      _ => unimplemented!()
+      Resource::NPDict(_) => {
+        let reader = match &resource_files[i] {
+          PhysicalResource::File(fpath) => Box::new(JSONRAReader::from_file(fpath)),
+          PhysicalResource::String(content) => Box::new(JSONRAReader::from_str(content)),
+        };
+        readers.push(reader);
+      }
+      _ => unimplemented!(),
     }
   }
-  
   exec_preprocessing(&mut readers, &desc.preprocessing);
-  
   match &mut plan.write_plan {
     WritePlan::SingleWriter2File { class_write_modes } => {
       let mut writer: Box<dyn StreamWriterResult> = match output {
-        PhysicalOutput::File { fpath, format: OutputFormat::TTL } => {
-          Box::new(TTLStreamWriter::write2file(&fpath, &desc.semantic_model))
-        }
-        PhysicalOutput::File { fpath, format: OutputFormat::GraphJSON } => {
-          Box::new(GraphJSONWriter::write2file(
-            &format!("{}.node", fpath),
-            &format!("{}.edge", fpath),
-            &desc.semantic_model))
-        }
-        #[cfg(not(feature = "disable-python"))]
-        PhysicalOutput::File { fpath: _, format: OutputFormat::GraphPy } => {
+        PhysicalOutput::File {
+          fpath,
+          format: OutputFormat::TTL,
+        } => Box::new(TTLStreamWriter::write2file(&fpath, &desc.semantic_model)),
+        PhysicalOutput::File {
+          fpath,
+          format: OutputFormat::GraphJSON,
+        } => Box::new(GraphJSONWriter::write2file(
+          &format!("{}.node", fpath),
+          &format!("{}.edge", fpath),
+          &desc.semantic_model,
+        )),
+        PhysicalOutput::File {
+          fpath: _,
+          format: OutputFormat::GraphPy,
+        } => {
           unimplemented!()
         }
-        PhysicalOutput::Memory { format: OutputFormat::TTL } => {
-          Box::new(TTLStreamWriter::write2str(&desc.semantic_model))
-        }
-        PhysicalOutput::Memory { format: OutputFormat::GraphJSON } => {
-          Box::new(GraphJSONWriter::write2str(&desc.semantic_model))
-        }
-        #[cfg(not(feature = "disable-python"))]
-        PhysicalOutput::Memory { format: OutputFormat::GraphPy } => {
-          Box::new(GraphPyWriter::write2mem(&desc.semantic_model))
-        }
+        PhysicalOutput::Memory {
+          format: OutputFormat::TTL,
+        } => Box::new(TTLStreamWriter::write2str(&desc.semantic_model)),
+        PhysicalOutput::Memory {
+          format: OutputFormat::GraphJSON,
+        } => Box::new(GraphJSONWriter::write2str(&desc.semantic_model)),
+        PhysicalOutput::Memory {
+          format: OutputFormat::GraphPy,
+        } => Box::new(GraphPyWriter::write2mem(&desc.semantic_model)),
       };
-      
       writer.begin();
       for cls_plan in plan.class_map_plans.iter_mut() {
-        let mut cls_writer = writer.begin_class(cls_plan.class_id, class_write_modes[cls_plan.class_id]);
-        
+        let mut cls_writer =
+          writer.begin_class(cls_plan.class_id, class_write_modes[cls_plan.class_id]);
         match &cls_plan.exec_strategy {
           ClassMapExecStrategy::Generic => {
             generic_class_map(&readers, cls_writer.as_mut(), desc, cls_plan);

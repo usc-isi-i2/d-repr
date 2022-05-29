@@ -1,7 +1,7 @@
 import copy
 from typing import Dict
 
-import ujson
+import orjson
 import uuid
 import xmltodict
 
@@ -29,9 +29,9 @@ def patch(repr: DRepr, resources: Dict[str, ResourceData]) -> DRepr:
                     doc = xmltodict.parse(resources[resource.id].value)
 
                 resource.type = ResourceType.JSON
-                resources[resource.id] = ResourceDataString(ujson.dumps(doc))
+                resources[resource.id] = ResourceDataString(orjson.dumps(doc))
                 # resources[resource.id] = ResourceDataFile(f"/tmp/{str(uuid.uuid4())}.json")
-                # with open(resources[resource.id].file_path, "w") as f:
-                #     ujson.dump(doc, f)
+                # with open(resources[resource.id].file_path, "wb") as f:
+                #     f.write(orjson.dumps(doc))
 
     return repr

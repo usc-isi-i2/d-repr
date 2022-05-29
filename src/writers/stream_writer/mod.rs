@@ -1,18 +1,16 @@
 use serde::{Deserialize, Serialize};
 
-pub use self::stream_class_writer::StreamClassWriter;
-pub use self::stream_writer::{StreamWriter};
-pub use self::turtle::TTLStreamWriter;
 pub use self::graph_json::GraphJSONWriter;
-#[cfg(not(feature = "disable-python"))]
 pub use self::graph_py::GraphPyWriter;
+pub use self::stream_class_writer::StreamClassWriter;
+pub use self::stream_writer::StreamWriter;
+pub use self::turtle::TTLStreamWriter;
 
-pub mod turtle;
 pub mod graph_json;
-#[cfg(not(feature = "disable-python"))]
 pub mod graph_py;
-pub mod stream_writer;
 pub mod stream_class_writer;
+pub mod stream_writer;
+pub mod turtle;
 
 /// Encode Scheme
 /// S<b|u|n>: blank (b), uri (u), either blank or uri (n)
@@ -51,7 +49,7 @@ pub enum WriteMode {
   Tf_Uf_Su_On,
   Tf_Uf_Sn_Ob,
   Tf_Uf_Sn_Ou,
-  Tf_Uf_Sn_On
+  Tf_Uf_Sn_On,
 }
 
 #[derive(Deserialize, Serialize, Clone, Copy, Debug)]
@@ -60,13 +58,17 @@ pub enum OutputFormat {
   TTL,
   #[serde(rename = "graph_json")]
   GraphJSON,
-  #[cfg(not(feature = "disable-python"))]
   #[serde(rename = "graph_py")]
-  GraphPy
+  GraphPy,
 }
 
 impl WriteMode {
-  pub fn create(keep_track_subj: bool, is_subj_unique: bool, subj_blank_or_uri: Option<bool>, obj_blank_or_uri: Option<bool>) -> WriteMode {
+  pub fn create(
+    keep_track_subj: bool,
+    is_subj_unique: bool,
+    subj_blank_or_uri: Option<bool>,
+    obj_blank_or_uri: Option<bool>,
+  ) -> WriteMode {
     if keep_track_subj {
       match subj_blank_or_uri {
         Some(true) => {

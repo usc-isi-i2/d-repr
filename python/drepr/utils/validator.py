@@ -3,7 +3,7 @@ import re
 from collections import OrderedDict
 from typing import Any, Set, Iterable, Dict, Union
 
-import ujson
+import orjson
 
 
 class InputError(Exception):
@@ -52,7 +52,7 @@ class Validator:
     def must_have(odict: dict, attr: str, error_msg: str):
         if attr not in odict:
             raise InputError(
-                f"{error_msg}\nERROR: The attribute `{attr}` is missing in the object: `{ujson.dumps(odict, indent=4)}`")
+                f"{error_msg}\nERROR: The attribute `{attr}` is missing in the object: `{orjson.dumps(odict, option=orjson.OPT_INDENT_2).decode()}`")
 
     @staticmethod
     def must_equal(val: Any, expected_val: Any, error_msg: str):
@@ -149,7 +149,7 @@ class DictValidator(SchemaValidator):
         )
 
     def to_string(self):
-        return ujson.dumps({k: v.to_string() for k, v in self.attrs.items()}, indent=4)
+        return orjson.dumps({k: v.to_string() for k, v in self.attrs.items()}, option=orjson.OPT_INDENT_2).decode()
 
 
 class AnyValidator(SchemaValidator):

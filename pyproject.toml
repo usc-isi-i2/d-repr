@@ -1,0 +1,21 @@
+[project]
+name = "drepr"
+version = "2.9.11"
+description = "Data Representation Language for Reading Heterogeneous Datasets"
+readme = "README.md"
+requires-python = ">=3.6"
+license = {file = "LICENSE"}
+authors = [{name = "Binh Vu", email = "<binh@toan2.com>"}]
+
+dependencies = [
+  "orjson >= 3.6.8, == 3.*",
+  "ruamel.yaml ~= 0.17.21",
+  "xmltodict ~= 0.13.0"
+]
+
+[project.urls]
+repository = "https://github.com/usc-isi-i2/d-repr"
+
+[build-system]
+requires = ["maturin>=0.12,<0.13"]
+build-backend = "maturin"

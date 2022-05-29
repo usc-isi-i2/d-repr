@@ -1,13 +1,13 @@
 import os
 from pathlib import Path
 
-from drepr import execute, DRepr, FileOutput, OutputFormat, Graph
+from drepr.engine import execute, DRepr, FileOutput, OutputFormat
 
 if __name__ == "__main__":
     wdir = Path(os.path.abspath(__file__)).parent
     for dataset_dir in sorted(wdir.iterdir()):
-        if dataset_dir.name.startswith("african_port"):
-            continue
+        # if not dataset_dir.name.startswith("african_port"):
+        #     continue
 
         if not dataset_dir.is_dir() or (dataset_dir / ".ignore").exists():
             continue
@@ -29,7 +29,6 @@ if __name__ == "__main__":
 
             print(f"Execute dataset: {dataset_dir.name}/{dsid}")
             ds_model = DRepr.parse_from_file(str(model))
-            assert len(Graph.from_drepr(ds_model, resources).nodes) > 0
 
             try:
                 execute(

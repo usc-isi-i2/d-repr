@@ -1,7 +1,7 @@
 import copy
 from typing import Dict
 
-import ujson
+import orjson
 from netCDF4 import Dataset
 
 from drepr.models import ResourceType, DRepr
@@ -35,10 +35,10 @@ def patch(repr: DRepr, resources: Dict[str, ResourceData]) -> DRepr:
                 for vname in nc_data.variables.keys():
                     doc[vname] = nc_data.variables[vname][:].tolist()
 
-                resources[resource.id] = ResourceDataString(ujson.dumps(doc))
+                resources[resource.id] = ResourceDataString(orjson.dumps(doc))
                 # resources[resource.id] = ResourceDataFile(f"/tmp/{str(uuid.uuid4())}.json")
                 # resources[resource.id] = ResourceDataFile("/tmp/bbfad741-f13f-4227-9a3c-9ab5fbe54bc4.json")
-                # with open(resources[resource.id].file_path, "w") as f:
-                #     ujson.dump(doc, f)
+                # with open(resources[resource.id].file_path, "wb") as f:
+                #     f.write(orjson.dumps(doc))
 
     return repr
