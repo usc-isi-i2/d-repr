@@ -5,7 +5,7 @@ description = "Data Representation Language for Reading Heterogeneous Datasets"
 readme = "README.md"
 requires-python = ">=3.7"
 license = {file = "LICENSE"}
-authors = [{name = "Binh Vu", email = "<binh@toan2.com>"}]
+authors = [{name = "Binh Vu", email = "binh@toan2.com"}]
 
 dependencies = [
   "orjson >= 3.6.8, == 3.*",
