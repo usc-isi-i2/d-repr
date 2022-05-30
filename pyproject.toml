@@ -1,6 +1,6 @@
 [project]
 name = "drepr"
-version = "2.9.11"
+version = "2.9.12a0"
 description = "Data Representation Language for Reading Heterogeneous Datasets"
 readme = "README.md"
 requires-python = ">=3.6"
@@ -10,7 +10,10 @@ authors = [{name = "Binh Vu", email = "<binh@toan2.com>"}]
 dependencies = [
   "orjson >= 3.6.8, == 3.*",
   "ruamel.yaml ~= 0.17.21",
-  "xmltodict ~= 0.13.0"
+  "xmltodict ~= 0.13.0",
+  "numpy >= 1.22.4",
+  'dataclasses;python_version<"3.7"',
+  "pillow >= 9.1.1"
 ]
 
 [project.urls]

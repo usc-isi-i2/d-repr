@@ -10,11 +10,15 @@ pub mod writers;
 
 use pyo3::prelude::*;
 
-use crate::python::Engine;
+use crate::python::{complete_description, Engine};
 
 #[pymodule]
 fn drepr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add_class::<Engine>()?;
+    m.add_function(wrap_pyfunction!(
+        complete_description::complete_description,
+        m
+    )?)?;
     Ok(())
 }

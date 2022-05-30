@@ -5,7 +5,7 @@ import argparse
 import time
 from pathlib import Path
 
-import ujson
+import orjson
 from ruamel.yaml import YAML
 
 from drepr.engine import execute, FileOutput, OutputFormat, MemoryOutput
@@ -26,7 +26,7 @@ if __name__ == "__main__":
         "--resource",
         required=True,
         nargs="+",
-        help="file paths of resources in this format: <resource_id>=<file_path>;",
+        help="file paths of resources in this format: <resource_id>=<file_path>",
     )
     parser.add_argument(
         "-v", "--verbose", default=0, help="increase output verbosity", action="count"
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     # read repr
     try:
-        raw = ujson.loads(args.repr)
+        raw = orjson.loads(args.repr)
         ds_model = DRepr.parse(raw)
     except ValueError:
         if not Path(args.repr).exists():
@@ -55,8 +55,8 @@ if __name__ == "__main__":
         ds_model = DRepr.parse_from_file(args.repr)
 
         if args.repr.endswith(".json"):
-            with open(args.repr, "r") as f:
-                raw_repr = ujson.load(f)
+            with open(args.repr, "rb") as f:
+                raw_repr = orjson.loads(f.read())
         elif args.repr.endswith(".yml") or args.repr.endswith(".yaml"):
             yaml = YAML()
             with open(args.repr, "r") as f:

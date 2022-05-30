@@ -16,7 +16,6 @@ readers = { path = "./readers" }
 regex = "1.5.6"
 hashbrown = "0.12.1"
 fnv = "1.0.7"
-
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
 serde_yaml = "0.8.24"
@@ -26,10 +25,10 @@ clap = "3.1.18"
 itertools = "0.10.3"
 fancy-regex = "0.10.0"
 lazy_static = "1.4.0"
-
 pyo3 = "0.16.3"
 
 [features]
-extension-module = ["pyo3/extension-module"]
 enable-exec-macro-cls-map = []
+extension-module = ["pyo3/extension-module"]
+# enable_netcdf = ["readers/netcdf", "extension-module"]
 default = ["extension-module"]

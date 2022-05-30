@@ -4,8 +4,7 @@ from typing import Dict
 import orjson
 from netCDF4 import Dataset
 
-from drepr.models import ResourceType, DRepr
-from drepr.patches import ResourceData, ResourceDataFile, ResourceDataString
+from drepr.models import ResourceType, DRepr, ResourceData, ResourceDataFile, ResourceDataString
 
 
 def patch(repr: DRepr, resources: Dict[str, ResourceData]) -> DRepr:

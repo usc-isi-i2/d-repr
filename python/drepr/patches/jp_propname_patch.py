@@ -3,8 +3,7 @@ from collections import defaultdict
 from typing import List, Dict, Tuple, Callable, Any, Optional
 
 from drepr.models import DRepr, WildcardExpr, StepExpr, RangeExpr, Expr, IndexExpr, Preprocessing, PreprocessingType, \
-    RMap, RMapFunc, Path, RangeAlignment
-from drepr.patches import ResourceData
+    RMap, RMapFunc, Path, RangeAlignment, ResourceData
 
 
 def patch(repr: DRepr, _resources: Dict[str, ResourceData]) -> DRepr:

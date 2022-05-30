@@ -1,0 +1,113 @@
+use std::fs::File;
+use std::time::Instant;
+
+use clap::{Arg, Command};
+use fnv::FnvHashMap;
+
+use drepr::executors::*;
+use drepr::lang::*;
+use drepr::writers::*;
+
+fn main() -> Result<(), std::io::Error> {
+  let matches = Command::new("D-REPR")
+    .version(env!("CARGO_PKG_VERSION"))
+    .author("binh@toan2.com")
+    .about("Mapping heterogeneous data sources to relational model. This rust command line is used to quickly test and debug the library")
+    .arg(
+      Arg::new("repr")
+        .required(true)
+        .help("Dataset representation (JSON only)"),
+    )
+    .arg(
+      Arg::new("output")
+        .required(true)
+        .help("the file we will write output to"),
+    )
+    .arg(Arg::new("format").required(true).help("format of the data"))
+    .arg(
+      Arg::new("resources")
+        .help("file paths of resources in this format: <resource_id>=<file_path>")
+        .required(true)
+        .multiple_occurrences(true)
+        .min_values(1),
+    )
+    .get_matches();
+
+  let resources = matches
+    .values_of("resources")
+    .unwrap()
+    .map(|s| {
+      let tmp = s.split("=").collect::<Vec<_>>();
+      let resource_id = tmp
+        .get(0)
+        .expect("The format for each resource should be <resource_id>=<resource_file>")
+        .to_string();
+      let resource_file = tmp
+        .get(1)
+        .expect("The format for each resource should be <resource_id>=<resource_file>")
+        .to_string();
+
+      (resource_id, PhysicalResource::File(resource_file))
+    })
+    .collect::<HashMap<_, _>>();
+
+  let repr_file = matches.value_of("repr").unwrap();
+  // let output_conf: Vec<&str> = matches
+  //   .value_of("output")
+  //   .unwrap()
+  //   .split(":")
+  //   .collect::<Vec<_>>();
+  let repr: Description =
+    serde_yaml::from_reader(File::open(repr_file).expect("File doesn't exist")).unwrap();
+
+  // if let Some(matches) = matches.subcommand_matches("test") {
+  //   let args: FnvHashMap<String, String> = match matches.value_of("sargs") {
+  //     None => FnvHashMap::default(),
+  //     Some(s) => s
+  //       .split(",")
+  //       .map(|x| {
+  //         let y = x.split("=").collect::<Vec<_>>();
+  //         (y[0].to_string(), y[1].to_string())
+  //       })
+  //       .collect::<FnvHashMap<_, _>>(),
+  //   };
+
+  //   match matches.value_of("test_func").unwrap() {
+  //     "read_data" => {
+  //       test_read_data(&resources[0].resource_file);
+  //     }
+  //     "value_alignment" => {
+  //       test_value_alignment(&resources[0].resource_file, input_repr, &args["var"])
+  //     }
+  //     "preprocessing" => {
+  //       test_preprocessing(&resources[0].resource_file);
+  //     }
+  //     _ => panic!(
+  //       "Invalid function: {}",
+  //       matches.value_of("test_func").unwrap()
+  //     ),
+  //   }
+
+  //   return Ok(());
+  // }
+
+  // let start = Instant::now();
+  // match (output_conf[0], output_conf[1]) {
+  //   ("ttl", "file") => {
+  //     let mut writer = TurtleWriter::<File>::write2file(output_conf[2]);
+  //     exec_mapping(input_repr, &resources, &mut writer);
+  //   }
+  //   ("graph_json", "file") => {
+  //     let mut writer = GraphJSONWriter::<File>::write2file(
+  //       &format!("{}.nodes.out", output_conf[2]),
+  //       &format!("{}.edges.out", output_conf[2]),
+  //     );
+  //     exec_mapping(input_repr, &resources, &mut writer);
+  //   }
+  //   _ => unimplemented!(),
+  // };
+
+  // let duration = start.elapsed();
+  // println!(">>> [D-REPR] runtime: {:?}", duration);
+  Ok(())
+}

@@ -1,12 +1,12 @@
+use crate::index::Index;
+use crate::iterators::IndexIterator;
+use crate::path_expr::{PathExpr, StepExpr};
+use crate::prelude::RAReader;
+use crate::ra_reader::default_iter_index;
 use crate::value::Value;
 use hashbrown::HashMap;
 use std::fs::File;
 use std::io::Read;
-use crate::prelude::RAReader;
-use crate::index::Index;
-use crate::path_expr::{PathExpr, StepExpr};
-use crate::iterators::IndexIterator;
-use crate::ra_reader::default_iter_index;
 
 #[derive(Debug, Clone)]
 pub struct JSONRAReader {
@@ -49,17 +49,15 @@ impl JSONRAReader {
       data: serde2value(val),
     }
   }
-  
   pub fn from_str(data: &str) -> JSONRAReader {
     let val: serde_json::Value = serde_json::from_str(data).unwrap();
     JSONRAReader {
-      data: serde2value(val)
+      data: serde2value(val),
     }
   }
-  
   pub fn from_json(val: serde_json::Value) -> JSONRAReader {
     JSONRAReader {
-      data: serde2value(val)
+      data: serde2value(val),
     }
   }
 }
@@ -68,19 +66,15 @@ impl RAReader for JSONRAReader {
   fn set_value(&mut self, index: &[Index], start_idx: usize, val: Value) {
     self.data.set_value(index, start_idx, val)
   }
-  
   fn get_value(&self, index: &[Index], start_idx: usize) -> &Value {
     self.data.get_value(index, start_idx)
   }
-  
   fn get_mut_value(&mut self, index: &[Index], start_idx: usize) -> &mut Value {
     self.data.get_mut_value(index, start_idx)
   }
-  
   fn len(&self) -> usize {
     self.data.len()
   }
-  
   fn remove(&mut self, index: &Index) {
     match &mut self.data {
       Value::Array(children) => {
@@ -92,7 +86,6 @@ impl RAReader for JSONRAReader {
       _ => panic!("Cannot remove child at leaf nodes"),
     }
   }
-  
   fn ground_path(&self, path: &mut PathExpr, start_idx: usize) {
     // we can only ground the first range slice
     let mut ptr = &self.data;
@@ -102,7 +95,7 @@ impl RAReader for JSONRAReader {
           match r.end {
             None => {
               r.end = Some(ptr.len() as i64);
-            },
+            }
             Some(e) => {
               if e < 0 {
                 r.end = Some(ptr.len() as i64 + e);
@@ -123,7 +116,6 @@ impl RAReader for JSONRAReader {
       }
     }
   }
-  
   fn iter_index<'a>(&'a self, path: &PathExpr) -> Box<dyn IndexIterator + 'a> {
     default_iter_index(self, path)
   }

@@ -5,8 +5,7 @@ import orjson
 import uuid
 import xmltodict
 
-from drepr.models import DRepr, ResourceType
-from drepr.patches import ResourceDataFile, ResourceData, ResourceDataString
+from drepr.models import DRepr, ResourceType, ResourceDataFile, ResourceData, ResourceDataString
 
 
 def patch(repr: DRepr, resources: Dict[str, ResourceData]) -> DRepr:

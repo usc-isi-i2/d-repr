@@ -110,7 +110,7 @@ impl<'a> StreamClassWriter for TrackWithURIOptionalWriter<'a> {
       .get_item(&self.predicates[predicate_id])
       .unwrap();
     let lst = v.downcast::<PyList>().unwrap();
-    lst.append(value);
+    lst.append(value).unwrap();
   }
 
   fn write_object_property(
