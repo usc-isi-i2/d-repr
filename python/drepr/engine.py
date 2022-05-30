@@ -1,9 +1,14 @@
 import copy, orjson
+from drepr.models.resource import ResourceDataString
+from pathlib import Path
+from uuid import uuid4
+from importlib.resources import Resource
+from importlib.metadata import PackageNotFoundError
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Union, Tuple, List
 
-from drepr.drepr import Engine
+from drepr.drepr import Engine, complete_description as rust_complete_description
 from drepr.models import (
     DRepr,
     DEFAULT_RESOURCE_ID,
@@ -15,14 +20,18 @@ from drepr.models import (
     ValueAlignment,
     LiteralNode,
     ClassNode,
+    ResourceDataFile, ResourceData
 )
 from drepr.patches import (
-    ResourceData,
-    ResourceDataFile,
-    ResourceDataString,
     xml_patch,
     jp_propname_patch,
+    static_class_patch
 )
+
+try:
+    from drepr.patches import nc_patch
+except ModuleNotFoundError:
+    nc_patch = None
 
 
 def execute(
@@ -31,23 +40,23 @@ def execute(
     output: "Output",
     debug: bool = False,
 ):
-    ptr = None
-    if isinstance(resources, (str, tuple)):
+    if isinstance(resources, str):
         resources = {DEFAULT_RESOURCE_ID: resources}
 
     # normalize resources so that we know which one is from files and which one is from string. Below is the schema
     # resources = {
     #   <resource_id>: { "file"|"string": <value> }
     # }
-    resources = {
-        rid: ResourceDataFile(resource) if type(resource) is str else resource
+    norm_resources = {
+        rid: ResourceDataFile(resource) if isinstance(resource, str) else resource
         for rid, resource in resources.items()
     }
 
-    # ds_model = nc_patch.patch(ds_model, resources)
-    ds_model = xml_patch.patch(ds_model, resources)
-    ds_model = jp_propname_patch.patch(ds_model, resources)
-    # ds_model, resources = static_class_patch.patch(ds_model, resources)
+    if nc_patch is not None:
+        ds_model = nc_patch.patch(ds_model, norm_resources)
+    ds_model = xml_patch.patch(ds_model, norm_resources)
+    ds_model = jp_propname_patch.patch(ds_model, norm_resources)
+    ds_model, norm_resources = static_class_patch.patch(ds_model, norm_resources)
 
     if isinstance(output, FileOutput):
         engine_output = {
@@ -60,17 +69,25 @@ def execute(
 
     engine_model = ds_model.to_engine_format()
     if debug:
-        print(">>> the engine is going to execute the below drepr model")
+        tmpdir = Path(f"/tmp/d-repr-{str(uuid4())}")
+        tmpdir.mkdir()
+        
+        print(f">>> the D-REPR model and data is stored in {str(tmpdir)}")
 
+        (tmpdir / "model.yml").write_text(ds_model.to_lang_yml())
+        for rid, resource in norm_resources.items():
+            if isinstance(resource, ResourceDataFile):
+                continue
+            assert isinstance(resource, ResourceDataString)
+            (tmpdir / f"{rid}.dat").write_bytes(resource.value if isinstance(resource.value, bytes) else resource.value.encode())
+    
     engine = Engine(
         orjson.dumps(
             {
                 "resources": [
-                    {"file": resources[rid].file_path}
-                    if isinstance(resources[rid], ResourceDataFile)
-                    else {"string": resources[rid].value}
+                    norm_resources[rid].to_dict()
                     for rid in sorted(
-                        resources.keys(),
+                        norm_resources.keys(),
                         key=lambda k: engine_model.resource_idmap[k],
                     )
                 ],
@@ -91,7 +108,6 @@ def execute(
         )
 
     result = engine.run()
-    print(result)
     if isinstance(output, MemoryOutput) and output.format == OutputFormat.GraphPy:
         class2nodes = {}
         for u in ds_model.sm.iter_class_nodes():
@@ -103,13 +119,13 @@ def execute(
 
 
 def complete_description(ds_model: DRepr) -> "CompleteDescription":
-    patched_model = jp_propname_patch.patch(ds_model, None)
+    patched_model = jp_propname_patch.patch(ds_model, {})
     # Note: do not patch the static class because we do post-update
     # description for the static class
     # patched_model, resources = static_class_patch.patch(ds_model, resources)
 
     engine_model = patched_model.to_engine_format()
-    extra_info = drepr_engine.complete_description(ujson.dumps(engine_model.model))
+    extra_info = rust_complete_description(orjson.dumps(engine_model.model))
 
     if ds_model is patched_model:
         sm = copy.deepcopy(ds_model.sm)

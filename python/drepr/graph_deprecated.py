@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Union, Dict, List, Iterable, Optional, Tuple
 
-import ujson
+import orjson
 
 from drepr.models import DRepr
 from drepr.engine import execute, MemoryOutput, OutputFormat
@@ -80,8 +80,8 @@ class Graph:
         return Graph(nodes, edges, None)
 
     def serialize(self, fpath: str):
-        with open(fpath, 'w') as f:
-            ujson.dump(f, {"prefixes": self.prefixes, "nodes": self.nodes, "edges": self.edges})
+        with open(fpath, 'wb') as f:
+            f.write(orjson.dumps({"prefixes": self.prefixes, "nodes": self.nodes, "edges": self.edges}))
 
     @staticmethod
     def _deserialize_drepr_output(ser_nodes: List[str], ser_edges: List[str]) -> Tuple[List[Node], List[Edge]]:
@@ -89,7 +89,7 @@ class Graph:
         edges = []
         for ser_node in ser_nodes:
             try:
-                u = ujson.loads(ser_node)
+                u = orjson.loads(ser_node)
             except:
                 print(ser_node)
                 raise

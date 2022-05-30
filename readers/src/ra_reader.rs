@@ -69,7 +69,7 @@ pub(super) fn default_iter_index<'a, R: RAReader>(
         steps.push(0);
         unknown_upperbounds.push(false);
       }
-      _ => unimplemented!(),
+      _ => unimplemented!("{:?}", slice),
     }
   }
 

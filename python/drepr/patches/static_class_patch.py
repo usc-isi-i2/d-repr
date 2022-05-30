@@ -2,11 +2,9 @@ import copy
 from typing import Dict, Tuple
 
 import orjson
-from netCDF4 import Dataset
 
-from drepr.models import ResourceType, DRepr, LiteralNode, Preprocessing, PreprocessingType, PMap, DataNode, Attr, Path, \
-    IndexExpr, Sorted, Edge, Resource, ClassNode, RangeAlignment
-from drepr.patches import ResourceData, ResourceDataFile, ResourceDataString
+from drepr.models import ResourceType, DRepr, LiteralNode, DataNode, Attr, Path, \
+    IndexExpr, Sorted, Edge, Resource, ClassNode, RangeAlignment, ResourceData, ResourceDataString
 
 
 def patch(repr: DRepr, resources: Dict[str, ResourceData]) -> Tuple[DRepr, Dict[str, ResourceData]]:

@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from typing import Union, Optional
@@ -25,7 +26,7 @@ class CSVProp:
 class Resource:
     id: str
     type: ResourceType
-    prop: Optional[Union[CSVProp]] = None
+    prop: Optional[CSVProp] = None
 
     @staticmethod
     def deserialize(raw: dict):
@@ -34,3 +35,25 @@ class Resource:
         else:
             prop = None
         return Resource(raw['id'], ResourceType(raw['type']), prop)
+
+
+class ResourceData(ABC):
+    
+    @abstractmethod
+    def to_dict(self):
+        pass
+    
+
+@dataclass
+class ResourceDataFile(ResourceData):
+    file: str
+
+    def to_dict(self):
+        return {"file": self.file}
+
+@dataclass
+class ResourceDataString(ResourceData):
+    value: Union[str, bytes]
+
+    def to_dict(self):
+        return {"string":self.value.decode() if isinstance(self.value, bytes) else self.value}
