@@ -1,6 +1,6 @@
 [project]
 name = "drepr"
-version = "2.10.0.dev1"
+version = "2.10.0-dev2"
 description = "Data Representation Language for Reading Heterogeneous Datasets"
 readme = "README.md"
 requires-python = ">=3.7"
