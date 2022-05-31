@@ -40,7 +40,7 @@ pub fn test_executors() {
       })
       .exec();
       let pred_output = fs::read_to_string(exc_output).unwrap();
-      let true_output = fs::read_to_string(&output.0).unwrap();
+      let true_output = fs::read_to_string(&output.0).unwrap().replace("\r\n", "\n");
       assert_eq!(true_output, pred_output);
     }
   }
