@@ -32,6 +32,7 @@ impl SpreadsheetRAReader {
                 DataType::String(v) => Value::Str(v.clone()),
                 DataType::Int(v) => Value::I64(*v),
                 DataType::Float(v) => Value::F64(*v),
+                DataType::DateTime(v) => Value::F64(*v),
                 DataType::Empty => Value::Str(String::new()),
                 DataType::Error(_) => Value::Null,
               })
