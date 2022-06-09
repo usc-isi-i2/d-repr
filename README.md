@@ -11,17 +11,14 @@
 
 </div>
 
+Dataset Representation Language for Reading Heterogeneous Datasets to RDF or JSON. The original dataset can be in different formats (e.g., JSON, CSV, Spreadsheets, etc), layouts (e.g., relational tables, matrix tables, etc), and can contain multiple files (e.g., one file contains data and another file contains data definitions or linked entities).
+
 ## Table of Contents
 
-- [Features](#features)
 - [Installation](#installation)
-- [Example](#example)
+- [Example](#docs-and-examples)
 - [Contributing](#contributing)
 <!-- - [Support](#support) -->
-
-## Features
-
-- Supporting reading datasets in heterogeneous formats (JSON, CSV, Spreadsheets, etc) and layouts (relational tables, matrix tables, etc) to the RDF format
 
 ## Installation
 
