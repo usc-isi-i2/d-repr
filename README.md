@@ -24,6 +24,8 @@ Dataset Representation Language for Reading Heterogeneous Datasets to RDF or JSO
 
 From PyPi: `pip install drepr`
 
+If you need to process netCDF or fiona, install `pip install drepr[fiona,netcdf]`. Installing these libraries requires you to have netcdf and gdal preinstalled and configured in your system.
+
 If you want to install from source or have trouble during installation, please look in the Wiki [Installation](https://github.com/usc-isi-i2/d-repr/wiki/Installation)
 
 ## How D-REPR works

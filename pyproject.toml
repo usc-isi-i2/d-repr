@@ -1,6 +1,6 @@
 [project]
 name = "drepr"
-version = "2.10.0-dev3"
+version = "2.10.0"
 description = "Data Representation Language for Reading Heterogeneous Datasets"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -8,12 +8,16 @@ license = {file = "LICENSE"}
 authors = [{name = "Binh Vu", email = "binh@toan2.com"}]
 
 dependencies = [
-  "orjson >= 3.6.8, == 3.*",
-  "ruamel.yaml ~= 0.17.21",
-  "xmltodict ~= 0.13.0",
+  "orjson >= 3.6.8, < 4.0.0",
+  "ruamel.yaml >= 0.17.21",
+  "xmltodict >= 0.13.0",
   "numpy >= 1.22.4",
   "pillow >= 9.1.1"
 ]
+
+[project.optional-dependencies]
+fiona = ["fiona"]
+netcdf = ["netCDF4"]
 
 [project.urls]
 repository = "https://github.com/usc-isi-i2/d-repr"

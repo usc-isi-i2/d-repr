@@ -136,6 +136,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmake"
+version = "0.1.48"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8ad8cef104ac57b68b89df3208164d228503abbdce70f6880ffa3d970e7443a"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "codepage"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -243,13 +252,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "hdf5-src"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e01493db39ddc0519cf2a83d620d2c037fee60f4fed724cb72dc23763f1727a8"
+dependencies = [
+ "cmake",
+ "libz-sys",
+]
+
+[[package]]
 name = "hdf5-sys"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4842d5980dc311a7c8933c7b45534fdae84df5ae7939a0ae8e449a56d4beb3d2"
 dependencies = [
+ "hdf5-src",
  "libc",
  "libloading",
+ "libz-sys",
  "pkg-config",
  "regex",
  "serde",
@@ -406,6 +427,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "netcdf-src"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "55951a3f2007bc40b0a35341393170a597d0820d53c2106d312d451615ab0cb7"
+dependencies = [
+ "cmake",
+ "hdf5-sys",
+]
+
+[[package]]
 name = "netcdf-sys"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -413,6 +444,7 @@ checksum = "f1028362b1f88b5c4bdf3538b202b2c83ab3cc8a5537f6337ac147e6e36dc5f9"
 dependencies = [
  "hdf5-sys",
  "libz-sys",
+ "netcdf-src",
 ]
 
 [[package]]

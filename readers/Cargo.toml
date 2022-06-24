@@ -20,7 +20,7 @@ clap = "3.1.18"
 itertools = "0.10.3"
 fancy-regex = "0.10.0"
 lazy_static = "1.4.0"
-netcdf = { version = "0.7.0", optional = true }
+netcdf = { version = "0.7.0", features = ["static"] }
 
 # for excel
 calamine = "0.18.0"

@@ -13,5 +13,4 @@ pub mod csv;
 pub mod json;
 pub mod spreadsheet;
 
-#[cfg(feature = "netcdf")]
 pub mod netcdf;
