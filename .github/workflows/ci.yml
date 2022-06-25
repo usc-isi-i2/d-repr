@@ -11,7 +11,7 @@ jobs:
         platform:
           - target: aarch64-unknown-linux-gnu
             image: quay.io/pypa/manylinux2014_aarch64:latest
-            platform: linux/arm64
+            platform: linux/arm64/v8
             arch: aarch64
     runs-on: ubuntu-latest
     container:
