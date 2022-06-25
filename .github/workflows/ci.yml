@@ -22,7 +22,7 @@ jobs:
       image: ${{ matrix.platform.image }}
       options: --platform ${{ matrix.platform.platform }}
     steps:
-      run: echo "hello world"
+      - run: echo "hello world"
       # - uses: actions/checkout@v3
       # - uses: actions-rs/toolchain@v1
       #   with:
