@@ -38,7 +38,8 @@ else
     rustup show
 fi
 
-if [[ ! -d $(rustc --print target-libdir --target "$target" ) ]]; then
+if [ ! -d $(rustc --print target-libdir --target "$target" ) ]
+then
     rustup target add $target;
 fi
 
