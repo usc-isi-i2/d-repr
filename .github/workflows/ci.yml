@@ -6,67 +6,71 @@ on:
 
 jobs:
   linux:
+    strategy:
+      matrix:
+        platform:
+          - target: aarch64-unknown-linux-gnu
+            image: quay.io/pypa/manylinux2014_aarch64:latest
+            platform: linux/arm64
+            arch: aarch64
     runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.platform.image }}
+      options: --platform ${{ matrix.platform.platform }}
     steps:
       - uses: actions/checkout@v3
-      - name: Run test
-        run: cargo test --no-default-features --features pyo3/auto-initialize
-      - uses: messense/maturin-action@v1
+      - uses: actions-rs/toolchain@v1
         with:
-          manylinux: auto
-          command: build
-          args: --release -o dist
-      - name: Upload wheels
-        uses: actions/upload-artifact@v2
-        with:
-          name: wheels
-          path: dist
+          profile: minimal
+          toolchain: stable
+          override: true
+      - run: which cargo
 
-  windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run test
-        run: cargo test --no-default-features --features pyo3/auto-initialize
-      - uses: messense/maturin-action@v1
-        with:
-          command: build
-          args: --release --no-sdist -o dist
-      - name: Upload wheels
-        uses: actions/upload-artifact@v2
-        with:
-          name: wheels
-          path: dist
+  # windows:
+  #   runs-on: windows-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Run test
+  #       run: cargo test --no-default-features --features pyo3/auto-initialize
+  #     - uses: messense/maturin-action@v1
+  #       with:
+  #         command: build
+  #         args: --release --no-sdist -o dist
+  #     - name: Upload wheels
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: wheels
+  #         path: dist
 
-  macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run test
-        run: cargo test --no-default-features --features pyo3/auto-initialize
-      - uses: messense/maturin-action@v1
-        with:
-          command: build
-          args: --release --no-sdist -o dist --universal2
-      - name: Upload wheels
-        uses: actions/upload-artifact@v2
-        with:
-          name: wheels
-          path: dist
+  # macos:
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Run test
+  #       run: cargo test --no-default-features --features pyo3/auto-initialize
+  #     - uses: messense/maturin-action@v1
+  #       with:
+  #         command: build
+  #         args: --release --no-sdist -o dist --universal2
+  #     - name: Upload wheels
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: wheels
+  #         path: dist
 
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    if: "startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master')"
-    needs: [macos, windows, linux]
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-          name: wheels
-      - name: Publish to PyPI
-        uses: messense/maturin-action@v1
-        env:
-          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-        with:
-          command: upload
-          args: --skip-existing *
+  # release:
+  #   name: Release
+  #   runs-on: ubuntu-latest
+  #   if: "startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master')"
+  #   needs: [macos, windows, linux]
+  #   steps:
+  #     - uses: actions/download-artifact@v2
+  #       with:
+  #         name: wheels
+  #     - name: Publish to PyPI
+  #       uses: messense/maturin-action@v1
+  #       env:
+  #         MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+  #       with:
+  #         command: upload
+  #         args: --skip-existing *
