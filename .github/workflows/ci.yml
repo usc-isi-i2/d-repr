@@ -48,7 +48,12 @@ jobs:
       #     profile: minimal
       #     toolchain: stable
       #     override: true
-      - run: docker run --rm -w /project -v $(pwd):/project --platform linux/arm64 quay.io/pypa/manylinux2014_aarch64:latest bash /project/.github/workflows/build.sh aarch64-unknown-linux-gnu
+      - run: docker pull quay.io/pypa/manylinux2014_aarch64:latest
+      - run: |
+          docker run --rm -w /project -v $(pwd):/project --platform linux/arm64 quay.io/pypa/manylinux2014_aarch64:latest bash /project/.github/workflows/build.sh
+        env:
+          TARGET: aarch64-unknown-linux-gnu
+          PYTHON_HOME: /opt/python/cp38-cp38
 
   # windows:
   #   runs-on: windows-latest
