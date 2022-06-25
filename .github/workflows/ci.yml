@@ -48,7 +48,7 @@ jobs:
       #     profile: minimal
       #     toolchain: stable
       #     override: true
-      - run: docker run --rm -w /project -v $(pwd):/project --platform linux/arm64 quay.io/pypa/manylinux2014_aarch64:latest /project/.github/workflows/build.sh
+      - run: docker run --rm -w /project -v $(pwd):/project --platform linux/arm64 quay.io/pypa/manylinux2014_aarch64:latest bash /project/.github/workflows/build.sh
 
   # windows:
   #   runs-on: windows-latest
