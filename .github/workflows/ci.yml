@@ -50,7 +50,7 @@ jobs:
       #     override: true
       - run: docker pull quay.io/pypa/manylinux2014_aarch64:latest
       - run: |
-          docker run --rm -w /project -v $(pwd):/project --platform linux/arm64 quay.io/pypa/manylinux2014_aarch64:latest bash /project/.github/workflows/build.sh
+          docker run --rm -w /project -v $(pwd):/project -e TARGET=$TARGET -e PYTHON_HOME=$PYTHON_HOME --platform linux/arm64 quay.io/pypa/manylinux2014_aarch64:latest bash /project/.github/workflows/build.sh
         env:
           TARGET: aarch64-unknown-linux-gnu
           PYTHON_HOME: /opt/python/cp38-cp38
