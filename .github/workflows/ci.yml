@@ -18,13 +18,14 @@ jobs:
       image: ${{ matrix.platform.image }}
       options: --platform ${{ matrix.platform.platform }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - run: which cargo
+      run: echo "hello world"
+      # - uses: actions/checkout@v3
+      # - uses: actions-rs/toolchain@v1
+      #   with:
+      #     profile: minimal
+      #     toolchain: stable
+      #     override: true
+      # - run: which cargo
 
   # windows:
   #   runs-on: windows-latest
