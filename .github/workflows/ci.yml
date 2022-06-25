@@ -9,10 +9,14 @@ jobs:
     strategy:
       matrix:
         platform:
-          - target: aarch64-unknown-linux-gnu
-            image: quay.io/pypa/manylinux2014_aarch64:latest
-            platform: linux/arm64/v8
-            arch: aarch64
+          # - target: aarch64-unknown-linux-gnu
+          #   image: quay.io/pypa/manylinux2014_aarch64:latest
+          #   platform: linux/arm64/v8
+          #   arch: aarch64
+          - target: x86_64-unknown-linux-gnu
+            image: quay.io/pypa/manylinux2014_x86_64:latest
+            platform: linux/amd64
+            arch: x86_64
     runs-on: ubuntu-latest
     container:
       image: ${{ matrix.platform.image }}
