@@ -35,7 +35,7 @@ jobs:
         run: |
           pip install dist/*cp38*.whl
           pip install pytest
-          pytest
+          pytest -xvs python/tests
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -94,7 +94,7 @@ jobs:
         run: |
           pip install dist/*cp38*.whl
           pip install pytest
-          pytest
+          pytest -xvs python/tests
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
