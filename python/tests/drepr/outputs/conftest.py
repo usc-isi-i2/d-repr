@@ -4,15 +4,20 @@ from pathlib import Path
 
 import pytest
 
-from drepr.outputs.array_backend.array_backend import ArrayBackend
+try:
+    from drepr.outputs.array_backend.array_backend import ArrayBackend
+except ModuleNotFoundError:
+    ArrayBackend = None
+
 from drepr.outputs.graph_backend.graph_backend import GraphBackend
 
 
 def get_backends(dataset_dir: Path):
-    return [
-        ArrayBackend.from_drepr(str(dataset_dir / "model.yml"), str(dataset_dir / "resource.json")),
-        GraphBackend.from_drepr(str(dataset_dir / "model.yml"), str(dataset_dir / "resource.json"))
-    ]
+    backends = []
+    if ArrayBackend is not None:
+        backends.append(ArrayBackend.from_drepr(str(dataset_dir / "model.yml"), str(dataset_dir / "resource.json")))
+    backends.append(GraphBackend.from_drepr(str(dataset_dir / "model.yml"), str(dataset_dir / "resource.json")))
+    return backends
 
 
 @pytest.fixture()

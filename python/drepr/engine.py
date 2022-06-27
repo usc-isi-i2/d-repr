@@ -111,7 +111,7 @@ def execute(
     if isinstance(output, MemoryOutput) and output.format == OutputFormat.GraphPy:
         class2nodes = {}
         for u in ds_model.sm.iter_class_nodes():
-            class2nodes[u.node_id] = result["class2nodes"][
+            class2nodes[u.node_id] = result[
                 engine_model.sm_node_idmap[u.node_id]
             ]
         return class2nodes

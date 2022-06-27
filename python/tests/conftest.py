@@ -6,7 +6,7 @@ import pytest
 
 def get_examples_dir():
     testdir = Path(os.path.abspath(__file__)).parent
-    return testdir.parent / "examples"
+    return testdir.parent.parent / "examples"
 
 
 @pytest.fixture()

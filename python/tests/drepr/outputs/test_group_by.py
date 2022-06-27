@@ -1,6 +1,9 @@
 from typing import List, Dict, Tuple, Callable, Any, Optional
 
-from drepr.outputs.array_backend.array_backend import ArrayBackend
+try:
+    from drepr.outputs.array_backend.array_backend import ArrayBackend
+except ModuleNotFoundError:
+    ArrayBackend = type(None)
 from drepr.outputs.base_output_sm import BaseOutputSM
 from drepr.outputs.record_id import GraphRecordID, BlankRecordID
 

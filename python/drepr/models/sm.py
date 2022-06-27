@@ -42,7 +42,8 @@ class DataNode:
 @dataclass
 class LiteralNode:
     node_id: str
-    value: str
+    # you should rely on data_type to get the type of value right. The parser may be wrong about it.
+    value: Union[str, int, float]
     data_type: Optional[DataType] = None
 
 
