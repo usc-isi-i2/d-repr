@@ -3,7 +3,7 @@ name = "drepr"
 version = "2.10.0"
 description = "Data Representation Language for Reading Heterogeneous Datasets"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 license = {file = "LICENSE"}
 authors = [{name = "Binh Vu", email = "binh@toan2.com"}]
 

@@ -3,6 +3,7 @@
 set -e
 
 # Description: builds Python's wheels.
+# The script needs yum or apt
 #
 # Envionment Arguments: (handled by `args.py`)
 #   PYTHON_HOME: the path to the Python installation, which will be used to build the wheels for. 
@@ -11,6 +12,8 @@ set -e
 #   PYTHON_VERSIONS: versions of Python separated by comma if you want to restricted to specific versions.
 # Arguments:
 #   -t <target>: target platform. See https://doc.rust-lang.org/nightly/rustc/platform-support.html
+
+export PATH=$EXTRA_PATH:$PATH
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
@@ -27,12 +30,29 @@ then
     exit 1
 fi
 
-echo "::group::Setup Rust"
+echo "::group::Setup build tools"
+# ##############################################
+# to build rocksdb, we need CLang and LLVM
+echo "Install CLang and LLVM"
+if ! command -v yum &> /dev/null
+then
+    # debian
+    apt update
+    apt install -y clang-11
+else
+    # centos
+    # https://developers.redhat.com/blog/2018/07/07/yum-install-gcc7-clang#
+    yum install -y llvm-toolset-7
+    source /opt/rh/llvm-toolset-7/enable
+fi
+
+# ##############################################
+echo "Install Rust"
 if ! command -v cargo &> /dev/null
 then
     # install rust and cargo
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
-    export PATH=$HOME/.cargo/bin:$PATH
+    curl --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+    source $HOME/.cargo/env
 else
     echo "Rust is already installed."
     rustup show
@@ -43,14 +63,18 @@ then
     rustup target add $target;
 fi
 
-source $HOME/.cargo/env
 echo "::endgroup::"
 echo
 
 echo "::group::Discovering Python"
-IFS=',' read -a PYTHON_HOMES <<< $(python $SCRIPT_DIR/pydiscovery.py)
+IFS=',' read -a PYTHON_HOMES <<< $(MINIMUM_PYTHON_VERSION=3.8 python $SCRIPT_DIR/pydiscovery.py)
 if [ ${#PYTHON_HOMES[@]} -eq 0 ]; then
     echo "No Python found. Did you forget to set any environment variable PYTHON_HOME or PYTHON_HOMES?"
+else
+    for PYTHON_HOME in "${PYTHON_HOMES[@]}"
+    do
+        echo "Found $PYTHON_HOME"
+    done    
 fi
 echo "::endgroup::"
 echo
@@ -58,16 +82,12 @@ echo
 for PYTHON_HOME in "${PYTHON_HOMES[@]}"
 do
     echo "::group::Building for Python $PYTHON_HOME"
-    
-    echo "::group::Install Building Tools"
-    "$PYTHON_HOME/bin/pip" install maturin
-    echo "::endgroup::"
-    echo
 
-    echo "::group::Building Wheels"
+    echo "Run: $PYTHON_HOME/bin/pip install maturin"    
+    "$PYTHON_HOME/bin/pip" install maturin
+
     echo "Run: $PYTHON_HOME/bin/maturin build -r -o dist -i $PYTHON_HOME/bin/python --target $target"
     "$PYTHON_HOME/bin/maturin" build -r -o dist -i "$PYTHON_HOME/bin/python" --target $target
-    echo "::endgroup::"
 
     echo "::endgroup::"
     echo

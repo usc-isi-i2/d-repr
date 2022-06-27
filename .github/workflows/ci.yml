@@ -6,102 +6,114 @@ on:
 
 jobs:
   linux:
-    # strategy:
-    #   matrix:
-    #     platform:
-    #       - target: aarch64-unknown-linux-gnu
-    #         image: quay.io/pypa/manylinux2014_aarch64:latest
-    #         platform: linux/arm64/v8
-    #         arch: aarch64
-    #       - target: x86_64-unknown-linux-gnu
-    #         image: quay.io/pypa/manylinux2014_x86_64:latest
-    #         platform: linux/amd64
-    #         arch: x86_64
+    strategy:
+      matrix:
+        platform:
+          - target: x86_64-unknown-linux-gnu
+            image: quay.io/pypa/manylinux2014_x86_64:latest
+            run_test: true
+          # - target: i686-unknown-linux-gnu
+          #   image: quay.io/pypa/manylinux2014_i686:latest
     runs-on: ubuntu-latest
-    # container:
-    #   image: ${{ matrix.platform.image }}
-    #   options: --platform ${{ matrix.platform.platform }}
     steps:
       - uses: actions/checkout@v3
-      # - uses: uraimo/run-on-arch-action@v2
-      #   name: Run commands
-      #   id: runcmd
-      #   with:
-      #     arch: armv7
-      #     distro: ubuntu18.04
-
-      #     # Not required, but speeds up builds by storing container images in
-      #     # a GitHub package registry.
-      #     githubToken: ${{ github.token }}
-
-      #     # Set an output parameter `uname` for use in subsequent steps
-      #     run: |
-      #       ls
-      - name: setup qemu
-        id: qemu
-        uses: docker/setup-qemu-action@v1
-        with:
-          image: tonistiigi/binfmt:latest
-          platforms: all
-      # - uses: actions-rs/toolchain@v1
-      #   with:
-      #     profile: minimal
-      #     toolchain: stable
-      #     override: true
-      - run: docker pull quay.io/pypa/manylinux2014_aarch64:latest
-      - run: |
+      - name: Build wheels
+        run: |
           docker run --rm -w /project -v $(pwd):/project \
-            -e TARGET=$TARGET -e PYTHON_HOME=$PYTHON_HOME -e CARGO_NET_GIT_FETCH_WITH_CLI=true \
-            --platform linux/arm64 quay.io/pypa/manylinux2014_aarch64:latest bash /project/.github/workflows/build.sh -t $TARGET
+            -e EXTRA_PATH=/opt/python/cp38-cp38/bin \
+            -e PYTHON_HOMES=/opt/python \
+            -e CARGO_NET_GIT_FETCH_WITH_CLI=false \
+            ${{ matrix.platform.image }} \
+            bash /project/.github/workflows/build.sh -t ${{ matrix.platform.target }}
+      - name: Prepare to run test
+        if: matrix.platform.run_test == true
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+      - name: Run test
+        if: matrix.platform.run_test == true
+        run: |
+          pip install dist/*cp38*.whl
+          pip install pytest
+          pytest
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
+
+  windows:
+    strategy:
+      matrix:
+        python: ["3.8", "3.9", "3.10"]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run test
+        run: cargo test --no-default-features --features pyo3/auto-initialize
+      - uses: messense/maturin-action@v1
+        with:
+          command: build
+          args: --release --no-sdist -o dist -i python
+      # - name: Run test
+      #   if: matrix.python == '3.8'
+      #   run: |
+      #     ls dist
+      #     bash -c 'pwd; pip install dist/*cp38*.whl'
+      #     pip install pytest
+      #     pytest
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
+
+  macos:
+    strategy:
+      matrix:
+        python: ["3.8", "3.9", "3.10"]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run test
+        run: cargo test --no-default-features --features pyo3/auto-initialize
+      - uses: messense/maturin-action@v1
+        with:
+          command: build
+          args: --release --no-sdist -o dist --universal2
+      - name: Run test
+        if: matrix.python == '3.8'
+        run: |
+          pip install dist/*cp38*.whl
+          pip install pytest
+          pytest
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: "startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/dev-ci')"
+    needs: [macos, windows, linux]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: wheels
+      - name: Publish to PyPI
+        uses: messense/maturin-action@v1
         env:
-          TARGET: aarch64-unknown-linux-gnu
-          PYTHON_HOME: /opt/python/cp38-cp38
-
-  # windows:
-  #   runs-on: windows-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Run test
-  #       run: cargo test --no-default-features --features pyo3/auto-initialize
-  #     - uses: messense/maturin-action@v1
-  #       with:
-  #         command: build
-  #         args: --release --no-sdist -o dist
-  #     - name: Upload wheels
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: wheels
-  #         path: dist
-
-  # macos:
-  #   runs-on: macos-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Run test
-  #       run: cargo test --no-default-features --features pyo3/auto-initialize
-  #     - uses: messense/maturin-action@v1
-  #       with:
-  #         command: build
-  #         args: --release --no-sdist -o dist --universal2
-  #     - name: Upload wheels
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: wheels
-  #         path: dist
-
-  # release:
-  #   name: Release
-  #   runs-on: ubuntu-latest
-  #   if: "startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master')"
-  #   needs: [macos, windows, linux]
-  #   steps:
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #         name: wheels
-  #     - name: Publish to PyPI
-  #       uses: messense/maturin-action@v1
-  #       env:
-  #         MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-  #       with:
-  #         command: upload
-  #         args: --skip-existing *
+          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        with:
+          command: upload
+          args: --skip-existing *

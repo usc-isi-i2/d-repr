@@ -1,5 +1,5 @@
 from __future__ import print_function
-import os, subprocess
+import os, subprocess, re
 
 
 homes = []
@@ -20,11 +20,39 @@ if "PYTHON_VERSIONS" in os.environ:
     versions = os.environ["PYTHON_VERSIONS"].split(",")
     filtered_homes = []
     for home in homes:
-        output = subprocess.check_output([os.path.join(home, "bin", "python"), "-V"]).decode().strip()
+        output = (
+            subprocess.check_output([os.path.join(home, "bin", "python"), "-V"])
+            .decode()
+            .strip()
+        )
         for version in versions:
-            if output.replace("Python ", "").startswith(version):
+            m = re.match("Python ([\d\.)]+)", output)
+            assert m is not None
+            pyversion = m.group(1)
+            if pyversion.startswith(version):
                 filtered_homes.append(home)
                 break
+
+    homes = filtered_homes
+
+
+if "MINIMUM_PYTHON_VERSION" in os.environ:
+    minimum_version = [int(d) for d in os.environ["MINIMUM_PYTHON_VERSION"].split(".")]
+    filtered_homes = []
+    for home in homes:
+        output = (
+            subprocess.check_output([os.path.join(home, "bin", "python"), "-V"])
+            .decode()
+            .strip()
+        )
+        m = re.match(r"Python ([\d\.)]+)", output)
+        assert m is not None
+        pyversion = m.group(1).split(".")
+
+        if all(
+            int(pyversion[i]) >= minimum_version[i] for i in range(len(minimum_version))
+        ):
+            filtered_homes.append(home)
 
     homes = filtered_homes
 
