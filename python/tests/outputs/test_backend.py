@@ -5,7 +5,10 @@ import numpy as np
 import pytest
 import orjson
 
-from drepr.outputs.array_backend.array_backend import ArrayBackend
+try:
+    from drepr.outputs.array_backend.array_backend import ArrayBackend
+except ModuleNotFoundError:
+    ArrayBackend = type(None)
 from drepr.outputs.base_lst_output_class import BaseLstOutputClass
 from drepr.outputs.base_output_class import BaseOutputClass
 from drepr.outputs.base_output_sm import BaseOutputSM

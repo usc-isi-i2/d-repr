@@ -2,7 +2,10 @@ from typing import List, Dict, Tuple, Callable, Any, Optional
 
 import numpy as np
 
-from drepr.outputs.array_backend.array_backend import ArrayBackend
+try:
+    from drepr.outputs.array_backend.array_backend import ArrayBackend
+except ModuleNotFoundError:
+    ArrayBackend = type(None)
 from drepr.outputs.base_output_sm import BaseOutputSM
 from drepr.outputs.namespace import Namespace
 
@@ -73,4 +76,6 @@ def test_get_prop_as_ndarray(s01: List[BaseOutputSM], s02: List[BaseOutputSM], s
                     assert records[i].s(mint_geo.lat) == data.index_props[0][i]
                     assert records[i].s(mint_geo.long) == data.index_props[1][i]
 
-    assert len(array_values) == 0 and len(graph_values) == 0
+    if ArrayBackend is not type(None):
+        assert len(array_values) == 0
+    assert len(graph_values) == 0

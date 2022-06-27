@@ -119,6 +119,14 @@ class SMParser:
                                       f"{trace1}\nParsing data type")
                     data_type = DataType(data_type)
 
+                # normalize value's type (e.g., ruamel.yaml read float into ScalarFloat)
+                if isinstance(value, str):
+                    value = str(value)
+                elif isinstance(value, int):
+                    value = int(value)
+                elif isinstance(value, float):
+                    value = float(value)
+
                 node = LiteralNode(node_id=f"lnode:{len(nodes)}", value=value, data_type=data_type)
                 nodes[node.node_id] = node
                 edges[len(edges)] = Edge(len(edges), class_id, node.node_id, predicate)

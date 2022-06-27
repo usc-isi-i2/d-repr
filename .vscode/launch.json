@@ -5,15 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "pytest",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "env": {
-                "RUST_BACKTRACE": "1"
-            }
+            "module": "pytest",
+            "args": [
+                "-xvs",
+                "python/tests",
+                // "python/tests/drepr/outputs/test_get_data_as_ndarray.py::test_get_prop_as_ndarray"
+            ],
+            "justMyCode": true
         }
     ]
 }

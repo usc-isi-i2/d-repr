@@ -6,16 +6,37 @@ on:
 
 jobs:
   linux:
+    strategy:
+      matrix:
+        platform:
+          - target: x86_64-unknown-linux-gnu
+            image: quay.io/pypa/manylinux2014_x86_64:latest
+            run_test: true
+          # - target: i686-unknown-linux-gnu
+          #   image: quay.io/pypa/manylinux2014_i686:latest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Run test
-        run: cargo test --no-default-features --features pyo3/auto-initialize
-      - uses: messense/maturin-action@v1
+      - name: Build wheels
+        run: |
+          docker run --rm -w /project -v $(pwd):/project \
+            -e EXTRA_PATH=/opt/python/cp38-cp38/bin \
+            -e PYTHON_HOMES=/opt/python \
+            -e CARGO_NET_GIT_FETCH_WITH_CLI=false \
+            ${{ matrix.platform.image }} \
+            bash /project/.github/workflows/build.sh -t ${{ matrix.platform.target }}
+      - name: Prepare to run test
+        if: matrix.platform.run_test == true
+        uses: actions/setup-python@v4
         with:
-          manylinux: auto
-          command: build
-          args: --release -o dist
+          python-version: 3.8
+      - name: Run test
+        if: matrix.platform.run_test == true
+        run: |
+          pip install dist/*cp38*.whl
+          pip install pytest
+          mv python/drepr python/drepr2
+          pytest -xvs python/tests
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -23,15 +44,30 @@ jobs:
           path: dist
 
   windows:
+    strategy:
+      matrix:
+        python: ["3.8", "3.9", "3.10"]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
       - name: Run test
         run: cargo test --no-default-features --features pyo3/auto-initialize
       - uses: messense/maturin-action@v1
         with:
           command: build
-          args: --release --no-sdist -o dist
+          args: --release --no-sdist -o dist -i python
+      # - name: Run test
+      #   if: matrix.python == '3.8'
+      #   run: |
+      #     ls dist
+      #     bash -c 'pwd; pip install dist/*cp38*.whl'
+      #     pip install pytest
+      #     mv python/drepr python/drepr2
+      #     pytest -xvs python/tests
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -39,15 +75,29 @@ jobs:
           path: dist
 
   macos:
+    strategy:
+      matrix:
+        python: ["3.8", "3.9", "3.10"]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
       - name: Run test
         run: cargo test --no-default-features --features pyo3/auto-initialize
       - uses: messense/maturin-action@v1
         with:
           command: build
-          args: --release --no-sdist -o dist --universal2
+          args: --release --no-sdist -o dist
+      - name: Run test
+        if: matrix.python == '3.8'
+        run: |
+          pip install dist/*cp38*.whl
+          pip install pytest
+          mv python/drepr python/drepr2
+          pytest -xvs python/tests
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -57,7 +107,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: "startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master')"
+    if: "startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/dev-ci')"
     needs: [macos, windows, linux]
     steps:
       - uses: actions/download-artifact@v2
