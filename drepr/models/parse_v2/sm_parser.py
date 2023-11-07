@@ -1,8 +1,9 @@
 import copy
 import re
 
-from drepr.utils.validator import Validator, InputError
-from ..sm import SemanticModel, ClassNode, DataNode, Edge, LiteralNode, DataType
+from drepr.utils.validator import InputError, Validator
+
+from ..sm import ClassNode, DataNode, DataType, Edge, LiteralNode, SemanticModel
 
 
 class SMParser:
@@ -13,22 +14,32 @@ class SMParser:
     semantic_model:
       <class_id>:
         properties:
-            - [<predicate>, <attr_id>, <sem_type>, <is_required=false>]
+            - [<predicate>, <attr_id>, (<data_type>, (<is_required=false>)?)?]
         links:
-            - [<predicate>, <value>, <sem_type>]
+            - [<predicate>, <class_id>]
         static_properties:
-            -
+            - [<predicate>, <value>, (<data_type>)?]
+        inverse_static_properties:
+            - [<predicate>, <uri>]
       prefixes:
         <prefix>: <uri>
     ```
     """
-    CLS_KEYS = {"properties", "subject", "links", "static_properties"}
+
+    CLS_KEYS = {
+        "properties",
+        "subject",
+        "links",
+        "static_properties",
+        "inverse_static_properties",
+    }
     DATA_TYPE_VALUES = {x.value for x in DataType}
 
     REG_SM_CLASS = re.compile(r"^((.+):\d+)$")
     REG_SM_DNODE = re.compile(r"^((?:(?!--).)+:\d+)--((?:(?!\^\^).)+)(?:\^\^(.+))?$")
     REG_SM_LNODE = re.compile(
-        r"^((?:(?!--).)+:\d+)--((?:(?!--).)+)--((?:(?!\^\^).)+)(?:\^\^(.+))?$")
+        r"^((?:(?!--).)+:\d+)--((?:(?!--).)+)--((?:(?!\^\^).)+)(?:\^\^(.+))?$"
+    )
     REG_SM_REL = re.compile(r"^((?:(?!--).)+:\d+)--((?:(?!--).)+)--((?:(?!--).)+:\d+)$")
 
     @classmethod
@@ -37,7 +48,7 @@ class SMParser:
         edges = {}
         # shallow copy
         sm = copy.copy(sm)
-        prefixes = sm.pop('prefixes', {})
+        prefixes = sm.pop("prefixes", {})
 
         trace0 = f"Parsing `prefixes` of the semantic model"
         Validator.must_be_dict(prefixes, trace0)
@@ -47,8 +58,9 @@ class SMParser:
         for class_id, class_conf in sm.items():
             trace0 = f"Parsing class `{class_id}` of the semantic model"
             Validator.must_be_dict(class_conf, trace0)
-            Validator.must_be_subset(cls.CLS_KEYS, class_conf.keys(), "keys of ontology class",
-                                     trace0)
+            Validator.must_be_subset(
+                cls.CLS_KEYS, class_conf.keys(), "keys of ontology class", trace0
+            )
 
             try:
                 class_name = cls.REG_SM_CLASS.match(class_id).group(2)
@@ -62,7 +74,7 @@ class SMParser:
         for class_id, class_conf in sm.items():
             trace0 = f"Parsing class `{class_id}` of the semantic model"
 
-            for i, prop in enumerate(class_conf.get('properties', [])):
+            for i, prop in enumerate(class_conf.get("properties", [])):
                 trace1 = f"{trace0}\nParsing property {i}: {prop}"
                 if len(prop) == 2:
                     predicate, attr_id = prop
@@ -70,9 +82,15 @@ class SMParser:
                     is_required = False
                 elif len(prop) == 3:
                     predicate, attr_id, data_type = prop
-                    if isinstance(data_type, bool) or data_type.lower() in {"true", "false"}:
-                        is_required = data_type if isinstance(data_type,
-                                                              bool) else data_type == "true"
+                    if isinstance(data_type, bool) or data_type.lower() in {
+                        "true",
+                        "false",
+                    }:
+                        is_required = (
+                            data_type
+                            if isinstance(data_type, bool)
+                            else data_type == "true"
+                        )
                         data_type = None
                     else:
                         is_required = False
@@ -81,28 +99,40 @@ class SMParser:
                 else:
                     raise InputError(
                         f"{trace1}\nERROR: Expect value of the property to be an array of two "
-                        f"three or four items (<predicate>, <attribute_id>[, semantic_type='auto'][, is_required=false])"
+                        f"three or four items (<predicate>, <attribute_id>[, data_type='auto'][, is_required=false])"
                     )
 
                 if data_type is not None:
-                    Validator.must_in(data_type, cls.DATA_TYPE_VALUES,
-                                      f"{trace1}\nParsing data type")
+                    Validator.must_in(
+                        data_type, cls.DATA_TYPE_VALUES, f"{trace1}\nParsing data type"
+                    )
                     data_type = DataType(data_type)
 
-                node = DataNode(node_id=f"dnode:{attr_id}", attr_id=attr_id, data_type=data_type)
+                node = DataNode(
+                    node_id=f"dnode:{attr_id}", attr_id=attr_id, data_type=data_type
+                )
                 nodes[node.node_id] = node
-                edges[len(edges)] = Edge(len(edges), class_id, node.node_id, predicate, is_required=is_required)
+                edges[len(edges)] = Edge(
+                    len(edges),
+                    class_id,
+                    node.node_id,
+                    predicate,
+                    is_required=is_required,
+                )
 
-            for i, link_conf in enumerate(class_conf.get('links', [])):
+            for i, link_conf in enumerate(class_conf.get("links", [])):
                 trace1 = f"{trace0}\nParsing link {i}: {link_conf}"
                 if len(link_conf) != 2:
                     raise InputError(
                         f"{trace1}\nERROR: Expect value of the link to be an array of two "
-                        f"items (<predicate>, <class_id>)")
+                        f"items (<predicate>, <class_id>)"
+                    )
                 predicate, object_class_id = link_conf
-                edges[len(edges)] = Edge(len(edges), class_id, object_class_id, predicate)
+                edges[len(edges)] = Edge(
+                    len(edges), class_id, object_class_id, predicate
+                )
 
-            for i, prop in enumerate(class_conf.get('static_properties', [])):
+            for i, prop in enumerate(class_conf.get("static_properties", [])):
                 trace1 = f"{trace0}\nParsing static properties {i}: {prop}"
                 if len(prop) == 2:
                     predicate, value = prop
@@ -112,11 +142,13 @@ class SMParser:
                 else:
                     raise InputError(
                         f"{trace1}\nERROR: Expect value of the property to be an array of two "
-                        f"or three items (<predicate>, <attribute_id>, [semantic_type])")
+                        f"or three items (<predicate>, <value>, [data_type])"
+                    )
 
                 if data_type is not None:
-                    Validator.must_in(data_type, cls.DATA_TYPE_VALUES,
-                                      f"{trace1}\nParsing data type")
+                    Validator.must_in(
+                        data_type, cls.DATA_TYPE_VALUES, f"{trace1}\nParsing data type"
+                    )
                     data_type = DataType(data_type)
 
                 # normalize value's type (e.g., ruamel.yaml read float into ScalarFloat)
@@ -127,22 +159,46 @@ class SMParser:
                 elif isinstance(value, float):
                     value = float(value)
 
-                node = LiteralNode(node_id=f"lnode:{len(nodes)}", value=value, data_type=data_type)
+                node = LiteralNode(
+                    node_id=f"lnode:{len(nodes)}", value=value, data_type=data_type
+                )
                 nodes[node.node_id] = node
                 edges[len(edges)] = Edge(len(edges), class_id, node.node_id, predicate)
 
+            for i, prop in enumerate(class_conf.get("inverse_static_properties", [])):
+                trace1 = f"{trace0}\nParsing inverse static properties {i}: {prop}"
+                if len(prop) == 2:
+                    predicate, value = prop
+                    data_type = DataType.xsd_anyURI
+                else:
+                    raise InputError(
+                        f"{trace1}\nERROR: Expect value of the property to be an array of two "
+                        f"items (<predicate>, <uri>)"
+                    )
+
+                if not isinstance(value, str):
+                    raise InputError("Value of inverse static property must be an uri")
+                value = str(value)
+                node = LiteralNode(
+                    node_id=f"lnode:{len(nodes)}", value=value, data_type=data_type
+                )
+                nodes[node.node_id] = node
+                edges[len(edges)] = Edge(len(edges), node.node_id, class_id, predicate)
+
         for class_id, class_conf in sm.items():
             trace0 = f"Parsing class `{class_id}` of the semantic model"
-            if 'subject' in class_conf:
+            if "subject" in class_conf:
                 trace1 = f"{trace0}\nParsing subject"
-                attr_id = class_conf['subject']
+                attr_id = class_conf["subject"]
                 target_id = f"dnode:{attr_id}"
                 for edge in edges.values():
                     if edge.source_id == class_id and edge.target_id == target_id:
                         edge.is_subject = True
                         break
                 else:
-                    raise InputError(f"{trace1}\nERROR: Subject of the class node must be one "
-                                     f"of the attributes used in the semantic model")
+                    raise InputError(
+                        f"{trace1}\nERROR: Subject of the class node must be one "
+                        f"of the attributes used in the semantic model"
+                    )
 
         return SemanticModel(nodes, edges, prefixes)

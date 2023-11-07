@@ -1,32 +1,32 @@
-import copy, orjson
-from drepr.models.resource import ResourceDataString
-from pathlib import Path
-from uuid import uuid4
-from importlib.resources import Resource
-from importlib.metadata import PackageNotFoundError
+import copy
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Union, Tuple, List
+from importlib.metadata import PackageNotFoundError
+from importlib.resources import Resource
+from pathlib import Path
+from typing import Dict, List, Tuple, Union
+from uuid import uuid4
 
-from drepr.drepr import Engine, complete_description as rust_complete_description
+import orjson
+
+from drepr.core import Engine
+from drepr.core import complete_description as rust_complete_description
 from drepr.models import (
-    DRepr,
     DEFAULT_RESOURCE_ID,
-    SemanticModel,
+    AlignedStep,
     Alignment,
     AlignmentType,
-    RangeAlignment,
-    AlignedStep,
-    ValueAlignment,
-    LiteralNode,
     ClassNode,
-    ResourceDataFile, ResourceData
+    DRepr,
+    LiteralNode,
+    RangeAlignment,
+    ResourceData,
+    ResourceDataFile,
+    SemanticModel,
+    ValueAlignment,
 )
-from drepr.patches import (
-    xml_patch,
-    jp_propname_patch,
-    static_class_patch
-)
+from drepr.models.resource import ResourceDataString
+from drepr.patches import jp_propname_patch, static_class_patch, xml_patch
 
 try:
     from drepr.patches import nc_patch
@@ -71,7 +71,7 @@ def execute(
     if debug:
         tmpdir = Path(f"/tmp/d-repr-{str(uuid4())}")
         tmpdir.mkdir()
-        
+
         print(f">>> the D-REPR model and data is stored in {str(tmpdir)}")
 
         (tmpdir / "model.yml").write_text(ds_model.to_lang_yml())
@@ -79,8 +79,12 @@ def execute(
             if isinstance(resource, ResourceDataFile):
                 continue
             assert isinstance(resource, ResourceDataString)
-            (tmpdir / f"{rid}.dat").write_bytes(resource.value if isinstance(resource.value, bytes) else resource.value.encode())
-    
+            (tmpdir / f"{rid}.dat").write_bytes(
+                resource.value
+                if isinstance(resource.value, bytes)
+                else resource.value.encode()
+            )
+
     engine = Engine(
         orjson.dumps(
             {
@@ -111,9 +115,7 @@ def execute(
     if isinstance(output, MemoryOutput) and output.format == OutputFormat.GraphPy:
         class2nodes = {}
         for u in ds_model.sm.iter_class_nodes():
-            class2nodes[u.node_id] = result[
-                engine_model.sm_node_idmap[u.node_id]
-            ]
+            class2nodes[u.node_id] = result[engine_model.sm_node_idmap[u.node_id]]
         return class2nodes
     return result
 

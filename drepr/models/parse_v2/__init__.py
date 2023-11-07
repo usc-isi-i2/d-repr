@@ -1,18 +1,19 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from dataclasses import asdict
 from typing import List
 
 from drepr.models.parse_v2.path_parser import PathParserV2
 from drepr.utils.validator import *
-from ..align import AlignmentType, RangeAlignment
 
+from ..align import AlignmentType, RangeAlignment
 from ..parse_v1.align_parser import AlignParser
 from ..parse_v1.attr_parser import AttrParser
 from ..parse_v1.preprocessing_parser import PreprocessingParser
 from ..parse_v1.resource_parser import ResourceParser
-
+from ..sm import ClassNode, DataNode, LiteralNode, SemanticModel
 from .sm_parser import SMParser
-from ..sm import SemanticModel, ClassNode, DataNode, LiteralNode
 
 
 class ReprV2Parser:
@@ -87,29 +88,44 @@ class ReprV2Parser:
                 class_counter[node.label] += 1
                 class_ids[node.node_id] = f"{node.label}:{class_counter[node.label]}"
                 sm[class_ids[node.node_id]] = OrderedDict(
-                    [("properties", []), ("static_properties", []), ("links", [])]
+                    [
+                        ("properties", []),
+                        ("static_properties", []),
+                        ("inverse_static_properties", []),
+                        ("links", []),
+                    ]
                 )
 
         for node in drepr.sm.nodes.values():
             if isinstance(node, DataNode):
-                edge = [
+                for edge in [
                     e for e in drepr.sm.edges.values() if e.target_id == node.node_id
-                ][0]
-                if node.data_type is not None:
-                    prop = (edge.label, node.attr_id, node.data_type.value)
-                else:
-                    prop = (edge.label, node.attr_id)
-                sm[class_ids[edge.source_id]]["properties"].append(prop)
+                ]:
+                    if node.data_type is not None:
+                        prop = (edge.label, node.attr_id, node.data_type.value)
+                    else:
+                        prop = (edge.label, node.attr_id)
+                    sm[class_ids[edge.source_id]]["properties"].append(prop)
 
             if isinstance(node, LiteralNode):
-                edge = [
+                for edge in [
                     e for e in drepr.sm.edges.values() if e.target_id == node.node_id
-                ][0]
-                if node.data_type is not None:
-                    prop = (edge.label, node.value, node.data_type.value)
-                else:
-                    prop = (edge.label, node.value)
-                sm[class_ids[edge.source_id]]["static_properties"].append(prop)
+                ]:
+                    if node.data_type is not None:
+                        prop = (edge.label, node.value, node.data_type.value)
+                    else:
+                        prop = (edge.label, node.value)
+                    sm[class_ids[edge.source_id]]["static_properties"].append(prop)
+                for edge in [
+                    e for e in drepr.sm.edges.values() if e.source_id == node.node_id
+                ]:
+                    if edge.target_id not in class_ids:
+                        raise Exception(
+                            "D-Repr YAML version 2 does not support link from literal node to non-class nodes"
+                        )
+                    sm[class_ids[edge.target_id]]["inverse_static_properties"].append(
+                        (edge.label, node.value)
+                    )
 
         for edge in drepr.sm.edges.values():
             if isinstance(drepr.sm.nodes[edge.source_id], ClassNode) and isinstance(

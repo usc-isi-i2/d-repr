@@ -13,7 +13,7 @@ use pyo3::prelude::*;
 use crate::python::{complete_description, Engine};
 
 #[pymodule]
-fn drepr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add_class::<Engine>()?;
     m.add_function(wrap_pyfunction!(

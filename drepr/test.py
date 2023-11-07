@@ -1,27 +1,29 @@
-import copy, orjson
+import copy
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Union, Tuple, List
+from typing import Dict, List, Tuple, Union
 
-from drepr.drepr import Engine
+import orjson
+
+from drepr.core import Engine
 from drepr.models import (
-    DRepr,
     DEFAULT_RESOURCE_ID,
-    SemanticModel,
+    AlignedStep,
     Alignment,
     AlignmentType,
-    RangeAlignment,
-    AlignedStep,
-    ValueAlignment,
-    LiteralNode,
     ClassNode,
+    DRepr,
+    LiteralNode,
+    RangeAlignment,
+    SemanticModel,
+    ValueAlignment,
 )
 from drepr.patches import (
     ResourceData,
     ResourceDataFile,
     ResourceDataString,
-    xml_patch,
     jp_propname_patch,
+    xml_patch,
 )
 
 

@@ -35,7 +35,7 @@ jobs:
         run: |
           pip install dist/*cp38*.whl
           pip install pytest
-          mv python/drepr python/drepr2
+          mv drepr drepr2
           pytest -xvs python/tests
       - name: Upload wheels
         uses: actions/upload-artifact@v2

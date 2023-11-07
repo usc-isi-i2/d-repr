@@ -1,18 +1,18 @@
 [project]
 name = "drepr"
-version = "2.10.0"
+version = "2.10.1"
 description = "Data Representation Language for Reading Heterogeneous Datasets"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {file = "LICENSE"}
-authors = [{name = "Binh Vu", email = "binh@toan2.com"}]
+license = { file = "LICENSE" }
+authors = [{ name = "Binh Vu", email = "binh@toan2.com" }]
 
 dependencies = [
   "orjson >= 3.6.8, < 4.0.0",
   "ruamel.yaml >= 0.17.21",
   "xmltodict >= 0.13.0",
   "numpy >= 1.22.4",
-  "pillow >= 9.1.1"
+  "pillow >= 9.1.1",
 ]
 
 [project.optional-dependencies]
@@ -20,8 +20,13 @@ fiona = ["fiona"]
 netcdf = ["netCDF4"]
 
 [project.urls]
+homepage = "https://github.com/usc-isi-i2/d-repr"
 repository = "https://github.com/usc-isi-i2/d-repr"
 
+[tool.maturin]
+module-name = "drepr.core"
+features = ["extension-module"]
+
 [build-system]
-requires = ["maturin>=0.12,<0.13"]
+requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
