@@ -1,13 +1,12 @@
-use std::io::{BufWriter, Write};
 use std::fmt::Debug;
+use std::io::{BufWriter, Write};
 
-use hashbrown::{HashSet};
+use hashbrown::HashSet;
 
-use readers::prelude::Value;
-use crate::writers::stream_writer::StreamClassWriter;
 use crate::writers::stream_writer::turtle::temp_object_props::TempObjectProps;
 use crate::writers::stream_writer::turtle::value_fmt::ValueFmt;
-
+use crate::writers::stream_writer::StreamClassWriter;
+use readers::prelude::Value;
 
 #[allow(dead_code)]
 pub struct GenericWriter<'a, W: Write + Debug> {
@@ -26,13 +25,13 @@ impl<'a, W: Write + Debug> StreamClassWriter for GenericWriter<'a, W> {
   fn has_written_record(&self, class_id: usize, subject: &str) -> bool {
     self.always_write_records[class_id] || self.written_records[class_id].contains(subject)
   }
-  
+
   fn begin_record(&mut self, subject: &str, is_blank: bool) -> bool {
     // check if has been inserted before
     if self.written_records[self.class_id].contains(subject) {
       return false;
     }
-    
+
     self.written_records[self.class_id].insert(subject.to_string());
     if is_blank {
       write!(self.channel, "{} a {};\n", subject, self.ont_class).unwrap();
@@ -52,13 +51,13 @@ impl<'a, W: Write + Debug> StreamClassWriter for GenericWriter<'a, W> {
     if self.written_records[self.class_id].contains(subject) {
       return false;
     }
-    
+
     self.buffer_oprops[self.class_id].push(TempObjectProps {
       id: subject.to_string(),
       is_blank,
       props: vec![],
     });
-    
+
     self.written_records[self.class_id].insert(subject.to_string());
     if is_blank {
       write!(self.channel, "{} a {};\n", subject, self.ont_class).unwrap();
@@ -79,9 +78,10 @@ impl<'a, W: Write + Debug> StreamClassWriter for GenericWriter<'a, W> {
         // encounter a null value, TTL doesn't have a way to represent a null value, so we should panic
         // because null may mean different things
         panic!("Cannot write null value because RDF doesn't have a way to represent it")
-      },
+      }
       Value::Str(v) => {
-        self.value_templates[predicate_id].write_string_value(&mut self.channel, &v.replace("\"", "\\\""));
+        self.value_templates[predicate_id]
+          .write_string_value(&mut self.channel, &v.replace("\"", "\\\""));
       }
       Value::Bool(v) => {
         self.value_templates[predicate_id].write_value(&mut self.channel, &v.to_string());
@@ -92,17 +92,42 @@ impl<'a, W: Write + Debug> StreamClassWriter for GenericWriter<'a, W> {
       Value::F64(v) => {
         self.value_templates[predicate_id].write_value(&mut self.channel, &v.to_string());
       }
-      Value::Array(_) => unimplemented!("TTL writers does not support writing array yet. The input value is: {:?}", value),
-      Value::Object(_) => unimplemented!("TTL writers does not support writing array yet. The input value is: {:?}", value),
+      Value::Array(_) => unimplemented!(
+        "TTL writers does not support writing array yet. The input value is: {:?}",
+        value
+      ),
+      Value::Object(_) => unimplemented!(
+        "TTL writers does not support writing array yet. The input value is: {:?}",
+        value
+      ),
     }
   }
 
-  fn write_object_property(&mut self, _target_cls: usize, subject: &str, predicate_id: usize, object: &str, is_subject_blank: bool, is_object_blank: bool, is_new_subj: bool) {
+  fn write_object_property(
+    &mut self,
+    _target_cls: usize,
+    subject: &str,
+    predicate_id: usize,
+    object: &str,
+    is_subject_blank: bool,
+    is_object_blank: bool,
+    is_new_subj: bool,
+  ) {
     if is_new_subj {
       if is_object_blank {
-        write!(self.channel, "\t{} {};\n", self.predicates[predicate_id], object).unwrap();
+        write!(
+          self.channel,
+          "\t{} {};\n",
+          self.predicates[predicate_id], object
+        )
+        .unwrap();
       } else {
-        write!(self.channel, "\t{} <{}>;\n", self.predicates[predicate_id], object).unwrap();
+        write!(
+          self.channel,
+          "\t{} <{}>;\n",
+          self.predicates[predicate_id], object
+        )
+        .unwrap();
       }
     } else {
       if is_subject_blank {
@@ -110,17 +135,35 @@ impl<'a, W: Write + Debug> StreamClassWriter for GenericWriter<'a, W> {
       } else {
         write!(self.channel, "<{}>", subject).unwrap();
       }
-      
+
       if is_object_blank {
-        write!(self.channel, " {} {}.\n", self.predicates[predicate_id], object).unwrap();
+        write!(
+          self.channel,
+          " {} {}.\n",
+          self.predicates[predicate_id], object
+        )
+        .unwrap();
       } else {
-        write!(self.channel, " {} <{}>.\n", self.predicates[predicate_id], object).unwrap();
+        write!(
+          self.channel,
+          " {} <{}>.\n",
+          self.predicates[predicate_id], object
+        )
+        .unwrap();
       }
     }
   }
 
-  fn buffer_object_property(&mut self, _target_cls: usize, predicate_id: usize, object: String, is_object_blank: bool) {
-    self.buffer_oprops[self.class_id].last_mut().unwrap()
+  fn buffer_object_property(
+    &mut self,
+    _target_cls: usize,
+    predicate_id: usize,
+    object: String,
+    is_object_blank: bool,
+  ) {
+    self.buffer_oprops[self.class_id]
+      .last_mut()
+      .unwrap()
       .props
       .push((predicate_id, object, is_object_blank));
   }

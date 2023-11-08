@@ -86,7 +86,7 @@ if __name__ == "__main__":
     else:
         output = MemoryOutput(OutputFormat(args.format))
 
-    print(ds_model.resources)
+    # print(ds_model.resources)
     start = time.time()
     result = execute(ds_model, resources, output, args.verbose > 1)
     end = time.time()
