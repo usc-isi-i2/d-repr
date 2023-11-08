@@ -36,7 +36,7 @@ jobs:
           pip install dist/*cp38*.whl
           pip install pytest
           mv drepr drepr2
-          pytest -xvs python/tests
+          pytest -xvs tests
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -66,8 +66,8 @@ jobs:
       #     ls dist
       #     bash -c 'pwd; pip install dist/*cp38*.whl'
       #     pip install pytest
-      #     mv python/drepr python/drepr2
-      #     pytest -xvs python/tests
+      #     mv drepr drepr2
+      #     pytest -xvs tests
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -96,8 +96,8 @@ jobs:
         run: |
           pip install dist/*cp38*.whl
           pip install pytest
-          mv python/drepr python/drepr2
-          pytest -xvs python/tests
+          mv drepr drepr2
+          pytest -xvs tests
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:

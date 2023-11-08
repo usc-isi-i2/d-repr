@@ -139,7 +139,7 @@ def complete_description(ds_model: DRepr) -> "CompleteDescription":
     for n in sm.iter_class_nodes():
         class_id = engine_model.sm_node_idmap[n.node_id]
         aidx = extra_info["class2subj"][class_id]
-        if aidx == -1:
+        if aidx is None:
             # just need to pick a random literal node
             for e in sm.iter_outgoing_edges(n.node_id):
                 if isinstance(sm.nodes[e.target_id], LiteralNode):

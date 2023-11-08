@@ -31,7 +31,7 @@ pub fn complete_description(py: Python<'_>, args: &[u8]) -> PyResult<PyObject> {
     } else {
       ClassMapPlan::find_subject(&desc, class_id, &class2subj, &inference)
     };
-    class2subj.push(subj);
+    class2subj[class_id] = subj;
   }
 
   // generate alignments between subject and other data attributes
@@ -68,7 +68,21 @@ pub fn complete_description(py: Python<'_>, args: &[u8]) -> PyResult<PyObject> {
   }
 
   let dict = PyDict::new(py);
-  dict.set_item("class2subj", class2subj).unwrap();
+  dict
+    .set_item(
+      "class2subj",
+      class2subj
+        .into_iter()
+        .map(|subj| {
+          if subj == desc.attributes.len() {
+            None
+          } else {
+            Some(subj)
+          }
+        })
+        .collect::<Vec<_>>(),
+    )
+    .unwrap();
   dict.set_item("aligned_funcs", aligned_funcs).unwrap();
   Ok(dict.into())
 }
