@@ -8,7 +8,7 @@ from pathlib import Path
 import orjson
 from ruamel.yaml import YAML
 
-from drepr.engine import execute, FileOutput, OutputFormat, MemoryOutput
+from drepr.engine import FileOutput, MemoryOutput, OutputFormat, execute
 from drepr.models import DRepr
 
 if __name__ == "__main__":
@@ -96,4 +96,4 @@ if __name__ == "__main__":
 
     if args.output is None:
         print(">>> Dumping RDF triples to console...\n")
-        print(result["value"])
+        print(result)

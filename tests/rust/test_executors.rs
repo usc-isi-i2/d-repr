@@ -54,7 +54,7 @@ struct Dataset {
 }
 
 fn read_datasets() -> Result<Vec<Dataset>, Error> {
-  let test_resource_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/resources");
+  let test_resource_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/rust/resources");
   let mut datasets = vec![];
   for e0 in fs::read_dir(&test_resource_dir)? {
     let dataset_dir = e0?.path();

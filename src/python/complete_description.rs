@@ -1,11 +1,10 @@
 use crate::alignments::inference::AlignmentInference;
+use crate::execution_plans::topological_sorting::topological_sorting;
 use crate::execution_plans::ClassMapPlan;
-use crate::executors::Executor;
 use crate::lang::{AlignedDim, Alignment, Description, GraphNode};
-use crate::writers::stream_writer::stream_writer::WriteResult;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyTuple};
+use pyo3::types::PyDict;
 use std::collections::HashMap;
 
 /// Inferring missing information in the description such as alignments and subjects
@@ -16,19 +15,21 @@ pub fn complete_description(py: Python<'_>, args: &[u8]) -> PyResult<PyObject> {
     Err(e) => return Err(PyValueError::new_err(format!("{}", e))),
   };
   let inference = AlignmentInference::new(&desc);
+  let reversed_topo_orders = topological_sorting(&desc.semantic_model);
   let n_class_nodes = desc.semantic_model.get_n_class_nodes();
 
   // compute subjects
-  let mut class2subj: Vec<i64> = Vec::with_capacity(n_class_nodes);
-  for class_id in 0..n_class_nodes {
+  let mut class2subj: Vec<usize> = vec![desc.attributes.len(); n_class_nodes];
+  // for class_id in 0..n_class_nodes {
+  for &class_id in &reversed_topo_orders.topo_order {
     // TODO: temporary solution to handle the case where there is no data nodes (only literal nodes)
     let subj = if desc.semantic_model.outgoing_edges[class_id]
       .iter()
       .all(|&eid| desc.semantic_model.get_target(eid).is_literal_node())
     {
-      -1
+      desc.attributes.len()
     } else {
-      ClassMapPlan::find_subject(&desc, class_id, &inference) as i64
+      ClassMapPlan::find_subject(&desc, class_id, &class2subj, &inference)
     };
     class2subj.push(subj);
   }
@@ -36,7 +37,7 @@ pub fn complete_description(py: Python<'_>, args: &[u8]) -> PyResult<PyObject> {
   // generate alignments between subject and other data attributes
   let mut aligned_funcs: HashMap<(usize, usize), Vec<Alignment>> = HashMap::new();
   for class_id in 0..n_class_nodes {
-    if class2subj[class_id] == -1 {
+    if class2subj[class_id] == desc.attributes.len() {
       continue;
     }
     let class_subj = class2subj[class_id] as usize;
@@ -55,7 +56,7 @@ pub fn complete_description(py: Python<'_>, args: &[u8]) -> PyResult<PyObject> {
           continue;
         }
         GraphNode::ClassNode(n) => {
-          if class2subj[n.node_id] == -1 {
+          if class2subj[n.node_id] == desc.attributes.len() {
             continue;
           }
           let target_subj = class2subj[n.node_id] as usize;

@@ -19,7 +19,7 @@ impl NetCDFRAReader {
     let mut dataset: HashMap<String, Value> = HashMap::with_capacity(file.variables().count());
 
     for var in file.variables() {
-      let var_id = var.name();
+      // let var_id = var.name();
       let vartype = var.vartype();
       let vardims = var.dimensions();
       let value = if vardims.len() == 0 {

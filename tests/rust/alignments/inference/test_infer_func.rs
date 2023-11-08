@@ -52,7 +52,7 @@ struct TestScenario {
 impl TestScenario {
   pub fn load() -> Vec<TestScenario> {
     let test_resource_dir =
-      Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/alignments/inference/resources");
+      Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/rust/alignments/inference/resources");
     let mut scenarios = vec![];
 
     for e0 in fs::read_dir(&test_resource_dir).unwrap() {

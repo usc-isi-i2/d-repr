@@ -1,7 +1,6 @@
 use super::context::Context;
 use super::pyfunc::PyFunc;
 use super::types::ReaderPtr;
-use itertools::Itertools;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 

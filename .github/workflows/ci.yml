@@ -59,7 +59,7 @@ jobs:
       - uses: messense/maturin-action@v1
         with:
           command: build
-          args: --release --no-sdist -o dist -i python
+          args: --release --no-sdist -o dist
       # - name: Run test
       #   if: matrix.python == '3.8'
       #   run: |

@@ -105,7 +105,7 @@ pub struct TestScenarioAlignment {
 impl TestScenario {
   pub fn fetch_one(fpath: &str) -> Vec<TestScenario> {
     let ds_file = Path::new(env!("CARGO_MANIFEST_DIR"))
-      .join("tests/alignments/funcs/resources")
+      .join("tests/rust/alignments/funcs/resources")
       .join(fpath);
     let tree: serde_json::Value =
       serde_json::from_str(&fs::read_to_string(ds_file).unwrap()).unwrap();

@@ -1,6 +1,6 @@
 [package]
 name = "drepr"
-version = "1.1.1"
+version = "1.2.0"
 authors = ["Binh Vu <binh@toan2.com>"]
 edition = "2018"
 
@@ -30,4 +30,3 @@ pyo3 = "0.16.5"
 [features]
 enable-exec-macro-cls-map = []
 extension-module = ["pyo3/extension-module"]
-default = ["extension-module"]
