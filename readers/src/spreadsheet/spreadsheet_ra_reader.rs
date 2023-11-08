@@ -1,9 +1,8 @@
-use crate::prelude::{Index, Value, PathExpr, IndexIterator};
-use crate::ra_reader::{RAReader, default_iter_index};
+use crate::prelude::{Index, IndexIterator, PathExpr, Value};
+use crate::ra_reader::{default_iter_index, RAReader};
 
 use calamine::{open_workbook_auto, DataType, Reader};
 use hashbrown::HashMap;
-
 
 #[derive(Debug)]
 pub struct SpreadsheetRAReader {
@@ -33,6 +32,9 @@ impl SpreadsheetRAReader {
                 DataType::Int(v) => Value::I64(*v),
                 DataType::Float(v) => Value::F64(*v),
                 DataType::DateTime(v) => Value::F64(*v),
+                DataType::Duration(v) => Value::F64(*v),
+                DataType::DateTimeIso(v) => Value::Str(v.to_owned()),
+                DataType::DurationIso(v) => Value::Str(v.to_owned()),
                 DataType::Empty => Value::Str(String::new()),
                 DataType::Error(_) => Value::Null,
               })
@@ -47,7 +49,11 @@ impl SpreadsheetRAReader {
       }
     }
 
-    return SpreadsheetRAReader { sheets, name2index, sheet_names };
+    return SpreadsheetRAReader {
+      sheets,
+      name2index,
+      sheet_names,
+    };
   }
 }
 
@@ -60,7 +66,7 @@ impl RAReader for SpreadsheetRAReader {
         } else {
           self.sheets[*v] = val;
         }
-      },
+      }
       Index::Str(v) => {
         if start_idx < index.len() - 1 {
           self.sheets[self.name2index[v]].set_value(index, start_idx + 1, val);
@@ -79,7 +85,7 @@ impl RAReader for SpreadsheetRAReader {
         } else {
           &self.sheets[*v]
         }
-      },
+      }
       Index::Str(v) => {
         if start_idx < index.len() - 1 {
           self.sheets[self.name2index[v]].get_value(index, start_idx + 1)
@@ -98,7 +104,7 @@ impl RAReader for SpreadsheetRAReader {
         } else {
           &mut self.sheets[*v]
         }
-      },
+      }
       Index::Str(v) => {
         if start_idx < index.len() - 1 {
           self.sheets[self.name2index[v]].get_mut_value(index, start_idx + 1)
@@ -115,12 +121,8 @@ impl RAReader for SpreadsheetRAReader {
 
   fn remove(&mut self, index: &Index) {
     let sheet_index = match index {
-      Index::Idx(v) => {
-        *v
-      },
-      Index::Str(v) => {
-        self.name2index[v]
-      }
+      Index::Idx(v) => *v,
+      Index::Str(v) => self.name2index[v],
     };
 
     self.sheets.remove(sheet_index);

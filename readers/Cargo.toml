@@ -1,6 +1,6 @@
 [package]
 name = "readers"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Binh Vu <binh@toan2.com>"]
 edition = "2018"
 
@@ -23,6 +23,6 @@ lazy_static = "1.4.0"
 netcdf = { version = "0.7.0", features = ["static"] }
 
 # for excel
-calamine = "0.18.0"
+calamine = "0.22.1"
 
 pyo3 = "0.16.5"

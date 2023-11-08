@@ -1,6 +1,6 @@
 [package]
 name = "drepr"
-version = "1.2.0"
+version = "1.2.1"
 authors = ["Binh Vu <binh@toan2.com>"]
 edition = "2018"
 
