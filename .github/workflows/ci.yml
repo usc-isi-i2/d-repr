@@ -92,7 +92,8 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: 10.14
         with:
           command: build
-          args: --release --sdist -o dist -i python --target universal2-apple-darwin
+          args: --release --sdist -o dist -i python
+          #--target universal2-apple-darwin
       - name: Run test
         if: matrix.python == '3.8'
         run: |
