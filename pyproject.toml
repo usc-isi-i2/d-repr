@@ -16,8 +16,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-fiona = ["fiona"]
-netcdf = ["netCDF4"]
+fiona = ["fiona >= 1.0.0"]
+netcdf = ["netCDF4 >= 1.0.0"]
 
 [project.urls]
 homepage = "https://github.com/usc-isi-i2/d-repr"
