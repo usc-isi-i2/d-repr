@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from .attr import Attr
 
@@ -9,6 +9,7 @@ class DataType(Enum):
     xsd_decimal = "xsd:decimal"
     xsd_anyURI = "xsd:anyURI"
     xsd_gYear = "xsd:gYear"
+    xsd_date = "xsd:date"
     xsd_dateTime = "xsd:dateTime"
     xsd_int = "xsd:int"
     xsd_string = "xsd:string"
