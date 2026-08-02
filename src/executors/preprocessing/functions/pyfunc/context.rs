@@ -8,7 +8,7 @@ use readers::prelude::{Index, Value};
 /// Reader is the pointer to RAReader. We have to store the raw pointer instead of
 /// reference since it is not feasible to handle life-time checking when the code
 /// is executed in python.
-#[pyclass]
+#[pyclass(unsendable)]
 pub struct Context {
   reader: ReaderPtr,
 }

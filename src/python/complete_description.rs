@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 /// Inferring missing information in the description such as alignments and subjects
 #[pyfunction]
-pub fn complete_description(py: Python<'_>, args: &[u8]) -> PyResult<PyObject> {
+pub fn complete_description<'py>(py: Python<'py>, args: &[u8]) -> PyResult<Bound<'py, PyAny>> {
   let desc = match serde_json::from_slice::<Description>(args) {
     Ok(desc) => desc,
     Err(e) => return Err(PyValueError::new_err(format!("{}", e))),
@@ -83,38 +83,66 @@ pub fn complete_description(py: Python<'_>, args: &[u8]) -> PyResult<PyObject> {
         .collect::<Vec<_>>(),
     )
     .unwrap();
-  dict.set_item("aligned_funcs", aligned_funcs).unwrap();
-  Ok(dict.into())
+  dict.set_item("aligned_funcs", aligned_funcs.into_pyobject(py)?).unwrap();
+  Ok(dict.into_any())
 }
 
-impl ToPyObject for Alignment {
-  fn to_object(&self, py: Python) -> PyObject {
-    let obj = PyDict::new(py);
-    match self {
-      Alignment::IdenticalAlign => {
-        obj.set_item("type", "identical").unwrap();
-      }
-      Alignment::RangeAlign(align) => {
-        obj.set_item("type", "range").unwrap();
-        obj.set_item("source", align.source).unwrap();
-        obj.set_item("target", align.target).unwrap();
-        obj.set_item("aligned_dims", &align.aligned_dims).unwrap();
-      }
-      Alignment::ValueAlign(align) => {
-        obj.set_item("type", "value").unwrap();
-        obj.set_item("source", align.source).unwrap();
-        obj.set_item("target", align.target).unwrap();
-      }
-    }
-    obj.into()
+impl<'py> IntoPyObject<'py> for Alignment {
+  type Target = PyAny;
+  type Output = Bound<'py, PyAny>;
+  type Error = PyErr;
+
+  fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+    (&self).into_pyobject(py)
   }
 }
 
-impl ToPyObject for AlignedDim {
-  fn to_object(&self, py: Python) -> PyObject {
+impl<'a, 'py> IntoPyObject<'py> for &'a Alignment {
+  type Target = PyAny;
+  type Output = Bound<'py, PyAny>;
+  type Error = PyErr;
+
+  fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
     let obj = PyDict::new(py);
-    obj.set_item("source_idx", self.source_dim).unwrap();
-    obj.set_item("target_idx", self.target_dim).unwrap();
-    obj.into()
+    match self {
+      Alignment::IdenticalAlign => {
+        obj.set_item("type", "identical")?;
+      }
+      Alignment::RangeAlign(align) => {
+        obj.set_item("type", "range")?;
+        obj.set_item("source", align.source)?;
+        obj.set_item("target", align.target)?;
+        obj.set_item("aligned_dims", align.aligned_dims.clone().into_pyobject(py)?)?;
+      }
+      Alignment::ValueAlign(align) => {
+        obj.set_item("type", "value")?;
+        obj.set_item("source", align.source)?;
+        obj.set_item("target", align.target)?;
+      }
+    }
+    Ok(obj.into_any())
+  }
+}
+
+impl<'py> IntoPyObject<'py> for AlignedDim {
+  type Target = PyAny;
+  type Output = Bound<'py, PyAny>;
+  type Error = PyErr;
+
+  fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+    (&self).into_pyobject(py)
+  }
+}
+
+impl<'a, 'py> IntoPyObject<'py> for &'a AlignedDim {
+  type Target = PyAny;
+  type Output = Bound<'py, PyAny>;
+  type Error = PyErr;
+
+  fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+    let obj = PyDict::new(py);
+    obj.set_item("source_idx", self.source_dim)?;
+    obj.set_item("target_idx", self.target_dim)?;
+    Ok(obj.into_any())
   }
 }

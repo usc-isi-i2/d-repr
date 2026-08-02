@@ -19,13 +19,13 @@ fnv = "1.0.7"
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
 serde_yaml = "0.8.24"
-chrono = "0.4.19"
+chrono = "0.4.38"
 petgraph = "0.6.2"
-clap = "3.1.18"
+clap = "4.5.20"
 itertools = "0.10.3"
 fancy-regex = "0.10.0"
 lazy_static = "1.4.0"
-pyo3 = "0.16.5"
+pyo3 = { version = "0.29.0", features = ["auto-initialize"] }
 
 [features]
 enable-exec-macro-cls-map = []

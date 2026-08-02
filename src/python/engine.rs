@@ -28,13 +28,17 @@ impl Engine {
   }
 }
 
-impl IntoPy<PyObject> for WriteResult {
-  fn into_py(self, py: Python<'_>) -> PyObject {
+impl<'py> IntoPyObject<'py> for WriteResult {
+  type Target = PyAny;
+  type Output = Bound<'py, PyAny>;
+  type Error = PyErr;
+
+  fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
     match self {
-      WriteResult::None => py.None(),
-      WriteResult::Str1(s) => s.into_py(py),
-      WriteResult::Str2(s1, s2) => PyTuple::new(py, [s1, s2]).into(),
-      WriteResult::GraphPy(vec) => vec.into_py(py),
+      WriteResult::None => Ok(py.None().into_pyobject(py)?.into_any()),
+      WriteResult::Str1(s) => Ok(s.into_pyobject(py)?.into_any()),
+      WriteResult::Str2(s1, s2) => Ok(PyTuple::new(py, [s1, s2])?.into_any()),
+      WriteResult::GraphPy(vec) => Ok(vec.into_pyobject(py)?.into_any()),
     }
   }
 }

@@ -22,8 +22,8 @@ use crate::index::Index;
 ///
 /// Below is the basic structure that the struct need to have in order to use the
 ///
-/// ```
-/// use reader::prelude::Index;
+/// ```ignore
+/// use readers::prelude::Index;
 ///
 /// struct KnownRangeIter {
 ///  // |lowerbounds| = |upperbounds| = |step| <= |index|

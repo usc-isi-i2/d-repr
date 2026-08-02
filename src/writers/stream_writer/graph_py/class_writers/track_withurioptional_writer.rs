@@ -54,13 +54,13 @@ impl<'a> StreamClassWriter for TrackWithURIOptionalWriter<'a> {
         node.set_item(p, PyList::empty(self.py)).unwrap();
       }
 
-      self.class_nodes.push(node.into());
-      self.nodes.insert(subject.to_string(), node.into());
-      self.curr_node = node.into();
+      self.class_nodes.push(node.clone().unbind());
+      self.nodes.insert(subject.to_string(), node.clone().unbind());
+      self.curr_node = node.unbind();
     } else {
       self.curr_node = self.nodes.get(subject).unwrap().clone_ref(self.py);
 
-      let curr_node = self.curr_node.as_ref(self.py);
+      let curr_node = self.curr_node.bind(self.py);
       for p in self.class_predicates {
         if curr_node.contains(p).unwrap() {
           curr_node.set_item(p, PyList::empty(self.py)).unwrap();
@@ -82,16 +82,16 @@ impl<'a> StreamClassWriter for TrackWithURIOptionalWriter<'a> {
         node.set_item(p, PyList::empty(self.py)).unwrap();
       }
 
-      self.class_nodes.push(node.into());
-      self.nodes.insert(subject.to_string(), node.into());
-      self.curr_node = node.into();
+      self.class_nodes.push(node.clone().unbind());
+      self.nodes.insert(subject.to_string(), node.clone().unbind());
+      self.curr_node = node.unbind();
       self.buffer_oprops[self.class_id].push(TempObjectProps {
         id: subject.to_string(),
         props: vec![],
       });
     } else {
       self.curr_node = self.nodes.get(subject).unwrap().clone_ref(self.py);
-      let curr_node = self.curr_node.as_ref(self.py);
+      let curr_node = self.curr_node.bind(self.py);
       for p in self.class_predicates {
         if curr_node.contains(p).unwrap() {
           curr_node.set_item(p, PyList::empty(self.py)).unwrap();
@@ -106,10 +106,11 @@ impl<'a> StreamClassWriter for TrackWithURIOptionalWriter<'a> {
   fn write_data_property(&mut self, _subject: &str, predicate_id: usize, value: &Value) {
     let v = self
       .curr_node
-      .as_ref(self.py)
+      .bind(self.py)
       .get_item(&self.predicates[predicate_id])
+      .unwrap()
       .unwrap();
-    let lst = v.downcast::<PyList>().unwrap();
+    let lst = v.cast::<PyList>().unwrap();
     lst.append(value).unwrap();
   }
 
@@ -125,10 +126,11 @@ impl<'a> StreamClassWriter for TrackWithURIOptionalWriter<'a> {
   ) {
     let v = self
       .curr_node
-      .as_ref(self.py)
+      .bind(self.py)
       .get_item(&self.predicates[predicate_id])
+      .unwrap()
       .unwrap();
-    let lst = v.downcast::<PyList>().unwrap();
+    let lst = v.cast::<PyList>().unwrap();
     lst.append(object).unwrap();
   }
 

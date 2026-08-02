@@ -35,7 +35,7 @@ use super::IndexIterator;
 ///
 /// # Structured
 ///
-/// ```
+/// ```ignore
 /// use readers::prelude::{RAReader, Index, Value};
 /// pub struct UnknownRangeIter<'a> {
 ///   ra_reader: &'a Box<dyn RAReader>,

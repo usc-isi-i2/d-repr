@@ -2,7 +2,6 @@ import copy
 from dataclasses import dataclass
 from enum import Enum
 from importlib.metadata import PackageNotFoundError
-from importlib.resources import Resource
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
 from uuid import uuid4

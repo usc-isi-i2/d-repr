@@ -12,9 +12,6 @@ pub mod class_writers;
 mod temp_object_props;
 
 pub struct GraphPyWriter {
-  /// Python GIL so we can generate Python objects
-  gil: GILGuard,
-
   /// A map that maps class id (`node_id`) to class label
   classes: Vec<String>,
 
@@ -37,7 +34,6 @@ pub struct GraphPyWriter {
 impl GraphPyWriter {
   pub fn write2mem(sm: &SemanticModel) -> GraphPyWriter {
     let mut writer = GraphPyWriter {
-      gil: Python::acquire_gil(),
       classes: vec![],
       predicates: vec![],
       class_predicates: vec![],
@@ -78,14 +74,13 @@ impl StreamWriter for GraphPyWriter {
   fn begin(&mut self) {}
 
   fn end(&mut self) {
-    let py = self.gil.python();
-
+    let py = unsafe { Python::assume_attached() };
     for (cid, records) in self.buffer_oprops.drain(..).enumerate() {
       let subnodes = self.nodes.get_mut(&self.classes[cid]).unwrap();
       for r in records {
-        let u = subnodes.get_mut(&r.id).unwrap().as_ref(py);
+        let u = subnodes.get_mut(&r.id).unwrap().bind(py);
         for (_tid, pid, opid) in r.props {
-          u.set_item(&self.predicates[pid], opid.into_py(py)).unwrap();
+          u.set_item(&self.predicates[pid], opid.into_pyobject(py).unwrap()).unwrap();
         }
       }
     }
@@ -96,14 +91,15 @@ impl StreamWriter for GraphPyWriter {
     class_id: usize,
     _write_mode: WriteMode,
   ) -> Box<dyn StreamClassWriter + 'a> {
+    let py = unsafe { Python::assume_attached() };
     Box::new(TrackWithURIOptionalWriter {
-      py: self.gil.python(),
+      py,
       class_id,
       ont_class: &self.classes[class_id],
       all_nodes: &self.nodes as *const _,
       nodes: self.nodes.get_mut(&self.classes[class_id]).unwrap(),
       class_nodes: &mut self.class2nodes[class_id],
-      curr_node: PyDict::new(self.gil.python()).into(),
+      curr_node: PyDict::new(py).into(),
       buffer_oprops: &mut self.buffer_oprops,
       classes: &self.classes,
       predicates: &self.predicates,
